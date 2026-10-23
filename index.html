@@ -66,8 +66,9 @@
         <div><dt>Desde</dt><dd id="inicio"></dd></div>
         <div><dt>Hasta</dt><dd id="fin"></dd></div>
         <div><dt>Plan</dt><dd id="plan"></dd></div>
+        <div><dt>Horario</dt><dd id="horario"></dd></div>
         <div><dt>Instructor</dt><dd id="instructor"></dd></div>
-        <div class="full"><dt>Código</dt><dd id="codigo" class="code"></dd></div>
+        <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
       </dl>
     </div>
   </section>
@@ -120,6 +121,7 @@
         $('inicio').textContent = a.inicio;
         $('fin').textContent = a.fin;
         $('plan').textContent = a.plan || '—';
+        $('horario').textContent = a.horario || '—';
         $('instructor').textContent = a.instructor || '—';
         $('codigo').textContent = a.id;
         $('detalle').hidden = false;
