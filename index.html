@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Kalos · Verificación</title>
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0D1708; --panel:#121e0d; --line:#24321e; --sage:#8A9686;
+      --ok:#62D97E; --warn:#F2B33D; --bad:#FF5A5A; --neutral:#8A9686;
+      --text:#ffffff; --muted:#8A9686;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;min-height:100%}
+    body{display:flex;justify-content:center;min-height:100vh}
+    .wrap{width:100%;max-width:440px;padding:28px 16px 32px;
+      background:radial-gradient(120% 60% at 50% 0%, rgba(138,150,134,.14), transparent 60%)}
+    .brand{margin:4px 0 26px}
+    .brand img{width:150px;height:auto;display:block}
+
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 20px 20px;position:relative;overflow:hidden}
+    .card:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--c);box-shadow:0 0 18px var(--c)}
+    .ok{--c:var(--ok)} .warn{--c:var(--warn)} .bad{--c:var(--bad)} .neutral{--c:var(--neutral)}
+
+    .status{display:inline-flex;align-items:center;gap:10px;font-family:'Bebas Neue',Impact,sans-serif;
+      font-size:30px;letter-spacing:2px;color:var(--c);line-height:1;text-shadow:0 0 16px var(--c)}
+    .dot{width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 12px var(--c);animation:pulse 1.4s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+
+    .name{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:44px;line-height:.95;letter-spacing:1px;margin:18px 0 6px;word-break:break-word}
+    .days{color:var(--muted);font-size:14px}
+    .bar{height:6px;background:#22301c;border-radius:6px;margin:14px 0 20px;overflow:hidden}
+    .bar span{display:block;height:100%;width:0;background:var(--c);border-radius:6px;transition:width .8s ease}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;border-top:1px solid var(--line);padding-top:18px}
+    .grid dt{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+    .grid dd{font-size:15px;font-weight:500;word-break:break-word}
+    .code{font-family:ui-monospace,Menlo,monospace;letter-spacing:1px;color:var(--muted)}
+
+    .msg{color:var(--muted);font-size:14px;line-height:1.5;margin-top:14px}
+    .loading .status{opacity:.7}
+    .clock{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+    .clock b{color:var(--text);font-variant-numeric:tabular-nums;font-weight:600}
+    .ig{display:block;text-align:center;margin-top:8px;color:var(--sage);font-size:12px;letter-spacing:1px;text-decoration:none}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="brand"><img src="logo.png" alt="Kalos by Beast"></header>
+
+  <section id="card" class="card neutral loading">
+    <div class="status"><span class="dot"></span><span id="estado">VERIFICANDO…</span></div>
+    <p id="mensaje" class="msg">Consultando la inscripción.</p>
+
+    <div id="detalle" hidden>
+      <h1 id="nombre" class="name"></h1>
+      <p id="dias" class="days"></p>
+      <div class="bar"><span id="barra"></span></div>
+      <dl class="grid">
+        <div><dt>Desde</dt><dd id="inicio"></dd></div>
+        <div><dt>Hasta</dt><dd id="fin"></dd></div>
+        <div><dt>Plan</dt><dd id="plan"></dd></div>
+        <div><dt>Horario</dt><dd id="horario"></dd></div>
+        <div><dt>Instructor</dt><dd id="instructor"></dd></div>
+        <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Reloj en vivo: una captura de pantalla vieja no se mueve -->
+  <p class="clock">Consulta en vivo · <b id="reloj">--:--:--</b></p>
+  <a class="ig" href="https://instagram.com/kalos.workout">@kalos.workout</a>
+</main>
+
+<script>
+  // URL de la Web App de Apps Script (la misma de Config!B4)
+  var API = 'https://script.google.com/macros/s/AKfycbzyGTFXmPiO_efF5JjDzM7xvsQh-LiZfVI5_Jixl33qHi3tO3fQCLLzXhZdXxSYqzF0/exec';
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function reloj() {
+    var d = new Date();
+    $('reloj').textContent = d.toLocaleDateString('es-BO') + ' ' + d.toLocaleTimeString('es-BO', { hour12: false });
+  }
+  reloj(); setInterval(reloj, 1000);
+
+  function pintar(clase, estado, mensaje) {
+    $('card').className = 'card ' + clase;
+    $('estado').textContent = estado;
+    $('mensaje').textContent = mensaje || '';
+    $('mensaje').hidden = !mensaje;
+  }
+
+  var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
+
+  if (!id) {
+    pintar('neutral', 'KALOS', 'Escanea el QR de tu tarjeta para ver el estado de tu inscripción.');
+  } else {
+    // Sin cookies: así no importa cuántas cuentas de Google tenga abiertas el celular
+    fetch(API + '?format=json&id=' + encodeURIComponent(id), { credentials: 'omit', cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) {
+          pintar('bad', 'NO VÁLIDA', 'No encontramos una inscripción con el código ' + id + '. Consulta en recepción.');
+          return;
+        }
+        var a = d.alumno;
+        pintar(a.clase, a.estado, '');
+        $('nombre').textContent = a.nombre;
+        $('dias').textContent = a.textoDias;
+        $('inicio').textContent = a.inicio;
+        $('fin').textContent = a.fin;
+        $('plan').textContent = a.plan || '—';
+        $('horario').textContent = a.horario || '—';
+        $('instructor').textContent = a.instructor || '—';
+        $('codigo').textContent = a.id;
+        $('detalle').hidden = false;
+        requestAnimationFrame(function () {
+          $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
+        });
+      })
+      .catch(function () {
+        pintar('warn', 'SIN CONEXIÓN', 'No pudimos verificar ahora. Revisa tu internet e intenta de nuevo.');
+      });
+  }
+</script>
+</body>
+</html>
