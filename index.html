@@ -47,6 +47,16 @@
     .clock{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
     .clock b{color:var(--text);font-variant-numeric:tabular-nums;font-weight:600}
     .ig{display:block;text-align:center;margin-top:8px;color:var(--sage);font-size:12px;letter-spacing:1px;text-decoration:none}
+
+    .btn{display:block;width:100%;margin-top:20px;padding:15px 16px;border:0;border-radius:12px;cursor:pointer;
+      font-family:'Bebas Neue',Impact,sans-serif;font-size:22px;letter-spacing:2px;text-align:center;text-decoration:none;
+      background:var(--c);color:#0D1708}
+    .btn.sec{background:transparent;color:var(--sage);border:1px solid var(--line);font-family:Inter,Arial,sans-serif;
+      font-size:13px;letter-spacing:0;margin-top:12px;padding:12px}
+    .btn.wa{background:#25D366;color:#06210f}
+    .qrbox{background:#fff;border-radius:14px;padding:12px;margin:18px auto 0;width:min(100%,300px)}
+    .qrbox img{display:block;width:100%;height:auto}
+    .pago h2{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:34px;letter-spacing:1px;margin:14px 0 0;line-height:1}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -70,7 +80,17 @@
         <div><dt>Instructor</dt><dd id="instructor"></dd></div>
         <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
       </dl>
+      <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
     </div>
+  </section>
+
+  <section id="pago" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>RENOVAR</div>
+    <h2>Escanea y paga con tu app del banco</h2>
+    <div class="qrbox"><img src="qr-pago.png" alt="QR de pago" width="640" height="640"></div>
+    <p class="msg">El QR está a nombre de <b style="color:#fff">Luis Carlos Camacho</b>, no te olvides enviar el comprobante a Chino!</p>
+    <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener">ENVIAR COMPROBANTE POR WHATSAPP</a>
+    <button id="btnVolver" class="btn sec" type="button">Volver</button>
   </section>
 
   <!-- Reloj en vivo: una captura de pantalla vieja no se mueve -->
@@ -95,6 +115,19 @@
     $('estado').textContent = estado;
     $('mensaje').textContent = mensaje || '';
     $('mensaje').hidden = !mensaje;
+  }
+
+
+  var WA = '59177412120'; // WhatsApp del Chino
+  function activarRenovar(nombre) {
+    var texto = 'Hola Chino! Soy ' + nombre + ' y quiero renovar mi mes!';
+    $('btnWa').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(texto);
+    $('btnRenovar').onclick = function () {
+      $('card').hidden = true; $('pago').hidden = false; window.scrollTo(0, 0);
+    };
+    $('btnVolver').onclick = function () {
+      $('pago').hidden = true; $('card').hidden = false; window.scrollTo(0, 0);
+    };
   }
 
   var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
@@ -124,6 +157,7 @@
         $('horario').textContent = a.horario || '—';
         $('instructor').textContent = a.instructor || '—';
         $('codigo').textContent = a.id;
+        activarRenovar(a.nombre);
         $('detalle').hidden = false;
         requestAnimationFrame(function () {
           $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
