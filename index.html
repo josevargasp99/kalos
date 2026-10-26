@@ -66,6 +66,32 @@
     .qrbox{background:#fff;border-radius:14px;padding:12px;margin:18px auto 0;width:min(100%,300px)}
     .qrbox img{display:block;width:100%;height:auto}
     .pago h2{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:34px;letter-spacing:1px;margin:14px 0 0;line-height:1}
+
+    /* Logros */
+    .lgprog{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;font-size:14px;color:var(--muted)}
+    .lgprog b{color:var(--text);font-size:15px}
+    .lgtotal{margin-top:6px;font-size:13px;color:var(--sage)}
+    ul.lgs{list-style:none;margin:18px 0 0;display:flex;flex-direction:column;gap:8px}
+    li.lg{display:flex;align-items:center;gap:10px;background:#0a1206;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+    li.lg.hecho{border-color:rgba(98,217,126,.45);background:rgba(98,217,126,.07)}
+    li.lg .tx{flex:1;font-size:15px;line-height:1.35;word-break:break-word}
+    li.lg.hecho .tx{color:#d9f7e1}
+    li.lg .fch{font-size:11px;color:var(--muted);white-space:nowrap}
+    li.lg button{background:none;border:0;color:var(--text);cursor:pointer;font-size:22px;line-height:1;padding:6px;border-radius:8px}
+    li.lg button.ed{font-size:16px;opacity:.7}
+    li.lg button:disabled{cursor:default;opacity:.6}
+    li.lg input{flex:1;min-width:0;padding:10px;border-radius:8px;border:1px solid var(--sage);background:#0a1206;color:var(--text);font:15px Inter,Arial,sans-serif}
+    .lginp{width:100%;margin-top:10px;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:16px Inter,Arial,sans-serif}
+    .lginp:focus{outline:2px solid var(--sage);border-color:transparent}
+    details.hist{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+    details.hist summary{cursor:pointer;color:var(--sage);font-size:14px}
+    details.hist h3{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;font-weight:500}
+    #modal{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px}
+    #modal .box{position:relative;z-index:2;width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 22px 20px;text-align:center}
+    #modal .box:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--ok);box-shadow:0 0 18px var(--ok);border-radius:18px 18px 0 0}
+    #mTitulo{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:34px;letter-spacing:1px;line-height:1.05}
+    #mTexto{margin-top:12px;color:#d9f7e1;font-size:17px;line-height:1.4;word-break:break-word}
+    #confeti{position:fixed;inset:0;z-index:1;pointer-events:none;width:100%;height:100%}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -89,9 +115,40 @@
         <div><dt>Instructor</dt><dd id="instructor"></dd></div>
         <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
       </dl>
+      <button id="btnLogros" class="btn out" type="button">🏆 MIS LOGROS</button>
       <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
       <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
     </div>
+  </section>
+
+  <section id="logros" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>LOGROS</div>
+    <p id="lgCarga" class="msg">Cargando tus logros…</p>
+
+    <div id="lgForm" hidden>
+      <h2 id="lgFormTitulo">Define tus 5 metas</h2>
+      <p id="lgFormHint" class="msg">¿Qué quieres lograr entrenando en Kalos? Escribe 5 metas concretas: cuando las cumplas las marcas y celebramos contigo.</p>
+      <input class="lginp" maxlength="60" placeholder="Ej: 20 flexiones seguidas" aria-label="Meta 1">
+      <input class="lginp" maxlength="60" placeholder="Ej: 10 dominadas" aria-label="Meta 2">
+      <input class="lginp" maxlength="60" placeholder="Ej: Bajar 3 kg" aria-label="Meta 3">
+      <input class="lginp" maxlength="60" placeholder="Ej: Subir 3 kg" aria-label="Meta 4">
+      <input class="lginp" maxlength="60" placeholder="Ej: Mantener un L-sit 15 segundos" aria-label="Meta 5">
+      <p id="lgAviso" class="aviso" role="status"></p>
+      <button id="btnGuardarMetas" class="btn" type="button">GUARDAR MIS 5 METAS</button>
+      <button id="btnCancelarForm" class="btn sec" type="button" hidden>Cancelar</button>
+    </div>
+
+    <div id="lgLista" hidden>
+      <div class="lgprog"><b id="lgProg"></b><span id="lgRonda"></span></div>
+      <div class="bar" style="margin:10px 0 0"><span id="lgBarra"></span></div>
+      <p id="lgTotal" class="lgtotal"></p>
+      <ul id="lgItems" class="lgs"></ul>
+      <p id="lgAvisoL" class="aviso" role="status"></p>
+      <button id="btnNuevaRonda" class="btn" type="button" hidden>DEFINIR MIS PRÓXIMAS 5 METAS</button>
+      <details id="lgHist" class="hist" hidden><summary>Ver rondas anteriores</summary><div id="lgHistCont"></div></details>
+    </div>
+
+    <button id="btnVolverL" class="btn sec" type="button">Volver</button>
   </section>
 
   <section id="buzon" class="card pago neutral" hidden>
@@ -118,6 +175,15 @@
     <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener">ENVIAR COMPROBANTE POR WHATSAPP</a>
     <button id="btnVolver" class="btn sec" type="button">Volver</button>
   </section>
+
+  <div id="modal" hidden role="dialog" aria-modal="true">
+    <canvas id="confeti"></canvas>
+    <div class="box">
+      <h2 id="mTitulo"></h2>
+      <p id="mTexto"></p>
+      <div id="mBotones"></div>
+    </div>
+  </div>
 
   <!-- Reloj en vivo: una captura de pantalla vieja no se mueve -->
   <p class="clock">Consulta en vivo · <b id="reloj">--:--:--</b></p>
@@ -146,7 +212,7 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   function ver(cual) {
-    ['card', 'buzon', 'pago'].forEach(function (k) { $(k).hidden = (k !== cual); });
+    ['card', 'logros', 'buzon', 'pago'].forEach(function (k) { $(k).hidden = (k !== cual); });
     window.scrollTo(0, 0);
   }
 
@@ -199,6 +265,238 @@
     };
   }
 
+  /* ===================== LOGROS ===================== */
+  var LG = { est: null, nombre: '', busy: false };
+
+  var LGERR = {
+    invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.',
+    ocupado: 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.',
+    ronda_abierta: 'Primero completa las metas de tu ronda actual.',
+    metas: 'Escribe las 5 metas.',
+    meta_invalida: 'Cada meta debe tener entre 3 y 60 caracteres.',
+    cerrada: 'Esa ronda ya está cerrada.',
+    no_existe: 'Esa meta ya no está disponible.',
+    logrado: 'Primero desmarca el logro para poder editarlo.'
+  };
+
+  function enviar(body) {
+    body.id = id;
+    return fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+  }
+
+  function lgDecir(el, clase, t) { el.className = 'aviso ' + clase; el.textContent = t; }
+
+  function activarLogros(nombre) {
+    LG.nombre = nombre;
+    $('btnLogros').onclick = function () { ver('logros'); cargarLogros(); };
+    $('btnVolverL').onclick = function () { ver('card'); };
+    $('btnNuevaRonda').onclick = function () { mostrarForm(LG.est.actual + 1); };
+    $('btnCancelarForm').onclick = function () { pintarLogros(); };
+    $('btnGuardarMetas').onclick = guardarMetas;
+  }
+
+  function cargarLogros() {
+    $('lgForm').hidden = true; $('lgLista').hidden = true;
+    $('lgCarga').hidden = false; $('lgCarga').textContent = 'Cargando tus logros…';
+    enviar({ accion: 'logros_leer' }).then(function (d) {
+      if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
+      else { $('lgCarga').textContent = LGERR[d && d.error] || 'No pudimos cargar tus logros. Intenta de nuevo.'; }
+    }).catch(function () {
+      $('lgCarga').textContent = 'No pudimos cargar tus logros. Revisa tu internet e intenta de nuevo.';
+    });
+  }
+
+  function mostrarForm(ronda) {
+    $('lgCarga').hidden = true; $('lgLista').hidden = true; $('lgForm').hidden = false;
+    $('lgFormTitulo').textContent = ronda === 1 ? 'Define tus 5 metas' : 'Ronda ' + ronda + ': tus próximas 5 metas';
+    $('lgFormHint').textContent = ronda === 1
+      ? '¿Qué quieres lograr entrenando en Kalos? Escribe 5 metas concretas: cuando las cumplas las marcas y celebramos contigo.'
+      : '¡Ya completaste la ronda anterior! Escribe 5 metas nuevas para seguir avanzando.';
+    Array.prototype.forEach.call($('lgForm').querySelectorAll('input'), function (i) { i.value = ''; });
+    lgDecir($('lgAviso'), '', '');
+    $('btnGuardarMetas').disabled = false;
+    $('btnCancelarForm').hidden = ronda === 1;
+    window.scrollTo(0, 0);
+  }
+
+  function guardarMetas() {
+    if (LG.busy) return;
+    var metas = Array.prototype.map.call($('lgForm').querySelectorAll('input'), function (i) { return i.value.trim(); });
+    for (var k = 0; k < metas.length; k++) {
+      if (metas[k].length < 3 || metas[k].length > 60) {
+        lgDecir($('lgAviso'), 'bad', 'Escribe las 5 metas (entre 3 y 60 caracteres cada una).'); return;
+      }
+    }
+    LG.busy = true; $('btnGuardarMetas').disabled = true; lgDecir($('lgAviso'), '', 'Guardando…');
+    enviar({ accion: 'logros_crear', metas: metas }).then(function (d) {
+      LG.busy = false;
+      if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
+      else { lgDecir($('lgAviso'), 'bad', LGERR[d && d.error] || 'No pudimos guardar tus metas. Intenta de nuevo.'); $('btnGuardarMetas').disabled = false; }
+    }).catch(function () {
+      LG.busy = false; $('btnGuardarMetas').disabled = false;
+      lgDecir($('lgAviso'), 'bad', 'No pudimos guardar. Revisa tu internet e intenta de nuevo.');
+    });
+  }
+
+  function pintarLogros() {
+    var e = LG.est;
+    $('lgCarga').hidden = true;
+    if (!e || !e.actual) { mostrarForm(1); return; }
+    $('lgForm').hidden = true; $('lgLista').hidden = false;
+    var cur = e.rondas[e.rondas.length - 1];
+    var hechas = cur.metas.filter(function (m) { return m.hecho; }).length;
+    $('lgProg').textContent = hechas + ' de ' + cur.metas.length;
+    $('lgRonda').textContent = 'Ronda ' + e.actual;
+    $('lgBarra').style.width = Math.round(hechas / cur.metas.length * 100) + '%';
+    $('lgTotal').textContent = '🏆 ' + e.total + (e.total === 1 ? ' logro conseguido' : ' logros conseguidos') + ' en Kalos';
+    lgDecir($('lgAvisoL'), '', '');
+
+    var ul = $('lgItems'); ul.textContent = '';
+    cur.metas.forEach(function (m) { ul.appendChild(itemLogro(m, true)); });
+    $('btnNuevaRonda').hidden = !e.completa;
+
+    var previas = e.rondas.slice(0, -1).reverse();
+    $('lgHist').hidden = !previas.length;
+    var cont = $('lgHistCont'); cont.textContent = '';
+    previas.forEach(function (r) {
+      var h = document.createElement('h3'); h.textContent = 'Ronda ' + r.ronda; cont.appendChild(h);
+      var l = document.createElement('ul'); l.className = 'lgs'; l.style.marginTop = '0';
+      r.metas.forEach(function (m) { l.appendChild(itemLogro(m, false)); });
+      cont.appendChild(l);
+    });
+  }
+
+  function itemLogro(m, activo) {
+    var li = document.createElement('li'); li.className = 'lg' + (m.hecho ? ' hecho' : '');
+    var chk = document.createElement('button'); chk.type = 'button';
+    chk.textContent = m.hecho ? '✅' : '○';
+    chk.setAttribute('aria-label', m.hecho ? 'Desmarcar logro' : 'Marcar como logrado');
+    var tx = document.createElement('span'); tx.className = 'tx'; tx.textContent = m.texto;
+    li.appendChild(chk); li.appendChild(tx);
+    if (m.hecho && m.logrado) { var f = document.createElement('span'); f.className = 'fch'; f.textContent = m.logrado; li.appendChild(f); }
+    if (!activo) { chk.disabled = true; return li; }
+
+    chk.onclick = function () {
+      if (LG.busy) return;
+      if (m.hecho) {
+        modal({ titulo: '¿Desmarcar este logro?', texto: m.texto, confeti: false, botones: [
+          { t: 'Sí, desmarcar', clase: 'btn', fn: function () { cerrarModal(); cambiarLogro(m, false); } },
+          { t: 'Cancelar', clase: 'btn sec', fn: cerrarModal }
+        ] });
+      } else { cambiarLogro(m, true); }
+    };
+
+    if (!m.hecho) {
+      var ed = document.createElement('button'); ed.type = 'button'; ed.className = 'ed'; ed.textContent = '✏️';
+      ed.setAttribute('aria-label', 'Editar meta');
+      ed.onclick = function () { editarLogro(li, m); };
+      li.appendChild(ed);
+    }
+    return li;
+  }
+
+  function cambiarLogro(m, valor) {
+    if (LG.busy) return;
+    LG.busy = true; lgDecir($('lgAvisoL'), '', 'Guardando…');
+    enviar({ accion: 'logros_marcar', ronda: LG.est.actual, n: m.n, valor: valor }).then(function (d) {
+      LG.busy = false;
+      if (d && d.ok) {
+        LG.est = d.estado; pintarLogros();
+        if (valor) festejar(m.texto, d.estado.completa);
+      } else { lgDecir($('lgAvisoL'), 'bad', LGERR[d && d.error] || 'No pudimos guardar. Intenta de nuevo.'); }
+    }).catch(function () {
+      LG.busy = false; lgDecir($('lgAvisoL'), 'bad', 'No pudimos guardar. Revisa tu internet e intenta de nuevo.');
+    });
+  }
+
+  function editarLogro(li, m) {
+    li.textContent = '';
+    var inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 60; inp.value = m.texto;
+    inp.setAttribute('aria-label', 'Editar meta');
+    var ok = document.createElement('button'); ok.type = 'button'; ok.textContent = '✔️'; ok.setAttribute('aria-label', 'Guardar');
+    var no = document.createElement('button'); no.type = 'button'; no.textContent = '✖️'; no.setAttribute('aria-label', 'Cancelar');
+    li.appendChild(inp); li.appendChild(ok); li.appendChild(no);
+    inp.focus();
+    no.onclick = pintarLogros;
+    ok.onclick = function () {
+      if (LG.busy) return;
+      var t = inp.value.trim();
+      if (t.length < 3 || t.length > 60) { lgDecir($('lgAvisoL'), 'bad', 'La meta debe tener entre 3 y 60 caracteres.'); return; }
+      LG.busy = true; lgDecir($('lgAvisoL'), '', 'Guardando…');
+      enviar({ accion: 'logros_editar', ronda: LG.est.actual, n: m.n, texto: t }).then(function (d) {
+        LG.busy = false;
+        if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
+        else { lgDecir($('lgAvisoL'), 'bad', LGERR[d && d.error] || 'No pudimos guardar. Intenta de nuevo.'); }
+      }).catch(function () {
+        LG.busy = false; lgDecir($('lgAvisoL'), 'bad', 'No pudimos guardar. Revisa tu internet e intenta de nuevo.');
+      });
+    };
+  }
+
+  /* ---------- festejo ---------- */
+  function festejar(texto, rondaCompleta) {
+    var nombre = (LG.nombre || '').split(' ')[0].toUpperCase();
+    if (rondaCompleta) {
+      var r = LG.est.actual;
+      modal({ titulo: '¡COMPLETASTE LA RONDA ' + r + '! 🏆', texto: 'Lograste las 5 metas. ¡Es hora de ponerte nuevas!', confeti: true, botones: [
+        { t: 'DEFINIR MIS PRÓXIMAS 5 METAS', clase: 'btn', fn: function () { cerrarModal(); mostrarForm(r + 1); } },
+        { t: 'Compartir mi logro', clase: 'btn wa', fn: function () { compartir(texto, true); } },
+        { t: 'Más tarde', clase: 'btn sec', fn: cerrarModal }
+      ] });
+    } else {
+      modal({ titulo: '¡LO LOGRASTE, ' + nombre + '! 💪', texto: texto, confeti: true, botones: [
+        { t: 'Compartir', clase: 'btn wa', fn: function () { compartir(texto, false); } },
+        { t: 'Seguir', clase: 'btn sec', fn: cerrarModal }
+      ] });
+    }
+  }
+
+  function compartir(texto, ronda) {
+    var t = ronda ? '¡Completé mi ronda de metas en Kalos! 🏆💪 @kalos.workout #KalosCalistenia'
+                  : '¡Logré «' + texto + '» entrenando en Kalos! 💪 @kalos.workout #KalosCalistenia';
+    if (navigator.share) { navigator.share({ text: t }).catch(function () {}); }
+    else { window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); }
+  }
+
+  function modal(o) {
+    $('mTitulo').textContent = o.titulo; $('mTexto').textContent = o.texto || '';
+    var b = $('mBotones'); b.textContent = '';
+    o.botones.forEach(function (x) {
+      var bt = document.createElement('button'); bt.type = 'button'; bt.className = x.clase; bt.textContent = x.t;
+      if (x.clase === 'btn') bt.style.background = 'var(--ok)';
+      bt.onclick = x.fn; b.appendChild(bt);
+    });
+    $('modal').hidden = false;
+    if (o.confeti) confeti(); else limpiarConfeti();
+  }
+  function cerrarModal() { $('modal').hidden = true; limpiarConfeti(); }
+
+  var confetiTimer = null;
+  function limpiarConfeti() {
+    if (confetiTimer) { cancelAnimationFrame(confetiTimer); confetiTimer = null; }
+    var c = $('confeti'); c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  }
+  function confeti() {
+    limpiarConfeti();
+    var c = $('confeti'), x = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    var cols = ['#62D97E', '#F2B33D', '#ffffff', '#8A9686', '#FF5A5A'];
+    var ps = [];
+    for (var i = 0; i < 120; i++) ps.push({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * 0.5,
+      w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, v: 2 + Math.random() * 3.5, s: (Math.random() - 0.5) * 2,
+      r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3, c: cols[i % cols.length] });
+    var t0 = Date.now();
+    (function paso() {
+      x.clearRect(0, 0, c.width, c.height);
+      ps.forEach(function (p) {
+        p.y += p.v; p.x += p.s; p.r += p.vr;
+        x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); x.restore();
+      });
+      if (Date.now() - t0 < 3500) confetiTimer = requestAnimationFrame(paso); else limpiarConfeti();
+    })();
+  }
+
   var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
 
   if (!id) {
@@ -228,6 +526,7 @@
         $('codigo').textContent = a.id;
         activarRenovar(a.nombre);
         activarBuzon();
+        activarLogros(a.nombre);
         $('detalle').hidden = false;
         requestAnimationFrame(function () {
           $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
