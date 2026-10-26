@@ -92,6 +92,29 @@
     #mTitulo{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:34px;letter-spacing:1px;line-height:1.05}
     #mTexto{margin-top:12px;color:#d9f7e1;font-size:17px;line-height:1.4;word-break:break-word}
     #confeti{position:fixed;inset:0;z-index:1;pointer-events:none;width:100%;height:100%}
+    /* Asistencia */
+    .tel{width:100%;margin-top:16px;padding:16px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);
+      font:600 24px Inter,Arial,sans-serif;letter-spacing:2px;text-align:center}
+    .tel:focus{outline:2px solid var(--sage);border-color:transparent}
+    .big{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:46px;letter-spacing:1px;line-height:1;margin:16px 0 0}
+    .aviso-venc{margin-top:16px;padding:12px 14px;border:1px solid var(--warn);border-radius:12px;color:var(--warn);font-size:14px;line-height:1.45}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}
+    .stats div{background:#0a1206;border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+    .stats b{display:block;font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:30px;line-height:1;color:var(--ok)}
+    .stats span{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+    .meses{display:flex;flex-direction:column;gap:18px;margin-top:20px}
+    .mes h3{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:22px;letter-spacing:1.5px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+    .mes h3 small{font-family:Inter,Arial,sans-serif;font-size:12px;letter-spacing:0;color:var(--muted)}
+    .sem,.dias{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .sem span{text-align:center;font-size:10px;color:var(--muted);padding-bottom:2px}
+    .dias i{font-style:normal;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;
+      background:#0a1206;border:1px solid var(--line);color:#5e6b5a}
+    .dias i.pasado{color:var(--muted)}
+    .dias i.asist{background:var(--ok);border-color:var(--ok);color:#0D1708;font-weight:700}
+    .dias i.hoy{box-shadow:0 0 0 2px var(--sage)}
+    .dias i.vacio{background:none;border:0}
+    .leyenda{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted)}
+    .leyenda b{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:6px}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -116,6 +139,7 @@
         <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
       </dl>
       <button id="btnLogros" class="btn out" type="button">🏆 MIS LOGROS</button>
+      <button id="btnAsist" class="btn out" type="button">📅 MI ASISTENCIA</button>
       <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
       <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
     </div>
@@ -176,6 +200,52 @@
     <button id="btnVolver" class="btn sec" type="button">Volver</button>
   </section>
 
+  <section id="puerta" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>ASISTENCIA</div>
+    <div id="puForm">
+      <h2>Registra tu asistencia</h2>
+      <p class="msg">Escribe tu número de celular, el mismo con el que te inscribiste en Kalos.</p>
+      <input id="puTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" placeholder="7XXXXXXX" aria-label="Tu número de celular">
+      <p id="puAviso" class="aviso" role="status"></p>
+      <button id="btnRegistrar" class="btn" type="button">REGISTRAR</button>
+    </div>
+    <div id="puElige" hidden>
+      <h2>¿Quién eres?</h2>
+      <p class="msg">Este celular está registrado en más de un alumno. Toca tu nombre.</p>
+      <div id="puNombres"></div>
+    </div>
+    <div id="puOk" hidden>
+      <h2 id="puTitulo" class="big"></h2>
+      <p id="puNombre" class="name" style="font-size:36px;margin:10px 0 4px"></p>
+      <p id="puCuando" class="days"></p>
+      <div id="puVenc" class="aviso-venc" hidden></div>
+      <div class="stats">
+        <div><b id="puMes">0</b><span>Este mes</span></div>
+        <div><b id="puAnio">0</b><span>Este año</span></div>
+        <div><b id="puRacha">0</b><span>Semanas seguidas</span></div>
+      </div>
+      <button id="btnPuCal" class="btn out" type="button">📅 VER MI CALENDARIO</button>
+      <a id="btnPuWa" class="btn wa" href="#" target="_blank" rel="noopener" hidden>RENOVAR MI MES POR WHATSAPP</a>
+      <button id="btnPuOtro" class="btn sec" type="button">No soy yo / cambiar número</button>
+    </div>
+  </section>
+
+  <section id="asistencia" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>ASISTENCIA</div>
+    <h2 id="asTitulo">Mi asistencia</h2>
+    <p id="asCarga" class="msg">Cargando tu calendario…</p>
+    <div id="asCont" hidden>
+      <div class="stats">
+        <div><b id="asMes">0</b><span>Este mes</span></div>
+        <div><b id="asAnio">0</b><span>Este año</span></div>
+        <div><b id="asRacha">0</b><span>Semanas seguidas</span></div>
+      </div>
+      <div class="leyenda"><span><b style="background:var(--ok)"></b>Fuiste</span><span><b style="background:#0a1206;border:1px solid var(--line)"></b>No fuiste</span></div>
+      <div id="asMeses" class="meses"></div>
+    </div>
+    <button id="btnVolverA" class="btn sec" type="button">Volver</button>
+  </section>
+
   <div id="modal" hidden role="dialog" aria-modal="true">
     <canvas id="confeti"></canvas>
     <div class="box">
@@ -212,7 +282,7 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   function ver(cual) {
-    ['card', 'logros', 'buzon', 'pago'].forEach(function (k) { $(k).hidden = (k !== cual); });
+    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta'].forEach(function (k) { $(k).hidden = (k !== cual); });
     window.scrollTo(0, 0);
   }
 
@@ -497,9 +567,141 @@
     })();
   }
 
-  var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
+  /* ===================== ASISTENCIA ===================== */
+  var AS = { volver: 'card', origen: null };
+  var MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  var ASERR = {
+    telefono: 'Escribe tu número de celular (8 dígitos).',
+    no_encontrado: 'No encontramos ese número. Revísalo o consulta en recepción.',
+    ocupado: 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.',
+    invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.'
+  };
+  function guardarTel(t) { try { localStorage.setItem('kalos_tel', t); } catch (e) {} }
+  function leerTel() { try { return localStorage.getItem('kalos_tel') || ''; } catch (e) { return ''; } }
+  function borrarTel() { try { localStorage.removeItem('kalos_tel'); } catch (e) {} }
 
-  if (!id) {
+  function pintarCalendario(d) {
+    $('asMes').textContent = d.mes; $('asAnio').textContent = d.total; $('asRacha').textContent = d.racha;
+    $('asTitulo').textContent = 'Asistencia ' + d.anio;
+    var set = {}; d.dias.forEach(function (f) { set[f] = true; });
+    var cont = $('asMeses'); cont.textContent = '';
+    var mesHoy = Number(d.hoy.slice(5, 7)) - 1, bloqueHoy = null;
+    for (var m = 0; m < 12; m++) {
+      var box = document.createElement('div'); box.className = 'mes';
+      var h = document.createElement('h3'); h.textContent = MESES[m];
+      var cuenta = d.dias.filter(function (f) { return Number(f.slice(5, 7)) - 1 === m; }).length;
+      var sm = document.createElement('small'); sm.textContent = cuenta + (cuenta === 1 ? ' día' : ' días'); h.appendChild(sm);
+      box.appendChild(h);
+      var sem = document.createElement('div'); sem.className = 'sem';
+      ['L','M','M','J','V','S','D'].forEach(function (x) { var sp = document.createElement('span'); sp.textContent = x; sem.appendChild(sp); });
+      box.appendChild(sem);
+      var g = document.createElement('div'); g.className = 'dias';
+      var primero = (new Date(Date.UTC(d.anio, m, 1)).getUTCDay() + 6) % 7;
+      var total = new Date(Date.UTC(d.anio, m + 1, 0)).getUTCDate();
+      for (var v = 0; v < primero; v++) { var e = document.createElement('i'); e.className = 'vacio'; g.appendChild(e); }
+      for (var dia = 1; dia <= total; dia++) {
+        var f = d.anio + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + dia).slice(-2);
+        var c = document.createElement('i'); c.textContent = dia;
+        if (set[f]) c.className = 'asist';
+        else if (f < d.hoy) c.className = 'pasado';
+        if (f === d.hoy) c.className += ' hoy';
+        g.appendChild(c);
+      }
+      box.appendChild(g); cont.appendChild(box);
+      if (m === mesHoy) bloqueHoy = box;
+    }
+    $('asCarga').hidden = true; $('asCont').hidden = false;
+    if (bloqueHoy) setTimeout(function () { bloqueHoy.scrollIntoView(); }, 30);
+  }
+
+  function abrirCalendario(origen, volver) {
+    AS.origen = origen; AS.volver = volver;
+    $('asCont').hidden = true; $('asCarga').hidden = false; $('asCarga').textContent = 'Cargando tu calendario…';
+    ver('asistencia');
+    var body = { accion: 'asistencia_ver' };
+    for (var k in origen) body[k] = origen[k];
+    fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok && d.dias) pintarCalendario(d);
+        else $('asCarga').textContent = ASERR[d && d.error] || 'No pudimos cargar tu calendario. Intenta de nuevo.';
+      })
+      .catch(function () { $('asCarga').textContent = 'No pudimos cargar tu calendario. Revisa tu internet e intenta de nuevo.'; });
+  }
+
+  function activarAsistencia() {
+    $('btnAsist').onclick = function () { abrirCalendario({ id: id }, 'card'); };
+    $('btnVolverA').onclick = function () { ver(AS.volver); };
+  }
+
+  /* ---------- puerta del gimnasio ---------- */
+  function iniciarPuerta() {
+    var inp = $('puTel'), aviso = $('puAviso'), btn = $('btnRegistrar'), PU = { tel: '', busy: false };
+    function decir(c, t) { aviso.className = 'aviso ' + c; aviso.textContent = t; }
+    function mostrar(cual) { ['puForm', 'puElige', 'puOk'].forEach(function (k) { $(k).hidden = (k !== cual); }); window.scrollTo(0, 0); }
+    inp.value = leerTel();
+    ver('puerta'); mostrar('puForm');
+
+    function registrar(sel) {
+      if (PU.busy) return;
+      var tel = inp.value.replace(/\D/g, '');
+      if (tel.length < 8) { decir('bad', ASERR.telefono); return; }
+      PU.busy = true; btn.disabled = true; decir('', 'Registrando…');
+      var body = { accion: 'asistencia_registrar', tel: tel };
+      if (sel !== undefined) body.sel = sel;
+      fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          PU.busy = false; btn.disabled = false;
+          if (d && d.ok && d.eleccion) { elegir(d.eleccion); decir('', ''); return; }
+          if (d && d.ok) { PU.tel = tel; guardarTel(tel); exito(d); return; }
+          decir('bad', ASERR[d && d.error] || 'No pudimos registrar tu asistencia. Intenta de nuevo.');
+        })
+        .catch(function () {
+          PU.busy = false; btn.disabled = false;
+          decir('bad', 'No pudimos registrar. Revisa tu internet e intenta de nuevo.');
+        });
+    }
+
+    function elegir(nombres) {
+      var c = $('puNombres'); c.textContent = '';
+      nombres.forEach(function (n, i) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn out'; b.textContent = n;
+        b.onclick = function () { mostrar('puForm'); registrar(i); };
+        c.appendChild(b);
+      });
+      mostrar('puElige');
+    }
+
+    function exito(d) {
+      $('puTitulo').textContent = d.ya ? 'YA REGISTRASTE HOY ✅' : '¡ASISTENCIA REGISTRADA! ✅';
+      $('puNombre').textContent = d.nombre;
+      $('puCuando').textContent = d.fecha + ' · ' + d.hora;
+      $('puMes').textContent = d.mes; $('puAnio').textContent = d.total; $('puRacha').textContent = d.racha;
+      var venc = d.estado === 'VENCIDO' || d.estado === 'VENCE HOY';
+      $('puVenc').hidden = !venc; $('btnPuWa').hidden = !venc;
+      if (venc) {
+        $('puVenc').textContent = d.estado === 'VENCE HOY'
+          ? 'Tu plan vence hoy. ¡Renueva para no perder tu ritmo!'
+          : 'Tu plan está vencido (' + String(d.textoDias || '').toLowerCase() + '). Renueva para seguir entrenando.';
+        $('btnPuWa').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hola Chino! Soy ' + d.nombre + ' y quiero renovar mi mes!');
+      }
+      mostrar('puOk');
+    }
+
+    btn.onclick = function () { registrar(); };
+    inp.onkeydown = function (e) { if (e.key === 'Enter') registrar(); };
+    $('btnPuCal').onclick = function () { abrirCalendario({ tel: PU.tel }, 'puerta'); };
+    $('btnPuOtro').onclick = function () { borrarTel(); inp.value = ''; decir('', ''); mostrar('puForm'); inp.focus(); };
+    $('btnVolverA').onclick = function () { ver(AS.volver); };
+  }
+
+  var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
+  var PUERTA = new URLSearchParams(location.search).has('puerta');
+
+  if (PUERTA) {
+    iniciarPuerta();
+  } else if (!id) {
     pintar('neutral', 'KALOS', 'Escanea el QR de tu tarjeta para ver el estado de tu inscripción.');
   } else {
     // Sin cookies: así no importa cuántas cuentas de Google tenga abiertas el celular
@@ -527,6 +729,7 @@
         activarRenovar(a.nombre);
         activarBuzon();
         activarLogros(a.nombre);
+        activarAsistencia();
         $('detalle').hidden = false;
         requestAnimationFrame(function () {
           $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
