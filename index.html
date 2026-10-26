@@ -53,6 +53,15 @@
       background:var(--c);color:#0D1708}
     .btn.sec{background:transparent;color:var(--sage);border:1px solid var(--line);font-family:Inter,Arial,sans-serif;
       font-size:13px;letter-spacing:0;margin-top:12px;padding:12px}
+    .btn.out{background:transparent;color:var(--c);border:1.5px solid var(--c);margin-top:20px}
+    .btn.out + .btn{margin-top:12px}
+    .btn:disabled{opacity:.5;cursor:default}
+    textarea{width:100%;min-height:150px;margin-top:16px;padding:14px;border-radius:12px;border:1px solid var(--line);
+      background:#0a1206;color:var(--text);font:16px/1.45 Inter,Arial,sans-serif;resize:vertical}
+    textarea:focus{outline:2px solid var(--sage);border-color:transparent}
+    .count{text-align:right;color:var(--muted);font-size:12px;margin-top:6px}
+    .aviso{margin-top:12px;font-size:14px;line-height:1.5;min-height:20px}
+    .aviso.bad{color:var(--bad)} .aviso.ok{color:var(--ok)}
     .btn.wa{background:#25D366;color:#06210f}
     .qrbox{background:#fff;border-radius:14px;padding:12px;margin:18px auto 0;width:min(100%,300px)}
     .qrbox img{display:block;width:100%;height:auto}
@@ -80,8 +89,25 @@
         <div><dt>Instructor</dt><dd id="instructor"></dd></div>
         <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
       </dl>
+      <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
       <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
     </div>
+  </section>
+
+  <section id="buzon" class="card pago neutral" hidden>
+    <div class="status"><span class="dot"></span>BUZÓN</div>
+    <h2>Déjanos saber tu opinión</h2>
+    <p class="msg">Tu mensaje es <b style="color:#fff">anónimo</b>: no guardamos tu nombre ni tu código. Cuéntanos qué mejorarías o qué te gustaría ver en Kalos.</p>
+    <div id="buzonForm">
+      <textarea id="txtSug" maxlength="500" placeholder="Escribe aquí tu sugerencia…" aria-label="Tu sugerencia"></textarea>
+      <div class="count"><span id="cuenta">0</span>/500</div>
+      <p id="avisoSug" class="aviso" role="status"></p>
+      <button id="btnEnviar" class="btn" type="button">ENVIAR</button>
+    </div>
+    <div id="buzonGracias" hidden>
+      <p class="aviso ok" style="font-size:17px;margin-top:20px">¡Gracias! Tu mensaje llegó al equipo de Kalos.</p>
+    </div>
+    <button id="btnVolverB" class="btn sec" type="button">Volver</button>
   </section>
 
   <section id="pago" class="card pago ok" hidden>
@@ -119,14 +145,57 @@
 
 
   var WA = '59177412120'; // WhatsApp del Chino
+  function ver(cual) {
+    ['card', 'buzon', 'pago'].forEach(function (k) { $(k).hidden = (k !== cual); });
+    window.scrollTo(0, 0);
+  }
+
   function activarRenovar(nombre) {
     var texto = 'Hola Chino! Soy ' + nombre + ' y quiero renovar mi mes!';
     $('btnWa').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(texto);
-    $('btnRenovar').onclick = function () {
-      $('card').hidden = true; $('pago').hidden = false; window.scrollTo(0, 0);
+    $('btnRenovar').onclick = function () { ver('pago'); };
+    $('btnVolver').onclick = function () { ver('card'); };
+  }
+
+  var MENSAJES = {
+    vacio: 'Escribe tu mensaje antes de enviar.',
+    largo: 'El mensaje es demasiado largo (máximo 500 caracteres).',
+    limite: 'Ya enviaste varias sugerencias. Vuelve a intentarlo más tarde.',
+    ocupado: 'Hay muchos mensajes en este momento. Intenta de nuevo en un minuto.',
+    invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.'
+  };
+
+  function activarBuzon() {
+    var txt = $('txtSug'), aviso = $('avisoSug'), enviar = $('btnEnviar');
+    function actualizar() { $('cuenta').textContent = txt.value.length; }
+    function decir(clase, t) { aviso.className = 'aviso ' + clase; aviso.textContent = t; }
+    txt.oninput = actualizar;
+    $('btnBuzon').onclick = function () {
+      $('buzonForm').hidden = false; $('buzonGracias').hidden = true;
+      txt.value = ''; actualizar(); decir('', ''); enviar.disabled = false;
+      ver('buzon');
     };
-    $('btnVolver').onclick = function () {
-      $('pago').hidden = true; $('card').hidden = false; window.scrollTo(0, 0);
+    $('btnVolverB').onclick = function () { ver('card'); };
+    enviar.onclick = function () {
+      var msg = txt.value.trim();
+      if (!msg) { decir('bad', MENSAJES.vacio); return; }
+      enviar.disabled = true; decir('', 'Enviando…');
+      // text/plain evita el preflight CORS de Apps Script; el código solo valida la tarjeta
+      fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                   body: JSON.stringify({ id: id, msg: msg }) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.ok) {
+            txt.value = ''; $('buzonForm').hidden = true; $('buzonGracias').hidden = false;
+          } else {
+            decir('bad', MENSAJES[d && d.error] || 'No pudimos enviar tu mensaje. Intenta de nuevo.');
+            enviar.disabled = false;
+          }
+        })
+        .catch(function () {
+          decir('bad', 'No pudimos enviar tu mensaje. Revisa tu internet e intenta de nuevo.');
+          enviar.disabled = false;
+        });
     };
   }
 
@@ -158,6 +227,7 @@
         $('instructor').textContent = a.instructor || '—';
         $('codigo').textContent = a.id;
         activarRenovar(a.nombre);
+        activarBuzon();
         $('detalle').hidden = false;
         requestAnimationFrame(function () {
           $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
