@@ -136,6 +136,15 @@
     .pasos li{counter-increment:p;position:relative;padding:12px 12px 12px 48px;margin-top:10px;border:1px solid var(--line);border-radius:12px;background:#0a1206;font-size:15px;line-height:1.45}
     .pasos li::before{content:counter(p);position:absolute;left:12px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#06210f;font:700 14px Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:center}
     .pasos b{color:#fff}
+    .dtabs{display:flex;gap:6px;margin-top:16px}
+    .dtabs button{flex:1;padding:10px 0;border-radius:10px;border:1px solid var(--line);background:#0a1206;color:var(--muted);font:600 14px Inter,Arial,sans-serif;cursor:pointer}
+    .dtabs button.on{background:var(--ok);color:#06210f;border-color:var(--ok)}
+    .dtabs button.hoy:not(.on){border-color:var(--ok);color:var(--ok)}
+    .rimgs{display:grid;gap:12px;margin-top:16px}
+    .rimgs img{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);background:#000;cursor:zoom-in}
+    #lbR{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:50;overflow:auto;touch-action:pan-x pan-y pinch-zoom;-webkit-overflow-scrolling:touch}
+    #lbR img{display:block;width:100%;height:auto}
+    #lbRx{position:fixed;top:12px;right:12px;z-index:51;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px;cursor:pointer}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -159,6 +168,7 @@
         <div><dt>Instructor</dt><dd id="instructor"></dd></div>
         <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
       </dl>
+      <button id="btnRutina" class="btn" type="button" hidden>💪 MI RUTINA</button>
       <button id="btnLogros" class="btn out" type="button">🏆 MIS LOGROS</button>
       <button id="btnAsist" class="btn out" type="button">📅 MI ASISTENCIA</button>
       <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
@@ -224,6 +234,18 @@
     <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener">ENVIAR COMPROBANTE POR WHATSAPP</a>
     <button id="btnVolver" class="btn sec" type="button">Volver</button>
   </section>
+
+  <section id="rutina" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>MI RUTINA</div>
+    <p id="rtCarga" class="msg">Cargando tu rutina…</p>
+    <div id="rtCont" hidden>
+      <div id="rtTabs" class="dtabs"></div>
+      <p id="rtNota" class="msg"></p>
+      <div id="rtImgs" class="rimgs"></div>
+    </div>
+    <button id="btnVolverR" class="btn sec" type="button">Volver</button>
+  </section>
+  <div id="lbR" hidden><button id="lbRx" type="button" aria-label="Cerrar">✕</button><img id="lbRImg" alt="Rutina"></div>
 
   <section id="entrada" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>KALOS WORKOUT</div>
@@ -344,7 +366,7 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   function ver(cual) {
-    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia'].forEach(function (k) { $(k).hidden = (k !== cual); });
+    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina'].forEach(function (k) { $(k).hidden = (k !== cual); });
     window.scrollTo(0, 0);
   }
 
@@ -803,6 +825,66 @@
     navigator.serviceWorker.register('sw.js').catch(function () {});
   }
 
+  /* ---------- mi rutina ---------- */
+  var NDIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+  var RT = { dias: null, fechas: null, dia: 1, tok: 0, cache: {} };
+  function diaHoy() {   // 1 = lunes … 5 = viernes; fin de semana = 0 (hora de Bolivia)
+    var w = new Date().toLocaleDateString('en-US', { timeZone: 'America/La_Paz', weekday: 'short' });
+    return { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5 }[w] || 0;
+  }
+  function activarRutina(inst) {
+    var es = String(inst || '').trim().toLowerCase() === 'ian';
+    $('btnRutina').hidden = !es;
+    $('btnRutina').onclick = abrirRutina;
+    $('btnVolverR').onclick = function () { ver('card'); };
+    $('lbRx').onclick = function () { $('lbR').hidden = true; $('lbRImg').removeAttribute('src'); };
+  }
+  function abrirRutina() {
+    ver('rutina'); RT.cache = {};
+    $('rtCarga').hidden = false; $('rtCarga').textContent = 'Cargando tu rutina…'; $('rtCont').hidden = true;
+    enviar({ accion: 'rutina_ver' }).then(function (d) {
+      if (!d || !d.ok) { $('rtCarga').textContent = d && d.error === 'ocupado' ? 'Hay muchas consultas. Intenta de nuevo en un minuto.' : 'No pudimos cargar tu rutina. Intenta de nuevo.'; return; }
+      RT.dias = d.dias; RT.fechas = d.fechas;
+      var hay = d.dias.some(function (x) { return x.length; });
+      if (!hay) { $('rtCarga').textContent = 'Tu instructor aún no cargó tu rutina. En cuanto la suba, aparecerá aquí 💪'; return; }
+      var hoy = diaHoy(), ini = hoy;
+      if (!ini || !d.dias[ini - 1].length) { ini = 0; for (var i = 0; i < 5; i++) if (d.dias[i].length) { ini = i + 1; break; } }
+      RT.hoy = hoy; $('rtCarga').hidden = true; $('rtCont').hidden = false;
+      var tabs = $('rtTabs'); tabs.textContent = '';
+      NDIAS.forEach(function (n, i) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = n.charAt(0) === 'M' ? (i === 1 ? 'Ma' : 'Mi') : n.charAt(0);
+        b.setAttribute('aria-label', n); b.dataset.d = String(i + 1);
+        if (hoy === i + 1) b.className = 'hoy';
+        b.onclick = function () { verDiaRutina(i + 1); };
+        tabs.appendChild(b);
+      });
+      verDiaRutina(ini);
+      if (!hoy) { $('rtNota').textContent = 'Hoy es descanso 😴 Esta es tu rutina del ' + NDIAS[ini - 1].toLowerCase() + '.'; }
+    }).catch(function () { $('rtCarga').textContent = 'Sin conexión, intenta de nuevo.'; });
+  }
+  function verDiaRutina(dia) {
+    RT.dia = dia; var tok = ++RT.tok;
+    Array.prototype.forEach.call($('rtTabs').children, function (b) { b.classList.toggle('on', Number(b.dataset.d) === dia); });
+    var lst = RT.dias[dia - 1], c = $('rtImgs'); c.textContent = '';
+    if (RT.hoy) $('rtNota').textContent = lst.length ? NDIAS[dia - 1] + (dia === RT.hoy ? ' · hoy' : '') + ' · actualizada el ' + RT.fechas[dia - 1] : '';
+    if (!lst.length) { var p = document.createElement('p'); p.className = 'msg'; p.textContent = 'Sin rutina cargada para el ' + NDIAS[dia - 1].toLowerCase() + '.'; c.appendChild(p); return; }
+    lst.forEach(function (x) {
+      var ph = document.createElement('p'); ph.className = 'msg'; ph.textContent = 'Cargando imagen…'; c.appendChild(ph);
+      var k = dia + '|' + x.orden;
+      function poner(src) {
+        if (tok !== RT.tok) return;
+        if (!src) { ph.textContent = 'No se pudo cargar la imagen. Revisa tu internet.'; return; }
+        var im = new Image(); im.alt = 'Rutina del ' + NDIAS[dia - 1]; im.src = src;
+        im.onclick = function () { $('lbRImg').src = src; $('lbR').hidden = false; $('lbR').scrollTop = 0; };
+        c.replaceChild(im, ph);
+      }
+      if (RT.cache[k]) { poner(RT.cache[k]); return; }
+      enviar({ accion: 'rutina_img', dia: dia, orden: x.orden }).then(function (d) {
+        if (d && d.ok) { RT.cache[k] = d.data; poner(d.data); } else poner(null);
+      }).catch(function () { poner(null); });
+    });
+  }
+
   /* ---------- tarjeta ---------- */
   var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
   var PUERTA = new URLSearchParams(location.search).has('puerta');
@@ -844,6 +926,7 @@
         activarLogros(a.nombre);
         activarAsistencia();
         $('btnCambiar').onclick = cambiarTarjeta;
+        activarRutina(a.instructor);
         $('detalle').hidden = false;
         mostrarInstalar();
         requestAnimationFrame(function () {
