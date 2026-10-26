@@ -177,15 +177,13 @@
     <p id="lgCarga" class="msg">Cargando tus logros…</p>
 
     <div id="lgForm" hidden>
-      <h2 id="lgFormTitulo">Define tus 5 metas</h2>
-      <p id="lgFormHint" class="msg">¿Qué quieres lograr entrenando en Kalos? Escribe 5 metas concretas: cuando las cumplas las marcas y celebramos contigo.</p>
+      <h2 id="lgFormTitulo">Define tus 3 metas</h2>
+      <p id="lgFormHint" class="msg">¿Qué quieres lograr entrenando en Kalos? Escribe 3 metas concretas: cuando las cumplas las marcas y celebramos contigo.</p>
       <input class="lginp" maxlength="60" placeholder="Ej: 20 flexiones seguidas" aria-label="Meta 1">
       <input class="lginp" maxlength="60" placeholder="Ej: 10 dominadas" aria-label="Meta 2">
-      <input class="lginp" maxlength="60" placeholder="Ej: Bajar 3 kg" aria-label="Meta 3">
-      <input class="lginp" maxlength="60" placeholder="Ej: Subir 3 kg" aria-label="Meta 4">
-      <input class="lginp" maxlength="60" placeholder="Ej: Mantener un L-sit 15 segundos" aria-label="Meta 5">
+      <input class="lginp" maxlength="60" placeholder="Ej: Mantener un L-sit 15 segundos" aria-label="Meta 3">
       <p id="lgAviso" class="aviso" role="status"></p>
-      <button id="btnGuardarMetas" class="btn" type="button">GUARDAR MIS 5 METAS</button>
+      <button id="btnGuardarMetas" class="btn" type="button">GUARDAR MIS 3 METAS</button>
       <button id="btnCancelarForm" class="btn sec" type="button" hidden>Cancelar</button>
     </div>
 
@@ -195,7 +193,7 @@
       <p id="lgTotal" class="lgtotal"></p>
       <ul id="lgItems" class="lgs"></ul>
       <p id="lgAvisoL" class="aviso" role="status"></p>
-      <button id="btnNuevaRonda" class="btn" type="button" hidden>DEFINIR MIS PRÓXIMAS 5 METAS</button>
+      <button id="btnNuevaRonda" class="btn" type="button" hidden>DEFINIR MIS PRÓXIMAS 3 METAS</button>
       <details id="lgHist" class="hist" hidden><summary>Ver rondas anteriores</summary><div id="lgHistCont"></div></details>
     </div>
 
@@ -406,7 +404,7 @@
     invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.',
     ocupado: 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.',
     ronda_abierta: 'Primero completa las metas de tu ronda actual.',
-    metas: 'Escribe las 5 metas.',
+    metas: 'Escribe las 3 metas.',
     meta_invalida: 'Cada meta debe tener entre 3 y 60 caracteres y no puede empezar con = + - @.',
     cerrada: 'Esa ronda ya está cerrada.',
     no_existe: 'Esa meta ya no está disponible.',
@@ -443,10 +441,10 @@
 
   function mostrarForm(ronda) {
     $('lgCarga').hidden = true; $('lgLista').hidden = true; $('lgForm').hidden = false;
-    $('lgFormTitulo').textContent = ronda === 1 ? 'Define tus 5 metas' : 'Ronda ' + ronda + ': tus próximas 5 metas';
+    $('lgFormTitulo').textContent = ronda === 1 ? 'Define tus 3 metas' : 'Ronda ' + ronda + ': tus próximas 3 metas';
     $('lgFormHint').textContent = ronda === 1
-      ? '¿Qué quieres lograr entrenando en Kalos? Escribe 5 metas concretas: cuando las cumplas las marcas y celebramos contigo.'
-      : '¡Ya completaste la ronda anterior! Escribe 5 metas nuevas para seguir avanzando.';
+      ? '¿Qué quieres lograr entrenando en Kalos? Escribe 3 metas concretas: cuando las cumplas las marcas y celebramos contigo.'
+      : '¡Ya completaste la ronda anterior! Escribe 3 metas nuevas para seguir avanzando.';
     Array.prototype.forEach.call($('lgForm').querySelectorAll('input'), function (i) { i.value = ''; });
     lgDecir($('lgAviso'), '', '');
     $('btnGuardarMetas').disabled = false;
@@ -459,7 +457,7 @@
     var metas = Array.prototype.map.call($('lgForm').querySelectorAll('input'), function (i) { return i.value.trim(); });
     for (var k = 0; k < metas.length; k++) {
       if (metas[k].length < 3 || metas[k].length > 60 || /^[=+\-@]/.test(metas[k])) {
-        lgDecir($('lgAviso'), 'bad', 'Escribe las 5 metas (entre 3 y 60 caracteres, sin empezar con = + - @).'); return;
+        lgDecir($('lgAviso'), 'bad', 'Escribe las 3 metas (entre 3 y 60 caracteres, sin empezar con = + - @).'); return;
       }
     }
     LG.busy = true; $('btnGuardarMetas').disabled = true; lgDecir($('lgAviso'), '', 'Guardando…');
@@ -573,8 +571,8 @@
     var nombre = (LG.nombre || '').split(' ')[0].toUpperCase();
     if (rondaCompleta) {
       var r = LG.est.actual;
-      modal({ titulo: '¡COMPLETASTE LA RONDA ' + r + '! 🏆', texto: 'Lograste las 5 metas. ¡Es hora de ponerte nuevas!', confeti: true, botones: [
-        { t: 'DEFINIR MIS PRÓXIMAS 5 METAS', clase: 'btn', fn: function () { cerrarModal(); mostrarForm(r + 1); } },
+      modal({ titulo: '¡COMPLETASTE LA RONDA ' + r + '! 🏆', texto: 'Lograste las 3 metas. ¡Es hora de ponerte nuevas!', confeti: true, botones: [
+        { t: 'DEFINIR MIS PRÓXIMAS 3 METAS', clase: 'btn', fn: function () { cerrarModal(); mostrarForm(r + 1); } },
         { t: 'Compartir mi logro', clase: 'btn wa', fn: function () { compartir(texto, true); } },
         { t: 'Más tarde', clase: 'btn sec', fn: cerrarModal }
       ] });
