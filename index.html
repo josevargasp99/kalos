@@ -113,6 +113,13 @@
     .dias i.asist{background:var(--ok);border-color:var(--ok);color:#0D1708;font-weight:700}
     .dias i.hoy{box-shadow:0 0 0 2px var(--sage)}
     .dias i.vacio{background:none;border:0}
+    .selmes{display:flex;gap:8px;margin-top:18px;align-items:stretch}
+    .selmes button{width:48px;flex:none;border:1px solid var(--line);background:#0a1206;color:var(--text);border-radius:12px;font-size:24px;cursor:pointer}
+    .selmes button:disabled{opacity:.3;cursor:default}
+    .selmes select{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);
+      font:600 16px Inter,Arial,sans-serif;text-align:center;text-align-last:center}
+    .selmes select:focus{outline:2px solid var(--sage);border-color:transparent}
+    .meses{margin-top:16px!important;gap:2px!important}
     .leyenda{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted)}
     .leyenda b{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:6px}
     [hidden]{display:none!important}
@@ -240,8 +247,13 @@
         <div><b id="asAnio">0</b><span>Este año</span></div>
         <div><b id="asRacha">0</b><span>Semanas seguidas</span></div>
       </div>
-      <div class="leyenda"><span><b style="background:var(--ok)"></b>Fuiste</span><span><b style="background:#0a1206;border:1px solid var(--line)"></b>No fuiste</span></div>
+      <div class="selmes">
+        <button id="mesAnt" type="button" aria-label="Mes anterior">‹</button>
+        <select id="mesSel" aria-label="Elegir mes"></select>
+        <button id="mesSig" type="button" aria-label="Mes siguiente">›</button>
+      </div>
       <div id="asMeses" class="meses"></div>
+      <div class="leyenda"><span><b style="background:var(--ok)"></b>Fuiste</span><span><b style="background:#0a1206;border:1px solid var(--line)"></b>No fuiste</span></div>
     </div>
     <button id="btnVolverA" class="btn sec" type="button">Volver</button>
   </section>
@@ -581,37 +593,45 @@
   function borrarTel() { try { localStorage.removeItem('kalos_tel'); } catch (e) {} }
 
   function pintarCalendario(d) {
+    AS.d = d;
     $('asMes').textContent = d.mes; $('asAnio').textContent = d.total; $('asRacha').textContent = d.racha;
     $('asTitulo').textContent = 'Asistencia ' + d.anio;
+    var sel = $('mesSel'); sel.textContent = '';
+    for (var m = 0; m < 12; m++) {
+      var n = d.dias.filter(function (f) { return Number(f.slice(5, 7)) - 1 === m; }).length;
+      var o = document.createElement('option'); o.value = m;
+      o.textContent = MESES[m].charAt(0) + MESES[m].slice(1).toLowerCase() + ' — ' + n + (n === 1 ? ' día' : ' días');
+      sel.appendChild(o);
+    }
+    sel.onchange = function () { pintarMes(Number(sel.value)); };
+    $('mesAnt').onclick = function () { if (AS.m > 0) pintarMes(AS.m - 1); };
+    $('mesSig').onclick = function () { if (AS.m < 11) pintarMes(AS.m + 1); };
+    $('asCarga').hidden = true; $('asCont').hidden = false;
+    pintarMes(Number(d.hoy.slice(5, 7)) - 1);
+  }
+
+  function pintarMes(m) {
+    var d = AS.d; AS.m = m;
+    $('mesSel').value = m;
+    $('mesAnt').disabled = m === 0; $('mesSig').disabled = m === 11;
     var set = {}; d.dias.forEach(function (f) { set[f] = true; });
     var cont = $('asMeses'); cont.textContent = '';
-    var mesHoy = Number(d.hoy.slice(5, 7)) - 1, bloqueHoy = null;
-    for (var m = 0; m < 12; m++) {
-      var box = document.createElement('div'); box.className = 'mes';
-      var h = document.createElement('h3'); h.textContent = MESES[m];
-      var cuenta = d.dias.filter(function (f) { return Number(f.slice(5, 7)) - 1 === m; }).length;
-      var sm = document.createElement('small'); sm.textContent = cuenta + (cuenta === 1 ? ' día' : ' días'); h.appendChild(sm);
-      box.appendChild(h);
-      var sem = document.createElement('div'); sem.className = 'sem';
-      ['L','M','M','J','V','S','D'].forEach(function (x) { var sp = document.createElement('span'); sp.textContent = x; sem.appendChild(sp); });
-      box.appendChild(sem);
-      var g = document.createElement('div'); g.className = 'dias';
-      var primero = (new Date(Date.UTC(d.anio, m, 1)).getUTCDay() + 6) % 7;
-      var total = new Date(Date.UTC(d.anio, m + 1, 0)).getUTCDate();
-      for (var v = 0; v < primero; v++) { var e = document.createElement('i'); e.className = 'vacio'; g.appendChild(e); }
-      for (var dia = 1; dia <= total; dia++) {
-        var f = d.anio + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + dia).slice(-2);
-        var c = document.createElement('i'); c.textContent = dia;
-        if (set[f]) c.className = 'asist';
-        else if (f < d.hoy) c.className = 'pasado';
-        if (f === d.hoy) c.className += ' hoy';
-        g.appendChild(c);
-      }
-      box.appendChild(g); cont.appendChild(box);
-      if (m === mesHoy) bloqueHoy = box;
+    var sem = document.createElement('div'); sem.className = 'sem';
+    ['L','M','M','J','V','S','D'].forEach(function (x) { var sp = document.createElement('span'); sp.textContent = x; sem.appendChild(sp); });
+    cont.appendChild(sem);
+    var g = document.createElement('div'); g.className = 'dias';
+    var primero = (new Date(Date.UTC(d.anio, m, 1)).getUTCDay() + 6) % 7;
+    var total = new Date(Date.UTC(d.anio, m + 1, 0)).getUTCDate();
+    for (var v = 0; v < primero; v++) { var e = document.createElement('i'); e.className = 'vacio'; g.appendChild(e); }
+    for (var dia = 1; dia <= total; dia++) {
+      var f = d.anio + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + dia).slice(-2);
+      var c = document.createElement('i'); c.textContent = dia;
+      if (set[f]) c.className = 'asist';
+      else if (f < d.hoy) c.className = 'pasado';
+      if (f === d.hoy) c.className += ' hoy';
+      g.appendChild(c);
     }
-    $('asCarga').hidden = true; $('asCont').hidden = false;
-    if (bloqueHoy) setTimeout(function () { bloqueHoy.scrollIntoView(); }, 30);
+    cont.appendChild(g);
   }
 
   function abrirCalendario(origen, volver) {
