@@ -273,7 +273,7 @@
     ocupado: 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.',
     ronda_abierta: 'Primero completa las metas de tu ronda actual.',
     metas: 'Escribe las 5 metas.',
-    meta_invalida: 'Cada meta debe tener entre 3 y 60 caracteres.',
+    meta_invalida: 'Cada meta debe tener entre 3 y 60 caracteres y no puede empezar con = + - @.',
     cerrada: 'Esa ronda ya está cerrada.',
     no_existe: 'Esa meta ya no está disponible.',
     logrado: 'Primero desmarca el logro para poder editarlo.'
@@ -324,8 +324,8 @@
     if (LG.busy) return;
     var metas = Array.prototype.map.call($('lgForm').querySelectorAll('input'), function (i) { return i.value.trim(); });
     for (var k = 0; k < metas.length; k++) {
-      if (metas[k].length < 3 || metas[k].length > 60) {
-        lgDecir($('lgAviso'), 'bad', 'Escribe las 5 metas (entre 3 y 60 caracteres cada una).'); return;
+      if (metas[k].length < 3 || metas[k].length > 60 || /^[=+\-@]/.test(metas[k])) {
+        lgDecir($('lgAviso'), 'bad', 'Escribe las 5 metas (entre 3 y 60 caracteres, sin empezar con = + - @).'); return;
       }
     }
     LG.busy = true; $('btnGuardarMetas').disabled = true; lgDecir($('lgAviso'), '', 'Guardando…');
@@ -422,7 +422,7 @@
     ok.onclick = function () {
       if (LG.busy) return;
       var t = inp.value.trim();
-      if (t.length < 3 || t.length > 60) { lgDecir($('lgAvisoL'), 'bad', 'La meta debe tener entre 3 y 60 caracteres.'); return; }
+      if (t.length < 3 || t.length > 60 || /^[=+\-@]/.test(t)) { lgDecir($('lgAvisoL'), 'bad', 'La meta debe tener entre 3 y 60 caracteres y no empezar con = + - @.'); return; }
       LG.busy = true; lgDecir($('lgAvisoL'), '', 'Guardando…');
       enviar({ accion: 'logros_editar', ronda: LG.est.actual, n: m.n, texto: t }).then(function (d) {
         LG.busy = false;
