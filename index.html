@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Kalos · Verificación</title>
-  <link rel="icon" href="logo.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#0D1708">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kalos Workout">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -122,6 +129,13 @@
     .meses{margin-top:16px!important;gap:2px!important}
     .leyenda{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted)}
     .leyenda b{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:6px}
+    .inst{margin-top:14px;text-align:center}
+    .inst .no{background:none;border:0;color:var(--muted);font:500 12px Inter,Arial,sans-serif;text-decoration:underline;cursor:pointer;margin-top:8px;padding:6px}
+    .cambiar{display:block;margin:18px auto 0;background:none;border:0;color:var(--muted);font:500 12px Inter,Arial,sans-serif;text-decoration:underline;cursor:pointer;padding:6px}
+    .pasos{list-style:none;counter-reset:p;margin-top:16px;text-align:left}
+    .pasos li{counter-increment:p;position:relative;padding:12px 12px 12px 48px;margin-top:10px;border:1px solid var(--line);border-radius:12px;background:#0a1206;font-size:15px;line-height:1.45}
+    .pasos li::before{content:counter(p);position:absolute;left:12px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#06210f;font:700 14px Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:center}
+    .pasos b{color:#fff}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -149,7 +163,13 @@
       <button id="btnAsist" class="btn out" type="button">📅 MI ASISTENCIA</button>
       <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
       <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
+      <div id="inst" class="inst" hidden>
+        <button id="btnInstalar" class="btn out" type="button">📲 INSTALAR APP</button>
+        <button id="btnInstNo" class="no" type="button">Ahora no</button>
+      </div>
+      <button id="btnCambiar" class="cambiar" type="button">¿No es tu tarjeta? Cambiar</button>
     </div>
+    <button id="btnReintentar" class="btn out" type="button" hidden>REINTENTAR</button>
   </section>
 
   <section id="logros" class="card pago ok" hidden>
@@ -205,6 +225,38 @@
     <p class="msg">El QR está a nombre de <b style="color:#fff">Luis Carlos Camacho</b>, no te olvides enviar el comprobante a Chino!</p>
     <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener">ENVIAR COMPROBANTE POR WHATSAPP</a>
     <button id="btnVolver" class="btn sec" type="button">Volver</button>
+  </section>
+
+  <section id="entrada" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>KALOS WORKOUT</div>
+    <div id="enForm">
+      <h2>Encuentra tu tarjeta</h2>
+      <p class="msg">Escribe tu número de celular, el mismo con el que te inscribiste en Kalos.</p>
+      <input id="enTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="7XXXXXXX" aria-label="Tu número de celular">
+      <p id="enAviso" class="aviso" role="status"></p>
+      <button id="btnEntrar" class="btn" type="button">VER MI TARJETA</button>
+    </div>
+    <div id="enElige" hidden>
+      <h2>¿Quién eres?</h2>
+      <p class="msg">Este celular está registrado en más de un alumno. Toca tu nombre.</p>
+      <div id="enNombres"></div>
+    </div>
+  </section>
+
+  <section id="guia" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>INSTALAR APP</div>
+    <h2 id="guiaTitulo">Agrega Kalos a tu pantalla de inicio</h2>
+    <ol id="guiaIos" class="pasos" hidden>
+      <li>Abre esta página en <b>Safari</b> (si estás en WhatsApp o Instagram, toca “Abrir en Safari”).</li>
+      <li>Toca el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba, abajo en la pantalla).</li>
+      <li>Baja y elige <b>“Agregar a pantalla de inicio”</b>, y luego toca <b>Agregar</b>.</li>
+    </ol>
+    <ol id="guiaAnd" class="pasos" hidden>
+      <li>Abre esta página en <b>Chrome</b>.</li>
+      <li>Toca el menú <b>⋮</b> (arriba a la derecha).</li>
+      <li>Elige <b>“Instalar app”</b> o <b>“Agregar a pantalla de inicio”</b>.</li>
+    </ol>
+    <button id="btnVolverG" class="btn sec" type="button">Volver</button>
   </section>
 
   <section id="puerta" class="card pago ok" hidden>
@@ -294,7 +346,7 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   function ver(cual) {
-    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta'].forEach(function (k) { $(k).hidden = (k !== cual); });
+    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia'].forEach(function (k) { $(k).hidden = (k !== cual); });
     window.scrollTo(0, 0);
   }
 
@@ -716,27 +768,70 @@
     $('btnVolverA').onclick = function () { ver(AS.volver); };
   }
 
+  /* ---------- app: recordar al alumno ---------- */
+  var ID_FMT = /^KAL-[A-Z0-9]{4,10}$/;
+  function guardarId(x) { try { localStorage.setItem('kalos_id', x); } catch (e) {} }
+  function leerId() { try { return (localStorage.getItem('kalos_id') || '').toUpperCase(); } catch (e) { return ''; } }
+  function borrarId() { try { localStorage.removeItem('kalos_id'); } catch (e) {} }
+
+  /* ---------- app: instalar ---------- */
+  var STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  var IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var promptInst = null;
+  function instalarOculto() {
+    try { var t = Number(localStorage.getItem('kalos_inst_off') || 0); return !!t && (Date.now() - t) < 7 * 86400000; } catch (e) { return false; }
+  }
+  function mostrarInstalar() { $('inst').hidden = STANDALONE || instalarOculto(); }
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); promptInst = e;
+    if (!$('detalle').hidden) mostrarInstalar();
+  });
+  window.addEventListener('appinstalled', function () { $('inst').hidden = true; });
+  $('btnInstalar').onclick = function () {
+    if (promptInst) {
+      var pi = promptInst; promptInst = null;
+      pi.prompt();
+      pi.userChoice.then(function (r) { if (r && r.outcome === 'accepted') $('inst').hidden = true; }).catch(function () {});
+    } else {
+      $('guiaIos').hidden = !IOS; $('guiaAnd').hidden = IOS; ver('guia');
+    }
+  };
+  $('btnInstNo').onclick = function () {
+    try { localStorage.setItem('kalos_inst_off', String(Date.now())); } catch (e) {}
+    $('inst').hidden = true;
+  };
+  $('btnVolverG').onclick = function () { ver('card'); };
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+
+  /* ---------- tarjeta ---------- */
   var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
   var PUERTA = new URLSearchParams(location.search).has('puerta');
 
-  if (PUERTA) {
-    iniciarPuerta();
-  } else if (!id) {
-    pintar('neutral', 'KALOS', 'Escanea el QR de tu tarjeta para ver el estado de tu inscripción.');
-  } else {
-    // Sin cookies: así no importa cuántas cuentas de Google tenga abiertas el celular
-    fetch(API + '?format=json&id=' + encodeURIComponent(id), { credentials: 'omit', cache: 'no-store' })
+  function cargarTarjeta(cid, origen) {
+    id = cid;
+    ver('card');
+    $('card').className = 'card neutral loading';
+    $('estado').textContent = 'VERIFICANDO…';
+    $('mensaje').textContent = 'Consultando la inscripción.'; $('mensaje').hidden = false;
+    $('detalle').hidden = true; $('btnReintentar').hidden = true;
+    // Sin cookies: así no importa cuántas cuentas de Google tenga abiertas el celular. Siempre datos frescos.
+    fetch(API + '?format=json&id=' + encodeURIComponent(cid), { credentials: 'omit', cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && d.ocupado) {
           pintar('warn', 'UN MOMENTO', 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.');
+          $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
           return;
         }
         if (!d || !d.ok) {
-          pintar('bad', 'NO VÁLIDA', 'No encontramos una inscripción con el código ' + id + '. Consulta en recepción.');
+          if (origen !== 'url') { borrarId(); iniciarEntrada('Esa tarjeta ya no existe. Escribe tu celular para encontrar la tuya.'); return; }
+          pintar('bad', 'NO VÁLIDA', 'No encontramos una inscripción con el código ' + cid + '. Consulta en recepción.');
           return;
         }
         var a = d.alumno;
+        guardarId(cid);
         pintar(a.clase, a.estado, '');
         $('nombre').textContent = a.nombre;
         $('dias').textContent = a.textoDias;
@@ -750,14 +845,94 @@
         activarBuzon();
         activarLogros(a.nombre);
         activarAsistencia();
+        $('btnCambiar').onclick = cambiarTarjeta;
         $('detalle').hidden = false;
+        mostrarInstalar();
         requestAnimationFrame(function () {
           $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
         });
       })
       .catch(function () {
-        pintar('warn', 'SIN CONEXIÓN', 'No pudimos verificar ahora. Revisa tu internet e intenta de nuevo.');
+        pintar('warn', 'SIN CONEXIÓN', 'Sin conexión, intenta de nuevo.');
+        $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
       });
+  }
+
+  function cambiarTarjeta() {
+    borrarId(); borrarTel(); id = '';
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    $('detalle').hidden = true;
+    iniciarEntrada('');
+  }
+
+  /* ---------- entrada por celular (si el teléfono no tiene la tarjeta guardada) ---------- */
+  function iniciarEntrada(msg) {
+    var inp = $('enTel'), aviso = $('enAviso'), btn = $('btnEntrar'), busy = false;
+    function decir(c, t) { aviso.className = 'aviso ' + c; aviso.textContent = t; }
+    function mostrar(cual) { ['enForm', 'enElige'].forEach(function (k) { $(k).hidden = (k !== cual); }); window.scrollTo(0, 0); }
+    ver('entrada'); mostrar('enForm');
+    inp.value = leerTel();
+    decir(msg ? 'bad' : '', msg || '');
+
+    function buscar(sel) {
+      if (busy) return;
+      var tel = inp.value.replace(/\D/g, '');
+      if (tel.length < 8) { decir('bad', ASERR.telefono); return; }
+      busy = true; btn.disabled = true; decir('', 'Buscando tu tarjeta…');
+      var body = { accion: 'asistencia_tarjeta', tel: tel };
+      if (sel !== undefined) body.sel = sel;
+      fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          busy = false; btn.disabled = false;
+          if (d && d.ok && d.eleccion) { elegir(d.eleccion); decir('', ''); return; }
+          if (d && d.ok && d.id && ID_FMT.test(String(d.id).toUpperCase())) { guardarTel(tel); cargarTarjeta(String(d.id).toUpperCase(), 'tel'); return; }
+          mostrar('enForm');
+          decir('bad', ASERR[d && d.error] || 'No pudimos encontrar tu tarjeta. Intenta de nuevo.');
+        })
+        .catch(function () {
+          busy = false; btn.disabled = false; mostrar('enForm');
+          decir('bad', 'Sin conexión, intenta de nuevo.');
+        });
+    }
+    function elegir(nombres) {
+      var c = $('enNombres'); c.textContent = '';
+      nombres.forEach(function (n, i) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn out'; b.textContent = n;
+        b.onclick = function () { mostrar('enForm'); buscar(i); };
+        c.appendChild(b);
+      });
+      mostrar('enElige');
+    }
+    btn.onclick = function () { buscar(); };
+    inp.onkeydown = function (e) { if (e.key === 'Enter') buscar(); };
+  }
+
+  /* ---------- arranque ---------- */
+  if (PUERTA) {
+    iniciarPuerta();
+  } else if (id) {
+    cargarTarjeta(id, 'url');
+  } else {
+    var guardado = leerId();
+    if (ID_FMT.test(guardado)) {
+      cargarTarjeta(guardado, 'guardado');
+    } else {
+      var t = leerTel();
+      if (t.length >= 8) {
+        // ya marcó asistencia en este celular: encontramos su tarjeta sin preguntar
+        $('card').className = 'card neutral loading'; $('estado').textContent = 'VERIFICANDO…';
+        fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'asistencia_tarjeta', tel: t }) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.ok && d.id && ID_FMT.test(String(d.id).toUpperCase())) cargarTarjeta(String(d.id).toUpperCase(), 'tel');
+            else iniciarEntrada('');          // celular compartido o ya no existe: que lo confirme él
+          })
+          .catch(function () { iniciarEntrada(''); });
+      } else {
+        iniciarEntrada('');
+      }
+    }
   }
 </script>
 </body>
