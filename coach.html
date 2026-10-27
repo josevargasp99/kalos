@@ -279,7 +279,7 @@
       var b = el('button', 'row'); b.type = 'button';
       var t = el('div', 't'); t.appendChild(el('div', 'n', a.nombre));
       var cargados = (a.cuenta || []).filter(function (x) { return x > 0; }).length;
-      t.appendChild(el('div', 's', (a.horario || '—') + ' · ' + cargados + ' de 5 días con rutina'));
+      t.appendChild(el('div', 's', (a.prueba ? '🧪 PRUEBA · ' : '') + (a.horario || '—') + ' · ' + cargados + ' de 5 días con rutina'));
       b.appendChild(t);
       var clase = a.estado === 'ACTIVO' ? 'ok' : (a.estado === 'POR VENCER' ? 'warn' : 'bad');
       b.appendChild(el('span', 'pill ' + clase, a.estado));
