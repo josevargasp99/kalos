@@ -1341,9 +1341,9 @@
       else msg += 'Empieza una nueva hoy 💪';
     } else if (r.estado === 'riesgo') {
       cls = 'riesgo';
-      msg = tres ? '⚠️ Te ' + (r.semana.faltan === 1 ? 'falta 1 día' : 'faltan ' + r.semana.faltan + ' días') + ' esta semana y hoy te toca venir para mantener tu racha.' : '⚠️ Hoy te toca venir para no perder tu racha.';
+      msg = tres ? '⚠️ Te ' + (r.semana.faltan === 1 ? 'falta 1 día' : 'faltan ' + r.semana.faltan + ' días') + ' esta semana y hoy te toca ir al gym para mantener tu racha.' : '⚠️ Hoy te toca ir al gym para no perder tu racha.';
     } else if (tres) msg = 'Esta semana: ' + Math.min(r.semana.visitas, r.semana.necesita) + ' de ' + r.semana.necesita + ' días. ' + (r.semana.faltan === 0 ? 'Semana cumplida ✅' : 'Ven ' + r.semana.faltan + (r.semana.faltan === 1 ? ' día más' : ' días más') + ' para mantener tu racha.');
-    else msg = r.semana.hoyToca ? 'Hoy te toca venir.' : 'Tu racha sigue viva. ¡Vamos por más! 🔥';
+    else msg = r.semana.hoyToca ? 'Hoy te toca ir al gym.' : 'Tu racha sigue viva. ¡Vamos por más! 🔥';
     var m = $('rMsg'); m.className = 'rmsg ' + cls; m.textContent = msg;
     var b = $('rBtn');
     if (r.restaurable) {
