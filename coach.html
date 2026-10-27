@@ -62,6 +62,17 @@
     #lb{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:50;overflow:auto;touch-action:pan-x pan-y pinch-zoom;-webkit-overflow-scrolling:touch}
     #lb img{display:block;width:100%;height:auto;min-width:100%}
     #lbx{position:fixed;top:12px;right:12px;z-index:51;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px;cursor:pointer}
+    .tabs{display:flex;gap:8px;margin:0 0 16px}
+    .tabs button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 14px Inter,Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+    .tabs button.on{background:var(--ok);border-color:var(--ok);color:#06210f}
+    .tot{font-family:'Bebas Neue',Impact,sans-serif;font-size:46px;line-height:1;margin:8px 0 4px;color:var(--ok)}
+    .pg{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+    .pg .t{flex:1;min-width:0}.pg .t b{display:block;font-weight:600;word-break:break-word}.pg .t span{color:var(--muted);font-size:12px}
+    .pg em{font-style:normal;font-weight:700;color:var(--ok);white-space:nowrap}
+    .sem{display:flex;align-items:center;gap:8px;margin:6px 0 12px}
+    .sem b{flex:1;text-align:center;font-size:15px}
+    .sem button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:20px;cursor:pointer}
+    .sem button:disabled{opacity:.3}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -78,11 +89,30 @@
   </section>
 
   <section id="sLista" hidden>
+    <div class="tabs"><button type="button" class="tabAl">Mis alumnos</button><button type="button" class="tabPg">Pagos</button></div>
     <h1>MIS ALUMNOS</h1>
     <p id="subLista" class="sub"></p>
     <input id="busca" type="search" placeholder="Buscar alumno…" aria-label="Buscar alumno">
     <div id="lista"></div>
     <p id="avLista" class="aviso" role="status"></p>
+  </section>
+
+  <section id="sPagos" hidden>
+    <div class="tabs"><button type="button" class="tabAl">Mis alumnos</button><button type="button" class="tabPg">Pagos</button></div>
+    <h1>MIS PAGOS</h1>
+    <p class="sub">Tu parte de lo que pagan tus alumnos. Se te paga cada lunes lo de la semana anterior.</p>
+    <div class="sem"><button id="semAnt" type="button" aria-label="Semana anterior">‹</button><b id="semTit"></b><button id="semSig" type="button" aria-label="Semana siguiente">›</button></div>
+    <div class="card">
+      <p class="sub" id="pgEtq" style="margin:0"></p>
+      <p class="tot" id="pgTotal"></p>
+      <p id="pgEstado" class="sub" style="margin:0 0 8px"></p>
+      <div id="pgLista"></div>
+    </div>
+    <div class="card" id="pgActualBox" style="margin-top:12px">
+      <p class="sub" style="margin:0">Acumulado esta semana (<span id="pgActRango"></span>)</p>
+      <p style="margin:6px 0 0;font-size:20px;font-weight:700" id="pgActual"></p>
+    </div>
+    <p id="avPg" class="aviso" role="status"></p>
   </section>
 
   <section id="sAlumno" hidden>
@@ -144,8 +174,9 @@
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function limpiar(n) { while (n.firstChild) n.removeChild(n.firstChild); }
   function pantalla(k) {
-    ['sLogin', 'sLista', 'sAlumno', 'sDia', 'sCopiar'].forEach(function (x) { $(x).hidden = (x !== k); });
+    ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sDia', 'sCopiar'].forEach(function (x) { $(x).hidden = (x !== k); });
     window.scrollTo(0, 0);
+    if (typeof marcarTabs === 'function') marcarTabs();
   }
   function decir(id, clase, t) { var n = $(id); n.className = 'aviso ' + clase; n.textContent = t; }
 
@@ -217,6 +248,46 @@
     });
   }
   $('busca').oninput = pintarLista;
+
+  /* ---------- pagos ---------- */
+  function bs(n) { n = Number(n) || 0; return 'Bs ' + (n % 1 === 0 ? String(n) : n.toFixed(2)).replace('.', ','); }
+  var PG = { semana: '' };
+  function cargarPagos(sem) {
+    pantalla('sPagos'); decir('avPg', '', 'Cargando…');
+    api({ accion: 'coach_pagos', semana: sem || '' }).then(function (d) {
+      if (!d.ok) { if (d.error === 'clave') { pantalla('sLogin'); decir('avLogin', 'bad', errTxt(d)); return; } decir('avPg', 'bad', errTxt(d)); return; }
+      decir('avPg', '', '');
+      var w = d.semana; PG.semana = w.semana;
+      $('semTit').textContent = (d.esPasada ? 'Semana pasada · ' : d.esActual ? 'Esta semana · ' : 'Semana ') + w.desde + ' – ' + w.hasta;
+      $('semAnt').disabled = !d.hayAnterior; $('semSig').disabled = !d.haySiguiente;
+      $('semAnt').onclick = function () { cargarPagos(d.previa); };
+      $('semSig').onclick = function () { cargarPagos(d.siguiente); };
+      $('pgEtq').textContent = d.esActual ? 'Te corresponde (en curso)' : 'Te corresponde';
+      $('pgTotal').textContent = bs(w.total);
+      var est = d.esActual ? 'Semana en curso: se te paga el lunes.' :
+        w.estado === 'pagado' ? '✅ Pagado el ' + w.liquidado.fecha :
+        w.estado === 'parcial' ? '⚠ Pagado ' + bs(w.liquidado.monto) + ' · falta ' + bs(w.diferencia) :
+        w.estado === 'pendiente' ? '⏳ Pendiente de pago' : 'Sin pagos de alumnos esta semana.';
+      $('pgEstado').textContent = est;
+      var c = $('pgLista'); limpiar(c);
+      w.items.forEach(function (x) {
+        var r = el('div', 'pg'); var t = el('div', 't'); t.appendChild(el('b', '', x.nombre));
+        t.appendChild(el('span', '', x.fecha + ' · ' + x.plan + ' · pagó ' + bs(x.monto)));
+        r.appendChild(t); r.appendChild(el('em', '', bs(x.ian))); c.appendChild(r);
+      });
+      $('pgActualBox').hidden = d.esActual;
+      $('pgActRango').textContent = d.actual.desde + ' – ' + d.actual.hasta;
+      $('pgActual').textContent = bs(d.actual.total) + (d.actual.n ? ' · ' + d.actual.n + (d.actual.n === 1 ? ' pago' : ' pagos') : '');
+      if (d.pendiente > 0 && !d.esActual) decir('avPg', 'warn', 'Tienes ' + bs(d.pendiente) + ' pendientes de pago en total.');
+    }).catch(function () { decir('avPg', 'bad', 'Sin conexión, intenta de nuevo.'); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.tabAl'), function (b) { b.onclick = function () { pantalla('sLista'); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('.tabPg'), function (b) { b.onclick = function () { cargarPagos(''); }; });
+  function marcarTabs() {
+    Array.prototype.forEach.call(document.querySelectorAll('.tabAl'), function (b) { b.className = 'tabAl' + (!$('sLista').hidden ? ' on' : ''); });
+    Array.prototype.forEach.call(document.querySelectorAll('.tabPg'), function (b) { b.className = 'tabPg' + (!$('sPagos').hidden ? ' on' : ''); });
+  }
+
 
   /* ---------- alumno ---------- */
   function abrirAlumno(a) {
