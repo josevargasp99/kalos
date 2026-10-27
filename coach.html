@@ -57,6 +57,7 @@
     .chk{display:flex;align-items:center;gap:12px;margin-top:8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#0a1206;cursor:pointer}
     .chk input{width:22px;height:22px;accent-color:#62D97E;flex:none}
     .chk .s{font-size:12px;color:var(--muted)}
+    #apLista h3{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:22px;letter-spacing:1px;margin:18px 0 0}
     .box{margin-top:14px;padding:14px;border:1px solid var(--ok);border-radius:14px;color:var(--text);font-size:14px;line-height:1.5}
     .box.warn{border-color:var(--warn)}
     #lb{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:50;overflow:auto;touch-action:pan-x pan-y pinch-zoom;-webkit-overflow-scrolling:touch}
@@ -133,6 +134,16 @@
       <p id="alInfo" class="sub"></p>
       <p class="sub" style="margin-top:14px">Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.</p>
       <div id="dias"></div>
+      <button id="btnApAl" class="btn out" type="button">📒 VER APUNTES DEL ALUMNO</button>
+    </div>
+  </section>
+
+  <section id="sApuntes" hidden>
+    <button id="btnAtrasAp" class="btn sec" type="button" style="margin-top:0">‹ <span id="apAtrasNom"></span></button>
+    <div class="card">
+      <h2>APUNTES</h2>
+      <p id="apSub" class="sub"></p>
+      <div id="apLista"></div>
     </div>
   </section>
 
@@ -184,7 +195,7 @@
 
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function limpiar(n) { while (n.firstChild) n.removeChild(n.firstChild); }
-  var PANT = ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sDia', 'sCopiar'];
+  var PANT = ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sApuntes', 'sDia', 'sCopiar'];
   var CUR = '', LIMP = null, REDUCE = false;
   try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
   function pantalla(k) {
@@ -341,6 +352,28 @@
     });
   }
   $('btnAtras1').onclick = function () { pintarLista(); pantalla('sLista'); };
+  $('btnApAl').onclick = function () {
+    var a = S.al, c = $('apLista'); $('apAtrasNom').textContent = a.nombre; $('apSub').textContent = 'Solo lectura · lo que anota el alumno en su cuaderno.';
+    pantalla('sApuntes'); limpiar(c); c.appendChild(el('p', 'aviso', 'Cargando…'));
+    api({ accion: 'coach_apuntes', id: a.id }).then(function (d) {
+      limpiar(c);
+      if (!d.ok) { c.appendChild(el('p', 'aviso bad', errTxt(d))); return; }
+      if (!d.items.length) { c.appendChild(el('p', 'aviso', 'Este alumno aún no tiene apuntes.')); return; }
+      var g = {}, orden = [];
+      d.items.forEach(function (x) { var k = x.ejercicio.trim().toLowerCase(); if (!g[k]) { g[k] = []; orden.push(k); } g[k].push(x); });
+      orden.forEach(function (k) {
+        c.appendChild(el('h3', '', g[k][0].ejercicio));
+        g[k].forEach(function (x) {
+          var f = x.fecha.split('-'), r = el('div', 'box');
+          r.appendChild(el('div', 's', f.length === 3 ? f[2] + '/' + f[1] + '/' + f[0] : x.fecha));
+          r.appendChild(el('div', 'n', x.intensidad + ' · ' + x.reps + ' reps'));
+          if (x.notas) r.appendChild(el('div', 's', x.notas));
+          c.appendChild(r);
+        });
+      });
+    }).catch(function () { limpiar(c); c.appendChild(el('p', 'aviso bad', 'Sin conexión, intenta de nuevo.')); });
+  };
+  $('btnAtrasAp').onclick = function () { pantalla('sAlumno'); };
 
   /* ---------- día ---------- */
   function abrirDia(dia) {

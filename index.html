@@ -117,6 +117,17 @@
     li.lg input{flex:1;min-width:0;padding:10px;border-radius:8px;border:1px solid var(--sage);background:#0a1206;color:var(--text);font:15px Inter,Arial,sans-serif}
     .lginp{width:100%;margin-top:10px;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:16px Inter,Arial,sans-serif}
     .lginp:focus{outline:2px solid var(--sage);border-color:transparent}
+    .apf{display:block;margin-top:12px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+    select.lginp{appearance:none;-webkit-appearance:none}
+    .apit{display:block;width:100%;text-align:left;margin-top:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:15px Inter,Arial,sans-serif;cursor:pointer}
+    .apit b{display:block;font-size:16px}
+    .apit span{display:block;margin-top:3px;font-size:13px;opacity:.75}
+    .aprow{margin-top:8px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;font-size:14px;line-height:1.45}
+    .aprow .fe{font-size:12px;opacity:.7}
+    .aprow .in{font-size:16px;font-weight:600;margin-top:2px}
+    .aprow .no{margin-top:4px;opacity:.85;white-space:pre-wrap;word-break:break-word}
+    .aprow .ac{display:flex;gap:8px;margin-top:8px}
+    .aprow .ac button{flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font:13px Inter,Arial,sans-serif;cursor:pointer}
     details.hist{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
     details.hist summary{cursor:pointer;color:var(--sage);font-size:14px}
     details.hist h3{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;font-weight:500}
@@ -288,6 +299,7 @@
       </dl>
       <button id="btnRutina" class="btn" type="button" hidden>💪 MI RUTINA</button>
       <button id="btnLogros" class="btn out" type="button">🏆 MIS LOGROS</button>
+      <button id="btnApuntes" class="btn out" type="button">📒 MIS APUNTES</button>
       <button id="btnAsist" class="btn out" type="button">📅 MI ASISTENCIA</button>
       <button id="btnFisio" class="btn out" type="button">🩺 FISIOTERAPIA · KINE-REGENERATUS</button>
       <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
@@ -327,6 +339,41 @@
     </div>
 
     <button id="btnVolverL" class="btn sec" type="button">Volver</button>
+  </section>
+
+  <section id="apuntes" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>MIS APUNTES</div>
+    <h2>MI CUADERNO</h2>
+    <p class="msg" id="apMsg" style="margin-top:0">Anota con qué intensidad y cuántas repeticiones haces cada ejercicio.</p>
+    <div id="apLista">
+      <button id="btnApNuevo" class="btn" type="button">➕ NUEVO APUNTE</button>
+      <input id="apBuscar" class="lginp" type="search" placeholder="Buscar ejercicio…" maxlength="60" autocomplete="off">
+      <div id="apGrupos"></div>
+    </div>
+    <div id="apDetalle" hidden>
+      <h2 id="apTitulo" style="font-size:26px"></h2>
+      <div id="apHist"></div>
+      <button id="btnApOtro" class="btn" type="button">➕ AGREGAR REGISTRO</button>
+      <button id="btnApAtras" class="btn sec" type="button">‹ Todos los ejercicios</button>
+    </div>
+    <div id="apForm" hidden>
+      <h2 id="apFormT" style="font-size:26px">NUEVO APUNTE</h2>
+      <label class="apf" for="apSel">Ejercicio</label>
+      <select id="apSel" class="lginp"></select>
+      <input id="apOtro" class="lginp" type="text" maxlength="60" placeholder="Nombre del ejercicio" hidden>
+      <label class="apf" for="apInt">Intensidad (liga, peso…)</label>
+      <input id="apInt" class="lginp" type="text" maxlength="60" placeholder="Ej: liga verde, 20 kg">
+      <label class="apf" for="apReps">Repeticiones</label>
+      <input id="apReps" class="lginp" type="text" maxlength="40" placeholder="Ej: 8, 3×10, 12-10-8">
+      <label class="apf" for="apFecha">Fecha</label>
+      <input id="apFecha" class="lginp" type="date">
+      <label class="apf" for="apNotas">Notas (opcional)</label>
+      <textarea id="apNotas" class="lginp" rows="3" maxlength="300" placeholder="Cómo te sentiste, técnica, etc."></textarea>
+      <button id="btnApGuardar" class="btn" type="button">GUARDAR</button>
+      <button id="btnApCancelar" class="btn sec" type="button">Cancelar</button>
+    </div>
+    <div id="apAviso" class="aviso"></div>
+    <button id="btnVolverAp" class="btn sec" type="button">Volver</button>
   </section>
 
   <section id="fisio" class="card pago ok" hidden>
@@ -502,7 +549,7 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   /* ---- navegación entre pantallas con deslizamiento lateral ---- */
-  var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio'];
+  var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio', 'apuntes'];
   var SOLO = { entrada: 1, puerta: 1 };
   var NAV = { cur: 'card', prev: '', pila: [], limpiar: null };
   var REDUCE = false; try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
@@ -909,6 +956,117 @@
     $('btnVolverA').onclick = function () { ver(AS.volver); };
   }
 
+  /* ---------- mis apuntes (cuaderno) ---------- */
+  var AP = { items: [], ej: null, ref: null, busy: false };
+  var AP_SUG = ['Dominadas con liga', 'Dominadas sin liga', 'Dominadas negativas', 'Fondos con liga', 'Fondos sin liga', 'Fondos negativos',
+    'Flexiones', 'Flexiones pica', 'Sentadilla c/peso', 'Sentadilla smith', 'Sentadilla búlgara', 'Sentadilla sissy', 'Hip thrust',
+    'Curl bíceps martillo', 'Curl bíceps supino', 'Extensión tríceps polea', 'Extensión tríceps banca plana c/mancuernas'];
+  var AP_ERR = { ejercicio: 'Elige o escribe el ejercicio.', intensidad: 'Escribe la intensidad (liga, peso…).', reps: 'Escribe las repeticiones.',
+    fecha: 'La fecha no es válida.', limite: 'Llegaste al límite de apuntes. Borra algunos antiguos.', ocupado: 'Muchos intentos seguidos. Espera un momento.',
+    no_existe: 'Ese apunte ya no existe.', invalido: 'Tarjeta no válida.' };
+  function apHoy() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function apFecha(f) { var p = String(f).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : f; }
+  function apCorta(f) { var p = String(f).split('-'); return p.length === 3 ? p[2] + '/' + p[1] : f; }
+  function apClave(n) { return String(n).trim().toLowerCase(); }
+  function apMostrar(cual) {
+    $('apLista').hidden = cual !== 'lista'; $('apDetalle').hidden = cual !== 'detalle'; $('apForm').hidden = cual !== 'form';
+    $('btnVolverAp').hidden = cual !== 'lista'; $('apMsg').hidden = cual !== 'lista'; $('apAviso').textContent = '';
+  }
+  function apGrupos() {
+    var g = {}, orden = [];
+    AP.items.forEach(function (x) { var k = apClave(x.ejercicio); if (!g[k]) { g[k] = []; orden.push(k); } g[k].push(x); });
+    return { g: g, orden: orden };
+  }
+  function apPintarLista() {
+    var cont = $('apGrupos'); while (cont.firstChild) cont.removeChild(cont.firstChild);
+    var q = apClave($('apBuscar').value), r = apGrupos(), n = 0;
+    r.orden.forEach(function (k) {
+      if (q && k.indexOf(q) < 0) return;
+      n++;
+      var ult = r.g[k][0], b = document.createElement('button'); b.type = 'button'; b.className = 'apit';
+      var t = document.createElement('b'); t.textContent = ult.ejercicio;
+      var sp = document.createElement('span'); sp.textContent = ult.intensidad + ' · ' + ult.reps + ' reps · ' + apCorta(ult.fecha) + ' · ' + r.g[k].length + (r.g[k].length === 1 ? ' registro' : ' registros');
+      b.appendChild(t); b.appendChild(sp); b.onclick = function () { apAbrir(k); };
+      cont.appendChild(b);
+    });
+    $('apMsg').textContent = AP.items.length ? 'Toca un ejercicio para ver tu historial.' : 'Aún no tienes apuntes. Anota tu primer ejercicio y empieza a ver tu progreso 💪';
+    $('apBuscar').hidden = !AP.items.length;
+    if (AP.items.length && !n) { var p = document.createElement('p'); p.className = 'msg'; p.textContent = 'Sin resultados.'; cont.appendChild(p); }
+  }
+  function apAbrir(k) {
+    AP.ej = k; var lista = apGrupos().g[k];
+    if (!lista) { AP.ej = null; apPintarLista(); apMostrar('lista'); return; }
+    $('apTitulo').textContent = lista[0].ejercicio;
+    var h = $('apHist'); while (h.firstChild) h.removeChild(h.firstChild);
+    lista.forEach(function (x) {
+      var d = document.createElement('div'); d.className = 'aprow';
+      var f = document.createElement('div'); f.className = 'fe'; f.textContent = apFecha(x.fecha);
+      var i = document.createElement('div'); i.className = 'in'; i.textContent = x.intensidad + ' · ' + x.reps + ' reps';
+      d.appendChild(f); d.appendChild(i);
+      if (x.notas) { var no = document.createElement('div'); no.className = 'no'; no.textContent = x.notas; d.appendChild(no); }
+      var ac = document.createElement('div'); ac.className = 'ac';
+      var e = document.createElement('button'); e.type = 'button'; e.textContent = '✏️ Editar'; e.onclick = function () { apForm(x); };
+      var bo = document.createElement('button'); bo.type = 'button'; bo.textContent = '🗑 Borrar';
+      bo.onclick = function () {
+        if (bo.dataset.ok !== '1') { bo.dataset.ok = '1'; bo.textContent = '¿Seguro? Toca otra vez'; return; }
+        apEnviar({ accion: 'apuntes_borrar', ref: x.ref }, function () { apAbrir(AP.ej); });
+      };
+      ac.appendChild(e); ac.appendChild(bo); d.appendChild(ac); h.appendChild(d);
+    });
+    apMostrar('detalle');
+  }
+  function apForm(x) {
+    AP.ref = x ? x.ref : null;
+    $('apFormT').textContent = x ? 'EDITAR APUNTE' : 'NUEVO APUNTE';
+    var sel = $('apSel'), nombre = x ? x.ejercicio : (AP.ej ? (apGrupos().g[AP.ej] || [{ ejercicio: '' }])[0].ejercicio : '');
+    var enSug = AP_SUG.indexOf(nombre) >= 0;
+    sel.value = nombre ? (enSug ? nombre : '__otro') : '';
+    $('apOtro').hidden = sel.value !== '__otro'; $('apOtro').value = (nombre && !enSug) ? nombre : '';
+    $('apInt').value = x ? x.intensidad : ''; $('apReps').value = x ? x.reps : '';
+    $('apFecha').value = x ? x.fecha : apHoy(); $('apNotas').value = x ? x.notas : '';
+    apMostrar('form');
+  }
+  function apEnviar(body, ok) {
+    if (AP.busy) return; AP.busy = true;
+    enviar(body).then(function (d) {
+      AP.busy = false;
+      if (d && d.ok) { AP.items = d.items || []; apPintarLista(); ok(); }
+      else lgDecir($('apAviso'), 'bad', AP_ERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
+    }).catch(function () { AP.busy = false; lgDecir($('apAviso'), 'bad', 'Sin conexión. Intenta de nuevo.'); });
+  }
+  function activarApuntes() {
+    var sel = $('apSel');
+    if (!sel.options.length) {
+      var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Elige un ejercicio…'; sel.appendChild(o0);
+      AP_SUG.forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+      var oo = document.createElement('option'); oo.value = '__otro'; oo.textContent = 'Otro (escribir nombre)…'; sel.appendChild(oo);
+      sel.onchange = function () { $('apOtro').hidden = sel.value !== '__otro'; if (!$('apOtro').hidden) $('apOtro').focus(); };
+    }
+    $('btnApuntes').onclick = function () {
+      ver('apuntes'); apMostrar('lista'); AP.ej = null;
+      $('apMsg').textContent = 'Cargando…';
+      enviar({ accion: 'apuntes_leer' }).then(function (d) {
+        if (d && d.ok) { AP.items = d.items || []; apPintarLista(); }
+        else { $('apMsg').textContent = 'No se pudieron cargar tus apuntes.'; }
+      }).catch(function () { $('apMsg').textContent = 'Sin conexión. Intenta de nuevo.'; });
+    };
+    $('btnVolverAp').onclick = function () { ver('card'); };
+    $('apBuscar').oninput = apPintarLista;
+    $('btnApNuevo').onclick = function () { AP.ej = null; apForm(null); };
+    $('btnApOtro').onclick = function () { apForm(null); };
+    $('btnApAtras').onclick = function () { AP.ej = null; apPintarLista(); apMostrar('lista'); };
+    $('btnApCancelar').onclick = function () { if (AP.ej && apGrupos().g[AP.ej]) apAbrir(AP.ej); else apMostrar('lista'); };
+    $('btnApGuardar').onclick = function () {
+      var nom = sel.value === '__otro' ? $('apOtro').value.trim() : sel.value;
+      var body = { accion: AP.ref ? 'apuntes_editar' : 'apuntes_crear', ref: AP.ref, ejercicio: nom, intensidad: $('apInt').value.trim(),
+                   reps: $('apReps').value.trim(), fecha: $('apFecha').value || apHoy(), notas: $('apNotas').value.trim() };
+      if (nom.length < 2) return lgDecir($('apAviso'), 'bad', AP_ERR.ejercicio);
+      if (!body.intensidad) return lgDecir($('apAviso'), 'bad', AP_ERR.intensidad);
+      if (!body.reps) return lgDecir($('apAviso'), 'bad', AP_ERR.reps);
+      apEnviar(body, function () { AP.ej = apClave(nom); apAbrir(AP.ej); });
+    };
+  }
+
   /* ---------- fisioterapia · Kine-Regeneratus ---------- */
   var FI = { listo: false };
   function activarFisio(a) {
@@ -1139,6 +1297,7 @@
         activarLogros(a.nombre);
         activarAsistencia();
         activarFisio(a);
+        activarApuntes();
         $('btnCambiar').onclick = cambiarTarjeta;
         activarRutina(a.instructor);
         $('detalle').hidden = false;
