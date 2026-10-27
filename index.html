@@ -49,6 +49,21 @@
     .full{grid-column:1/-1}
     .code{font-family:ui-monospace,Menlo,monospace;letter-spacing:1px;color:var(--muted)}
 
+    .racha{margin:14px 0 4px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0a1206}
+    .racha.on{border-color:rgba(242,179,61,.5)}
+    .rtop{display:flex;align-items:center;gap:12px}
+    .fuego{font-size:34px;line-height:1}
+    .racha.off .fuego{filter:grayscale(1);opacity:.55}
+    .rnum{font-family:'Bebas Neue',Impact,sans-serif;font-size:40px;line-height:1;letter-spacing:1px}
+    .rlbl{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+    .rrec{margin-left:auto;font-size:12px;color:var(--muted);text-align:right}
+    .rsem{display:flex;gap:6px;margin-top:12px}
+    .rsem span{flex:1;text-align:center;padding:7px 0;border-radius:9px;background:#121e0d;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .rsem span.ok{border-color:var(--ok);color:var(--ok)} .rsem span.hoy{border-color:var(--warn);color:var(--warn)}
+    .rsem span.falta{border-color:rgba(255,90,90,.5);color:var(--bad)} .rsem span.feriado{opacity:.5}
+    .rmsg{font-size:13px;line-height:1.5;margin-top:10px;color:var(--text)}
+    .rmsg.riesgo{color:var(--warn)} .rmsg.perdida{color:var(--bad)}
+    .rbtn{display:block;margin-top:10px;padding:12px;border-radius:12px;text-align:center;text-decoration:none;background:#25D366;color:#06210f;font-weight:600;font-size:14px}
     .msg{color:var(--muted);font-size:14px;line-height:1.5;margin-top:14px}
     .loading .status{opacity:.7}
     .clock{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
@@ -158,6 +173,14 @@
 
     <div id="detalle" hidden>
       <h1 id="nombre" class="name"></h1>
+      <div id="racha" class="racha" hidden>
+        <div class="rtop"><span class="fuego" aria-hidden="true">🔥</span>
+          <div><span id="rNum" class="rnum"></span><span id="rLbl" class="rlbl"></span></div>
+          <span id="rRec" class="rrec"></span></div>
+        <div id="rSem" class="rsem"></div>
+        <p id="rMsg" class="rmsg"></p>
+        <a id="rBtn" class="rbtn" href="#" target="_blank" rel="noopener" hidden></a>
+      </div>
       <p id="dias" class="days"></p>
       <div class="bar"><span id="barra"></span></div>
       <dl class="grid">
@@ -915,6 +938,7 @@
         pintar(a.clase, a.estado, '');
         $('nombre').textContent = a.nombre;
         $('dias').textContent = a.staff ? 'STAFF · Kalos' : a.textoDias;
+        pintarRacha(a.racha, a);
         $('btnRenovar').hidden = !!a.staff;
         $('barra').parentNode.hidden = !!a.staff;
         $('inicio').textContent = a.inicio;
@@ -939,6 +963,46 @@
         pintar('warn', 'SIN CONEXIÓN', 'Sin conexión, intenta de nuevo.');
         $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
       });
+  }
+
+  /* ---------- racha ---------- */
+  function fdm(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; }
+  function pintarRacha(r, a) {
+    var box = $('racha');
+    if (!r) { box.hidden = true; return; }
+    box.hidden = false;
+    var viva = r.racha > 0;
+    box.className = 'racha ' + (viva ? 'on' : 'off');
+    $('rNum').textContent = r.racha;
+    $('rLbl').textContent = r.racha === 1 ? 'día de racha' : 'días de racha';
+    $('rRec').textContent = r.record > 0 ? 'Récord: ' + r.record : '';
+    var sem = $('rSem'); while (sem.firstChild) sem.removeChild(sem.firstChild);
+    var tres = r.modo === '3x';
+    (r.semana.dias || []).forEach(function (d) {
+      var e = d.e, t = d.l;
+      if (e === 'ok') t += ' ✅'; else if (e === 'falta') { if (tres) e = ''; else t += ' ❌'; } else if (e === 'hoy') t += ' •'; else if (e === 'feriado') t += ' 🎌';
+      var sp = document.createElement('span'); sp.className = e === 'futuro' ? '' : e; sp.textContent = t; sem.appendChild(sp);
+    });
+    var msg = '', cls = '';
+    if (r.estado === 'nueva') msg = 'Empieza tu racha: escanea el QR de la puerta cada vez que vengas a entrenar. Solo cuentan lunes a viernes.';
+    else if (r.estado === 'perdida') {
+      cls = 'perdida';
+      msg = r.perdida ? 'Perdiste tu racha de ' + r.perdida.dias + (r.perdida.dias === 1 ? ' día' : ' días') + ' (' + fdm(r.perdida.fecha) + '). ' : '';
+      if (r.restaurable) msg += 'Puedes recuperarla con una penitencia hasta el ' + fdm(r.restaurable.limite) + '.';
+      else if (r.bloqueada) msg += 'Ya usaste tu recuperación de esta semana. Empieza una nueva racha hoy 💪';
+      else msg += 'Empieza una nueva hoy 💪';
+    } else if (r.estado === 'riesgo') {
+      cls = 'riesgo';
+      msg = tres ? '⚠️ Te ' + (r.semana.faltan === 1 ? 'falta 1 día' : 'faltan ' + r.semana.faltan + ' días') + ' esta semana y hoy te toca venir para mantener tu racha.' : '⚠️ Hoy te toca venir para no perder tu racha.';
+    } else if (tres) msg = 'Esta semana: ' + Math.min(r.semana.visitas, r.semana.necesita) + ' de ' + r.semana.necesita + ' días. ' + (r.semana.faltan === 0 ? 'Semana cumplida ✅' : 'Ven ' + r.semana.faltan + (r.semana.faltan === 1 ? ' día más' : ' días más') + ' para mantener tu racha.');
+    else msg = r.semana.hoyToca ? 'Hoy te toca venir.' : 'Tu racha sigue viva. ¡Vamos por más! 🔥';
+    var m = $('rMsg'); m.className = 'rmsg ' + cls; m.textContent = msg;
+    var b = $('rBtn');
+    if (r.restaurable) {
+      var txt = 'Hola, soy ' + a.nombre + ' (' + a.id + '). Perdí mi racha de ' + r.restaurable.prev + ' días el ' + fdm(r.restaurable.desde) + '. Quiero mi penitencia para recuperarla 💪';
+      b.hidden = false; b.textContent = '🔁 RECUPERAR MI RACHA CON PENITENCIA';
+      b.href = 'https://wa.me/59177412120?text=' + encodeURIComponent(txt);
+    } else { b.hidden = true; b.removeAttribute('href'); }
   }
 
   function cambiarTarjeta() {
