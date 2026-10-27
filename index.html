@@ -304,6 +304,8 @@
       <button id="btnFisio" class="btn out" type="button">🩺 FISIOTERAPIA · KINE-REGENERATUS</button>
       <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
       <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
+      <button id="btnAvisos" class="btn out" type="button" hidden>🔔 ACTIVAR AVISOS</button>
+      <p id="avAvisos" class="aviso"></p>
       <div id="inst" class="inst" hidden>
         <button id="btnInstalar" class="btn out" type="button">📲 INSTALAR APP</button>
         <button id="btnInstNo" class="no" type="button">Ahora no</button>
@@ -412,6 +414,7 @@
   <section id="pago" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>RENOVAR</div>
     <h2>Escanea y paga con tu app del banco</h2>
+    <div id="pgBono" class="fdesc" hidden><b>🎁 Renueva a tiempo y gana 2 días extra</b><span id="pgBonoTxt"></span></div>
     <div class="qrbox"><img src="qr-pago.png" alt="QR de pago" width="640" height="640"></div>
     <p class="msg">El QR está a nombre de <b style="color:#fff">Luis Carlos Camacho</b>, no te olvides enviar el comprobante a Chino!</p>
     <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener">ENVIAR COMPROBANTE POR WHATSAPP</a>
@@ -1067,6 +1070,71 @@
     };
   }
 
+  /* ---------- avisos en el celular (notificaciones) ---------- */
+  var VAPID_PUB = 'BBXVZLTO8PARtGp6EDeHQgGLfUuVk_yEPCfc3Ft-oqhuYn7GCMmw-WXlvWk15Zk8tGjmzgA1WOgCz_L2PLhEtQE';
+  function b64aBytes(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; var r = atob(s), o = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) o[i] = r.charCodeAt(i); return o; }
+  function pushSoportado() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+  function esIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function instalada() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+  function guardarCfgPush(endpoint) {
+    return caches.open('kalos-cfg').then(function (c) {
+      return c.put(new Request(new URL('cfg-push', location.href).href), new Response(JSON.stringify({ api: API, id: id, endpoint: endpoint })));
+    }).catch(function () {});
+  }
+  function avisosBaja() {
+    try {
+      if (!pushSoportado()) return;
+      navigator.serviceWorker.getRegistration().then(function (reg) { return reg && reg.pushManager.getSubscription(); }).then(function (sub) {
+        if (!sub) return;
+        enviar({ accion: 'push_baja', endpoint: sub.endpoint }).catch(function () {});
+        sub.unsubscribe().catch(function () {});
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  function activarAvisos() {
+    var b = $('btnAvisos'), av = $('avAvisos');
+    function pintarBtn(on) { b.textContent = on ? '🔔 AVISOS ACTIVADOS · toca para desactivar' : '🔔 ACTIVAR AVISOS'; b.className = on ? 'btn sec' : 'btn out'; b.dataset.on = on ? '1' : ''; }
+    if (!pushSoportado()) {
+      if (esIOS() && !instalada()) { b.hidden = false; pintarBtn(false); b.onclick = function () { lgDecir(av, '', 'En iPhone, primero instala la app: toca Compartir y luego "Añadir a pantalla de inicio". Ábrela desde ahí y activa los avisos.'); }; }
+      return;
+    }
+    b.hidden = false; pintarBtn(false); lgDecir(av, '', '');
+    navigator.serviceWorker.ready.then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (sub) {
+        if (sub && Notification.permission === 'granted') {
+          pintarBtn(true); guardarCfgPush(sub.endpoint);
+          enviar({ accion: 'push_registrar', endpoint: sub.endpoint }).catch(function () {});   // mantiene el registro al día
+        }
+        b.onclick = function () {
+          lgDecir(av, '', '');
+          if (b.dataset.on) {
+            enviar({ accion: 'push_baja', endpoint: sub && sub.endpoint }).catch(function () {});
+            reg.pushManager.getSubscription().then(function (s) { return s && s.unsubscribe(); }).then(function () { sub = null; pintarBtn(false); lgDecir(av, 'ok', 'Avisos desactivados.'); });
+            return;
+          }
+          if (Notification.permission === 'denied') { lgDecir(av, 'bad', 'Los avisos están bloqueados. Actívalos en los ajustes de tu celular para esta app.'); return; }
+          Notification.requestPermission().then(function (perm) {
+            if (perm !== 'granted') { lgDecir(av, 'bad', 'No diste permiso para los avisos.'); return; }
+            return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64aBytes(VAPID_PUB) }).then(function (s) {
+              sub = s;
+              return enviar({ accion: 'push_registrar', endpoint: s.endpoint }).then(function (d) {
+                if (d && d.ok) { guardarCfgPush(s.endpoint); pintarBtn(true); lgDecir(av, 'ok', '¡Listo! Te avisaremos cuando tu mes esté por vencer y cuando toque entrenar 💪'); }
+                else { s.unsubscribe().catch(function () {}); sub = null; lgDecir(av, 'bad', 'No se pudieron activar los avisos. Intenta de nuevo.'); }
+              });
+            });
+          }).catch(function () { lgDecir(av, 'bad', 'No se pudieron activar los avisos en este celular.'); });
+        };
+      });
+    }).catch(function () { b.hidden = true; });
+  }
+  function pintarBono(a) {
+    var box = $('pgBono'); box.hidden = true;
+    if (a.staff) return;
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(a.fin || ''));
+    if (a.estado === 'VENCE HOY') { $('pgBonoTxt').textContent = 'Renueva hoy y gana 2 días extra de regalo.'; box.hidden = false; }
+    else if (a.estado === 'POR VENCER' && m) { $('pgBonoTxt').textContent = 'Renueva hasta el ' + m[1] + '/' + m[2] + ' y gana 2 días extra de regalo.'; box.hidden = false; }
+  }
+
   /* ---------- fisioterapia · Kine-Regeneratus ---------- */
   var FI = { listo: false };
   function activarFisio(a) {
@@ -1253,6 +1321,7 @@
   }
 
   /* ---------- tarjeta ---------- */
+  var IR = new URLSearchParams(location.search).get('ir') || '';
   var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
   var PUERTA = new URLSearchParams(location.search).has('puerta');
 
@@ -1298,10 +1367,13 @@
         activarAsistencia();
         activarFisio(a);
         activarApuntes();
+        activarAvisos();
+        pintarBono(a);
         $('btnCambiar').onclick = cambiarTarjeta;
         activarRutina(a.instructor);
         $('detalle').hidden = false;
         mostrarInstalar();
+        if (IR === 'renovar' && !a.staff) { IR = ''; try { history.replaceState(null, '', location.pathname + '?app=1'); } catch (e) {} setTimeout(function () { ver('pago'); }, 450); }
         requestAnimationFrame(function () {
           $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
         });
@@ -1354,6 +1426,7 @@
   }
 
   function cambiarTarjeta() {
+    avisosBaja();
     borrarId(); borrarTel(); id = '';
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
     $('detalle').hidden = true;
