@@ -49,6 +49,17 @@
     .full{grid-column:1/-1}
     .code{font-family:ui-monospace,Menlo,monospace;letter-spacing:1px;color:var(--muted)}
 
+    .fdesc{margin:14px 0 0;padding:12px 14px;border:1px solid var(--ok);border-radius:12px;background:#0a1206}
+    .fdesc b{display:block;color:var(--ok);font-size:15px}
+    .fdesc span{display:block;margin-top:4px;color:#fff;font-size:14px;line-height:1.4}
+    .fcar{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:14px -4px 0;padding:0 4px 6px;-webkit-overflow-scrolling:touch}
+    .fcar img{flex:0 0 82%;width:82%;max-width:340px;aspect-ratio:4/5;object-fit:cover;border-radius:12px;scroll-snap-align:center;border:1px solid var(--line);background:#0a1206;cursor:zoom-in}
+    .fhint{margin:6px 0 0;text-align:center;color:var(--sage);font-size:12px}
+    .fzoom{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.94)}
+    .fzoom button{position:fixed;top:12px;right:12px;z-index:2;width:44px;height:44px;border:0;border-radius:50%;background:#fff;color:#000;font-size:20px;cursor:pointer}
+    .fzs{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;display:flex}
+    .fzs img{margin:auto;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in}
+    .fzs.z img{max-width:none;max-height:none;width:220%;cursor:zoom-out}
     .racha{margin:14px 0 4px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0a1206}
     .racha.on{border-color:rgba(242,179,61,.5)}
     .rtop{display:flex;align-items:center;gap:12px}
@@ -194,6 +205,7 @@
       <button id="btnRutina" class="btn" type="button" hidden>💪 MI RUTINA</button>
       <button id="btnLogros" class="btn out" type="button">🏆 MIS LOGROS</button>
       <button id="btnAsist" class="btn out" type="button">📅 MI ASISTENCIA</button>
+      <button id="btnFisio" class="btn out" type="button">🩺 FISIOTERAPIA · KINE-REGENERATUS</button>
       <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
       <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
       <div id="inst" class="inst" hidden>
@@ -232,6 +244,23 @@
 
     <button id="btnVolverL" class="btn sec" type="button">Volver</button>
   </section>
+
+  <section id="fisio" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>FISIOTERAPIA</div>
+    <h2>KINE-REGENERATUS</h2>
+    <p class="msg" style="margin-top:0">Centro de rehabilitación</p>
+    <div class="fdesc">
+      <b>🎁 Descuento especial por ser alumno de Kalos</b>
+      <span>30 % de descuento en sus servicios individuales. Consulta también por el seguro y por el pago anticipado.</span>
+    </div>
+    <div id="fiCar" class="fcar"></div>
+    <p class="fhint">Desliza para ver más · toca una imagen para ampliarla</p>
+    <a id="btnFiMaps" class="btn out" href="https://maps.app.goo.gl/P3mE5J7D6FEiEbCm7?g_st=iw" target="_blank" rel="noopener">📍 CÓMO LLEGAR</a>
+    <a id="btnFiWa" class="btn wa" href="#" target="_blank" rel="noopener">💬 ESCRIBIR A SERGIO</a>
+    <button id="btnVolverF" class="btn sec" type="button">Volver</button>
+  </section>
+
+  <div id="fiZoom" class="fzoom" hidden><button id="fiCerrar" type="button" aria-label="Cerrar">✕</button><div class="fzs"><img id="fiImg" alt="Kine-Regeneratus"></div></div>
 
   <section id="buzon" class="card pago neutral" hidden>
     <div class="status"><span class="dot"></span>BUZÓN</div>
@@ -389,7 +418,7 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   function ver(cual) {
-    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina'].forEach(function (k) { $(k).hidden = (k !== cual); });
+    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio'].forEach(function (k) { $(k).hidden = (k !== cual); });
     window.scrollTo(0, 0);
   }
 
@@ -749,6 +778,32 @@
     $('btnVolverA').onclick = function () { ver(AS.volver); };
   }
 
+  /* ---------- fisioterapia · Kine-Regeneratus ---------- */
+  var FI = { listo: false };
+  function activarFisio(a) {
+    var txt = 'Hola Sergio, soy ' + a.nombre + ', alumno de Kalos Calistenia. Quiero consultar por los servicios de fisioterapia y el descuento para alumnos 💪';
+    $('btnFiWa').href = 'https://wa.me/59175977906?text=' + encodeURIComponent(txt);
+    $('btnFiWa').onclick = function () {
+      try { fetch(API, { method: 'POST', credentials: 'omit', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                         body: JSON.stringify({ accion: 'fisio_contacto', id: id }) }).catch(function () {}); } catch (e) {}
+    };
+    $('btnFisio').onclick = function () {
+      if (!FI.listo) {
+        FI.listo = true;
+        for (var i = 1; i <= 4; i++) {
+          var im = document.createElement('img');
+          im.src = 'kine' + i + '.jpg'; im.alt = 'Kine-Regeneratus ' + i; im.loading = 'lazy';
+          im.onclick = function () { $('fiImg').src = this.src; $('fiImg').parentNode.className = 'fzs'; $('fiZoom').hidden = false; };
+          $('fiCar').appendChild(im);
+        }
+        $('fiImg').onclick = function () { this.parentNode.classList.toggle('z'); };
+        $('fiCerrar').onclick = function () { $('fiZoom').hidden = true; };
+      }
+      ver('fisio');
+    };
+    $('btnVolverF').onclick = function () { ver('card'); };
+  }
+
   /* ---------- puerta del gimnasio ---------- */
   function iniciarPuerta() {
     var inp = $('puTel'), aviso = $('puAviso'), btn = $('btnRegistrar'), PU = { tel: '', busy: false };
@@ -951,6 +1006,7 @@
         activarBuzon();
         activarLogros(a.nombre);
         activarAsistencia();
+        activarFisio(a);
         $('btnCambiar').onclick = cambiarTarjeta;
         activarRutina(a.instructor);
         $('detalle').hidden = false;
@@ -969,7 +1025,7 @@
   function fdm(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; }
   function pintarRacha(r, a) {
     var box = $('racha');
-    if (!r) { box.hidden = true; return; }
+    if (!r || !r.semana) r = { modo: (r && r.modo) || 'diario', racha: 0, record: (r && r.record) || 0, estado: (r && r.estado) || 'nueva', perdida: null, restaurable: null, bloqueada: false, semana: { dias: [], visitas: 0, necesita: 3, faltan: 3, hoyToca: false } };
     box.hidden = false;
     var viva = r.racha > 0;
     box.className = 'racha ' + (viva ? 'on' : 'off');
@@ -984,7 +1040,7 @@
       var sp = document.createElement('span'); sp.className = e === 'futuro' ? '' : e; sp.textContent = t; sem.appendChild(sp);
     });
     var msg = '', cls = '';
-    if (r.estado === 'nueva') msg = 'Empieza tu racha: escanea el QR de la puerta cada vez que vengas a entrenar. Solo cuentan lunes a viernes.';
+    if (r.estado === 'nueva' || (!viva && r.estado !== 'perdida' && r.estado !== 'riesgo')) msg = '¡Comienza tu racha! 💪 Ve al gimnasio y escanea el QR de la puerta cada vez que entrenes. Solo cuentan lunes a viernes.';
     else if (r.estado === 'perdida') {
       cls = 'perdida';
       msg = r.perdida ? 'Perdiste tu racha de ' + r.perdida.dias + (r.perdida.dias === 1 ? ' día' : ' días') + ' (' + fdm(r.perdida.fecha) + '). ' : '';
