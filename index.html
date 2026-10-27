@@ -8,7 +8,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <meta name="theme-color" content="#0D1708">
+  <meta name="theme-color" content="#000000">
+  <link rel="preload" as="image" href="isotipo-splash.png">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Kalos Workout">
@@ -172,9 +173,83 @@
     #lbR img{display:block;width:100%;height:auto}
     #lbRx{position:fixed;top:12px;right:12px;z-index:51;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px;cursor:pointer}
     [hidden]{display:none!important}
+
+    /* ---------- pantalla de inicio (neblina) ---------- */
+    #splash{position:fixed;inset:0;z-index:100;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:background .6s ease .15s}
+    #splash .sp-fog{position:absolute;left:50%;top:50%;width:130vmax;height:130vmax;margin:-65vmax 0 0 -65vmax;border-radius:50%;will-change:transform,opacity;
+      background:radial-gradient(circle,rgba(205,215,205,.30) 0,rgba(205,215,205,.10) 30%,transparent 60%)}
+    #splash .f1{animation:fogA 9s ease-in-out infinite alternate}
+    #splash .f2{animation:fogB 11s ease-in-out infinite alternate;opacity:.8}
+    #splash .f3{animation:fogC 13s ease-in-out infinite alternate;opacity:.6}
+    @keyframes fogA{from{transform:translate3d(-12%,6%,0) scale(.9)}to{transform:translate3d(10%,-6%,0) scale(1.15)}}
+    @keyframes fogB{from{transform:translate3d(14%,10%,0) scale(1.1)}to{transform:translate3d(-10%,-8%,0) scale(.85)}}
+    @keyframes fogC{from{transform:translate3d(0,-12%,0) scale(1)}to{transform:translate3d(-8%,12%,0) scale(1.2)}}
+    #splash .sp-mist{position:absolute;left:50%;top:50%;width:150vmax;height:150vmax;margin:-75vmax 0 0 -75vmax;z-index:3;pointer-events:none;will-change:transform,opacity;
+      background:radial-gradient(circle,rgba(92,101,92,.92) 0,rgba(92,101,92,.78) 20%,rgba(92,101,92,.4) 38%,transparent 58%);
+      animation:mistOut 2.5s cubic-bezier(.4,0,.3,1) .1s forwards}
+    @keyframes mistOut{from{opacity:1;transform:scale(.7)}to{opacity:0;transform:scale(1.7)}}
+    #spLogo{position:relative;z-index:2;width:min(58vw,260px);height:auto;display:block;will-change:transform,opacity,filter;
+      animation:spIn 2.4s cubic-bezier(.2,.7,.2,1) .15s backwards}
+    @keyframes spIn{from{opacity:0;filter:blur(18px);transform:scale(.86)}}
+    #splash.espera #spLogo{animation:spResp 2.4s ease-in-out infinite}
+    @keyframes spResp{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+    #splash.corto .sp-fog,#splash.corto .sp-mist{display:none}
+    #splash.corto #spLogo{animation:spInC .45s ease-out backwards}
+    @keyframes spInC{from{opacity:0;transform:scale(.92)}}
+    #splash.zoom{background:rgba(0,0,0,0)}
+    #splash.zoom #spLogo{animation:none;opacity:0;filter:blur(3px);transform:scale(15);
+      transition:transform .8s cubic-bezier(.55,0,.85,.35),opacity .55s ease .25s,filter .8s ease}
+    #splash.zoom .sp-fog,#splash.zoom .sp-mist{opacity:0;transition:opacity .45s ease}
+    body.entra .wrap{animation:wrapIn .7s cubic-bezier(.2,.8,.2,1)}
+    @keyframes wrapIn{from{opacity:0;transform:scale(1.06)}}
+    /* ---------- deslizamiento entre pantallas ---------- */
+    html,body{overflow-x:hidden}
+    .wrap{position:relative;overflow-x:clip}
+    .sl-sale-izq{animation:slOutL .36s cubic-bezier(.4,0,.2,1) forwards}
+    .sl-sale-der{animation:slOutR .36s cubic-bezier(.4,0,.2,1) forwards}
+    .sl-entra-der{animation:slInR .36s cubic-bezier(.2,.8,.2,1) both}
+    .sl-entra-izq{animation:slInL .36s cubic-bezier(.2,.8,.2,1) both}
+    @keyframes slOutL{to{transform:translate3d(-105%,0,0);opacity:.2}}
+    @keyframes slOutR{to{transform:translate3d(105%,0,0);opacity:.2}}
+    @keyframes slInR{from{transform:translate3d(105%,0,0);opacity:.2}}
+    @keyframes slInL{from{transform:translate3d(-105%,0,0);opacity:.2}}
+    .btn:active:not(:disabled){transform:scale(.97);transition:transform .08s}
+    @media (prefers-reduced-motion:reduce){
+      #splash .sp-fog,#splash .sp-mist{display:none}
+      #spLogo{animation:spInC .5s ease-out backwards}
+      #splash.zoom #spLogo{transform:none;filter:none;transition:opacity .3s}
+      body.entra .wrap{animation:none}
+    }
   </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+  <div class="sp-fog f1"></div><div class="sp-fog f2"></div><div class="sp-fog f3"></div>
+  <img id="spLogo" src="isotipo-splash.png" alt="">
+  <div class="sp-mist"></div>
+</div>
+<script>
+(function () {
+  var sp = document.getElementById('splash'); if (!sp) return;
+  var corto = /[?&]puerta(=|&|$)/.test(location.search);
+  var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var MIN = corto ? 900 : (reduce ? 1200 : 3000);
+  if (corto) sp.className = 'corto';
+  var t0 = Date.now(), listo = false, hecho = false;
+  window.KALOS_SPLASH = false;
+  function cerrar() {
+    if (hecho) return; hecho = true;
+    sp.className = (sp.className ? sp.className + ' ' : '') + 'zoom';
+    document.body.className += ' entra';
+    var tc = document.querySelector('meta[name="theme-color"]'); if (tc) setTimeout(function () { tc.setAttribute('content', '#0D1708'); }, 500);
+    setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); window.KALOS_SPLASH = true; }, reduce ? 400 : 950);
+  }
+  function revisar() { if (!hecho && listo && Date.now() - t0 >= MIN) cerrar(); }
+  window.splashListo = function () { if (listo) return; listo = true; setTimeout(revisar, Math.max(0, MIN - (Date.now() - t0))); };
+  setTimeout(function () { if (!hecho && !listo) sp.className += ' espera'; }, MIN);     // el isotipo "respira" si los datos tardan
+  setTimeout(function () { listo = true; revisar(); }, 9000);                              // seguro: nunca se queda trabado
+})();
+</script>
 <main class="wrap">
   <header class="brand"><img src="logo.png" alt="Kalos by Beast"></header>
 
@@ -417,10 +492,57 @@
 
 
   var WA = '59177412120'; // WhatsApp del Chino
-  function ver(cual) {
-    ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio'].forEach(function (k) { $(k).hidden = (k !== cual); });
+  /* ---- navegación entre pantallas con deslizamiento lateral ---- */
+  var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio'];
+  var SOLO = { entrada: 1, puerta: 1 };
+  var NAV = { cur: 'card', prev: '', pila: [], limpiar: null };
+  var REDUCE = false; try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  try { history.scrollRestoration = 'manual'; } catch (e) {}
+
+  function ir(cual, atras, pop) {
+    if (NAV.limpiar) NAV.limpiar();
+    var prev = NAV.cur;
+    if (prev === cual) {
+      VISTAS.forEach(function (k) { $(k).hidden = (k !== cual); });
+      window.scrollTo(0, 0); return;
+    }
+    if (pop) NAV.pila.pop();
+    else if (!atras && prev && !SOLO[cual] && !SOLO[prev]) { NAV.pila.push(prev); try { history.pushState({ v: cual }, ''); } catch (e) {} }
+    else if (SOLO[cual] || SOLO[prev]) NAV.pila = [];
+    NAV.prev = prev; NAV.cur = cual;
     window.scrollTo(0, 0);
+    var out = $(prev), inn = $(cual);
+    var anim = window.KALOS_SPLASH && !REDUCE && prev !== cual && !out.hidden;
+    VISTAS.forEach(function (k) { if (k !== cual && !(anim && k === prev)) $(k).hidden = true; });
+    if (!anim) { inn.hidden = false; if (prev !== cual) out.hidden = true; return; }
+    var top = out.offsetTop, left = out.offsetLeft, w = out.offsetWidth;
+    out.style.position = 'absolute'; out.style.top = top + 'px'; out.style.left = left + 'px'; out.style.width = w + 'px'; out.style.margin = '0';
+    inn.hidden = false;
+    out.classList.add(atras ? 'sl-sale-der' : 'sl-sale-izq');
+    inn.classList.add(atras ? 'sl-entra-izq' : 'sl-entra-der');
+    var tm = setTimeout(function () { NAV.limpiar && NAV.limpiar(); }, 400);
+    NAV.limpiar = function () {
+      clearTimeout(tm); NAV.limpiar = null;
+      if (NAV.cur !== prev) out.hidden = true;
+      out.removeAttribute('style'); out.classList.remove('sl-sale-izq', 'sl-sale-der');
+      inn.classList.remove('sl-entra-izq', 'sl-entra-der');
+    };
   }
+
+  function ver(cual) {
+    if (window.splashListo && cual !== 'card') splashListo();
+    if (cual === NAV.cur) { ir(cual, false, false); return; }
+    var top = NAV.pila[NAV.pila.length - 1];
+    if (top === cual) {                       // "Volver": dejamos que el historial del celular haga el regreso
+      var t = setTimeout(function () { if (NAV.cur !== cual) ir(cual, true, true); }, 350);
+      try { history.back(); } catch (e) { clearTimeout(t); ir(cual, true, true); }
+      return;
+    }
+    ir(cual, cual === NAV.prev, false);
+  }
+  window.addEventListener('popstate', function () {
+    if (NAV.pila.length) ir(NAV.pila[NAV.pila.length - 1], true, true);
+  });
 
   function activarRenovar(nombre) {
     var texto = 'Hola Chino! Soy ' + nombre + ' y quiero renovar mi mes!';
@@ -978,6 +1100,7 @@
     fetch(API + '?format=json&id=' + encodeURIComponent(cid), { credentials: 'omit', cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (d) {
+        if (window.splashListo) splashListo();
         if (d && d.ocupado) {
           pintar('warn', 'UN MOMENTO', 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.');
           $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
@@ -1016,6 +1139,7 @@
         });
       })
       .catch(function () {
+        if (window.splashListo) splashListo();
         pintar('warn', 'SIN CONEXIÓN', 'Sin conexión, intenta de nuevo.');
         $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
       });

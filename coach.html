@@ -74,6 +74,17 @@
     .sem button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:20px;cursor:pointer}
     .sem button:disabled{opacity:.3}
     [hidden]{display:none!important}
+    html,body{overflow-x:hidden}
+    .wrap{position:relative;overflow-x:clip}
+    .sl-sale-izq{animation:slOutL .36s cubic-bezier(.4,0,.2,1) forwards}
+    .sl-sale-der{animation:slOutR .36s cubic-bezier(.4,0,.2,1) forwards}
+    .sl-entra-der{animation:slInR .36s cubic-bezier(.2,.8,.2,1) both}
+    .sl-entra-izq{animation:slInL .36s cubic-bezier(.2,.8,.2,1) both}
+    @keyframes slOutL{to{transform:translate3d(-105%,0,0);opacity:.2}}
+    @keyframes slOutR{to{transform:translate3d(105%,0,0);opacity:.2}}
+    @keyframes slInR{from{transform:translate3d(105%,0,0);opacity:.2}}
+    @keyframes slInL{from{transform:translate3d(-105%,0,0);opacity:.2}}
+    .btn:active:not(:disabled){transform:scale(.97);transition:transform .08s}
   </style>
 </head>
 <body>
@@ -173,9 +184,28 @@
 
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function limpiar(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+  var PANT = ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sDia', 'sCopiar'];
+  var CUR = '', LIMP = null, REDUCE = false;
+  try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
   function pantalla(k) {
-    ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sDia', 'sCopiar'].forEach(function (x) { $(x).hidden = (x !== k); });
+    if (LIMP) LIMP();
+    var prev = CUR; CUR = k;
     window.scrollTo(0, 0);
+    var out = prev && prev !== k ? $(prev) : null;
+    var anim = out && !out.hidden && !REDUCE;
+    PANT.forEach(function (x) { if (x !== k && !(anim && x === prev)) $(x).hidden = true; });
+    var inn = $(k); inn.hidden = false;
+    if (anim) {
+      var atras = PANT.indexOf(k) < PANT.indexOf(prev);
+      out.style.position = 'absolute'; out.style.top = out.offsetTop + 'px'; out.style.left = out.offsetLeft + 'px'; out.style.width = out.offsetWidth + 'px'; out.style.margin = '0';
+      out.classList.add(atras ? 'sl-sale-der' : 'sl-sale-izq'); inn.classList.add(atras ? 'sl-entra-izq' : 'sl-entra-der');
+      var tm = setTimeout(function () { LIMP && LIMP(); }, 400);
+      LIMP = function () {
+        clearTimeout(tm); LIMP = null;
+        if (CUR !== prev) out.hidden = true;
+        out.removeAttribute('style'); out.classList.remove('sl-sale-izq', 'sl-sale-der'); inn.classList.remove('sl-entra-izq', 'sl-entra-der');
+      };
+    }
     if (typeof marcarTabs === 'function') marcarTabs();
   }
   function decir(id, clase, t) { var n = $(id); n.className = 'aviso ' + clase; n.textContent = t; }
