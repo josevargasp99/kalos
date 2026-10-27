@@ -914,7 +914,9 @@
         guardarId(cid);
         pintar(a.clase, a.estado, '');
         $('nombre').textContent = a.nombre;
-        $('dias').textContent = a.textoDias;
+        $('dias').textContent = a.staff ? 'STAFF · Kalos' : a.textoDias;
+        $('btnRenovar').hidden = !!a.staff;
+        $('barra').parentNode.hidden = !!a.staff;
         $('inicio').textContent = a.inicio;
         $('fin').textContent = a.fin;
         $('plan').textContent = a.plan || '—';
