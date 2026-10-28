@@ -1397,7 +1397,7 @@
     $('rLbl').textContent = r.racha === 1 ? 'día de racha' : 'días de racha';
     $('rRec').textContent = r.record > 0 ? 'Récord: ' + r.record : '';
     var sem = $('rSem'); while (sem.firstChild) sem.removeChild(sem.firstChild);
-    var tres = r.modo === '3x';
+    var tres = r.modo === '3x' || r.modo === '4x';
     (r.semana.dias || []).forEach(function (d) {
       var e = d.e, t = d.l;
       if (e === 'ok') t += ' ✅'; else if (e === 'falta') { if (tres) e = ''; else t += ' ❌'; } else if (e === 'hoy') t += ' •'; else if (e === 'feriado') t += ' 🎌';
