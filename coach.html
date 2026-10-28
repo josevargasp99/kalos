@@ -265,6 +265,7 @@
       if (!d.ok) { if (d.error === 'clave') { pantalla('sLogin'); if (fallo) fallo(d); else decir('avLogin', 'bad', errTxt(d)); return; } decir('avLista', 'bad', errTxt(d)); return; }
       S.alumnos = d.alumnos || [];
       $('quien').textContent = 'Instructor · ' + d.coach;
+      Array.prototype.forEach.call(document.querySelectorAll('.tabs'), function (t) { t.hidden = d.pagos === false; });
       decir('avLista', '', '');
       pintarLista();
     }).catch(function () { decir('avLista', 'bad', 'Sin conexión, intenta de nuevo.'); });
