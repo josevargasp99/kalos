@@ -41,6 +41,8 @@
 
     .name{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:44px;line-height:.95;letter-spacing:1px;margin:18px 0 6px;word-break:break-word}
     .days{color:var(--muted);font-size:14px}
+    .etapa{display:flex;gap:6px;margin:10px 0 2px}.etapa div{flex:1;text-align:center;color:var(--muted);font-size:11px;white-space:nowrap}
+    .etapa i{display:block;height:5px;border-radius:3px;background:#24321e;margin-bottom:5px}.etapa div.on i{background:var(--ok)}.etapa div.act{color:var(--ok)}
     .bar{height:6px;background:#22301c;border-radius:6px;margin:14px 0 20px;overflow:hidden}
     .bar span{display:block;height:100%;width:0;background:var(--c);border-radius:6px;transition:width .8s ease}
 
@@ -279,6 +281,7 @@
 
     <div id="detalle" hidden>
       <h1 id="nombre" class="name"></h1>
+      <div id="etapa" class="etapa" hidden role="img"></div>
       <div id="racha" class="racha" hidden>
         <div class="rtop"><span class="fuego" aria-hidden="true">🔥</span>
           <div><span id="rNum" class="rnum"></span><span id="rLbl" class="rlbl"></span></div>
@@ -1353,6 +1356,7 @@
         $('nombre').textContent = a.nombre;
         $('dias').textContent = a.staff ? 'STAFF · Kalos' : a.textoDias;
         pintarRacha(a.racha, a);
+        pintarEtapa(a.etapa);
         $('btnRenovar').hidden = !!a.staff;
         $('barra').parentNode.hidden = !!a.staff;
         $('inicio').textContent = a.inicio;
@@ -1387,6 +1391,18 @@
 
   /* ---------- racha ---------- */
   function fdm(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; }
+  var ETAPAS = ['Ajuste', 'Carga', 'Carga/Mant.', 'Descarga'];
+  function pintarEtapa(e) {
+    var box = $('etapa');
+    while (box.firstChild) box.removeChild(box.firstChild);
+    if (!e || typeof e.idx !== 'number' || e.idx < 0 || e.idx > 3) { box.hidden = true; return; }
+    ETAPAS.forEach(function (n, i) {
+      var d = document.createElement('div'); d.className = (i <= e.idx ? 'on' : '') + (i === e.idx ? ' act' : '');
+      d.appendChild(document.createElement('i')); d.appendChild(document.createTextNode(n)); box.appendChild(d);
+    });
+    box.setAttribute('aria-label', 'Etapa de esta semana: ' + ETAPAS[e.idx] + ' (semana ' + (e.idx + 1) + ' de 4)');
+    box.hidden = false;
+  }
   function pintarRacha(r, a) {
     var box = $('racha');
     if (!r || !r.semana) r = { modo: (r && r.modo) || 'diario', racha: 0, record: (r && r.record) || 0, estado: (r && r.estado) || 'nueva', perdida: null, restaurable: null, bloqueada: false, semana: { dias: [], visitas: 0, necesita: 3, faltan: 3, hoyToca: false } };
