@@ -436,6 +436,23 @@
   </section>
   <div id="lbR" hidden><button id="lbRx" type="button" aria-label="Cerrar">✕</button><img id="lbRImg" alt="Rutina"></div>
 
+  <section id="pin" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>PIN</div>
+    <h2 id="pinTitulo">INGRESA TU PIN</h2>
+    <p id="pinSub" class="msg"></p>
+    <div id="pinTelBox" hidden>
+      <input id="pinTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" placeholder="Tu celular" aria-label="Tu número de celular">
+    </div>
+    <input id="pinIn" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="PIN de 4 dígitos" aria-label="PIN de 4 dígitos">
+    <div id="pinIn2Box" hidden>
+      <input id="pinIn2" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="Repite tu PIN" aria-label="Repite tu PIN">
+    </div>
+    <p id="pinAv" class="aviso" role="status"></p>
+    <button id="btnPin" class="btn" type="button">ENTRAR</button>
+    <a id="pinOlvide" class="btn wa" href="#" target="_blank" rel="noopener" hidden>OLVIDÉ MI PIN</a>
+    <button id="pinOtra" class="btn sec" type="button">No es mi tarjeta · cambiar</button>
+  </section>
+
   <section id="entrada" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>KALOS WORKOUT</div>
     <div id="enForm">
@@ -474,8 +491,19 @@
       <h2>Registra tu asistencia</h2>
       <p class="msg">Escribe tu número de celular, el mismo con el que te inscribiste en Kalos.</p>
       <input id="puTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" placeholder="7XXXXXXX" aria-label="Tu número de celular">
+      <input id="puPin" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="PIN de 4 dígitos" aria-label="PIN de 4 dígitos">
       <p id="puAviso" class="aviso" role="status"></p>
       <button id="btnRegistrar" class="btn" type="button">REGISTRAR</button>
+      <a id="puOlvide" class="btn wa" href="#" target="_blank" rel="noopener">OLVIDÉ MI PIN</a>
+    </div>
+    <div id="puCrear" hidden>
+      <h2>Crea tu PIN</h2>
+      <p class="msg">Por seguridad, ahora la asistencia y tu tarjeta piden un PIN de 4 dígitos. Elige uno que recuerdes: solo lo creas esta vez.</p>
+      <input id="puPinN" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="Tu PIN nuevo" aria-label="Tu PIN nuevo">
+      <input id="puPinN2" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="Repite tu PIN" aria-label="Repite tu PIN">
+      <p id="puAvisoC" class="aviso" role="status"></p>
+      <button id="btnPuCrear" class="btn" type="button">CREAR PIN Y REGISTRAR</button>
+      <button id="btnPuCrearNo" class="btn sec" type="button">Volver</button>
     </div>
     <div id="puElige" hidden>
       <h2>¿Quién eres?</h2>
@@ -539,6 +567,15 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
+  /* ---- PIN: el permiso de sesión vive solo en memoria, así que cada apertura de la app pide el PIN ---- */
+  var TK = '';
+  var PIN_SEGUNDO_PLANO_MS = 45 * 60 * 1000, tOculta = 0;
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { tOculta = Date.now(); return; }
+    var fuera = tOculta ? Date.now() - tOculta : 0; tOculta = 0;
+    if (TK && fuera > PIN_SEGUNDO_PLANO_MS) { TK = ''; if (id) mostrarPin(id, true, 'guardado', ''); }   // más de 45 min en segundo plano
+  });
+
   function reloj() {
     var d = new Date();
     $('reloj').textContent = d.toLocaleDateString('es-BO') + ' ' + d.toLocaleTimeString('es-BO', { hour12: false });
@@ -555,8 +592,8 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   /* ---- navegación entre pantallas con deslizamiento lateral ---- */
-  var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio', 'apuntes'];
-  var SOLO = { entrada: 1, puerta: 1 };
+  var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio', 'apuntes', 'pin'];
+  var SOLO = { entrada: 1, puerta: 1, pin: 1 };
   var NAV = { cur: 'card', prev: '', pila: [], limpiar: null };
   var REDUCE = false; try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
   try { history.scrollRestoration = 'manual'; } catch (e) {}
@@ -638,7 +675,7 @@
       enviar.disabled = true; decir('', 'Enviando…');
       // text/plain evita el preflight CORS de Apps Script; el código solo valida la tarjeta
       fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                   body: JSON.stringify({ id: id, msg: msg }) })
+                   body: JSON.stringify({ id: id, t: TK, msg: msg }) })
         .then(function (r) { return r.json(); })
         .then(function (d) {
           if (d && d.ok) {
@@ -670,9 +707,12 @@
   };
 
   function enviar(body) {
-    body.id = id;
+    body.id = id; body.t = TK;
     return fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+                        body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.error === 'pin_requerido' && body.accion !== 'push_baja') { TK = ''; if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }   // el permiso venció: vuelve a pedir el PIN
+      return d;
+    });
   }
 
   function lgDecir(el, clase, t) { el.className = 'aviso ' + clase; el.textContent = t; }
@@ -894,8 +934,20 @@
     telefono: 'Escribe tu número de celular (8 dígitos).',
     no_encontrado: 'No encontramos ese número. Revísalo o consulta en recepción.',
     ocupado: 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.',
-    invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.'
+    invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.',
+    pin_pedir: 'Escribe tu PIN de 4 dígitos.',
+    pin_formato: 'El PIN tiene 4 números.',
+    pin_debil: 'Ese PIN es muy fácil de adivinar (1234, 0000…). Elige otro.',
+    pin_existe: 'Ya tienes un PIN: escríbelo arriba.',
+    pin_requerido: 'Vuelve a ingresar tu PIN.'
   };
+  function errPin(d) {
+    var e = d && d.error;
+    if (e === 'pin_incorrecto') return 'PIN incorrecto. ' + (d.restantes === 1 ? 'Te queda 1 intento.' : 'Te quedan ' + d.restantes + ' intentos.');
+    if (e === 'pin_bloqueado') return 'Demasiados intentos. Espera ' + d.minutos + (d.minutos === 1 ? ' minuto' : ' minutos') + ' e inténtalo de nuevo.';
+    if (e === 'pin_tel') return 'Ese celular no coincide con el registrado en Kalos. ' + (d.restantes === 1 ? 'Te queda 1 intento.' : 'Te quedan ' + d.restantes + ' intentos.');
+    return ASERR[e] || '';
+  }
   function guardarTel(t) { try { localStorage.setItem('kalos_tel', t); } catch (e) {} }
   function leerTel() { try { return localStorage.getItem('kalos_tel') || ''; } catch (e) { return ''; } }
   function borrarTel() { try { localStorage.removeItem('kalos_tel'); } catch (e) {} }
@@ -946,12 +998,13 @@
     AS.origen = origen; AS.volver = volver;
     $('asCont').hidden = true; $('asCarga').hidden = false; $('asCarga').textContent = 'Cargando tu calendario…';
     ver('asistencia');
-    var body = { accion: 'asistencia_ver' };
+    var body = { accion: 'asistencia_ver', t: TK };
     for (var k in origen) body[k] = origen[k];
     fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d && d.ok && d.dias) pintarCalendario(d);
+        if (d && d.error === 'pin_requerido') { TK = ''; if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }
+        else if (d && d.ok && d.dias) pintarCalendario(d);
         else $('asCarga').textContent = ASERR[d && d.error] || 'No pudimos cargar tu calendario. Intenta de nuevo.';
       })
       .catch(function () { $('asCarga').textContent = 'No pudimos cargar tu calendario. Revisa tu internet e intenta de nuevo.'; });
@@ -1145,7 +1198,7 @@
     $('btnFiWa').href = 'https://wa.me/59175977906?text=' + encodeURIComponent(txt);
     $('btnFiWa').onclick = function () {
       try { fetch(API, { method: 'POST', credentials: 'omit', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                         body: JSON.stringify({ accion: 'fisio_contacto', id: id }) }).catch(function () {}); } catch (e) {}
+                         body: JSON.stringify({ accion: 'fisio_contacto', id: id, t: TK }) }).catch(function () {}); } catch (e) {}
     };
     $('btnFisio').onclick = function () {
       if (!FI.listo) {
@@ -1166,29 +1219,45 @@
 
   /* ---------- puerta del gimnasio ---------- */
   function iniciarPuerta() {
-    var inp = $('puTel'), aviso = $('puAviso'), btn = $('btnRegistrar'), PU = { tel: '', busy: false };
-    function decir(c, t) { aviso.className = 'aviso ' + c; aviso.textContent = t; }
-    function mostrar(cual) { ['puForm', 'puElige', 'puOk'].forEach(function (k) { $(k).hidden = (k !== cual); }); window.scrollTo(0, 0); }
+    var inp = $('puTel'), aviso = $('puAviso'), btn = $('btnRegistrar'), PU = { tel: '', pin: '', busy: false, sel: undefined };
+    function decir(c, t) { aviso.className = 'aviso ' + c; aviso.textContent = t; $('puAvisoC').className = 'aviso ' + c; $('puAvisoC').textContent = t; }
+    function mostrar(cual) { ['puForm', 'puElige', 'puOk', 'puCrear'].forEach(function (k) { $(k).hidden = (k !== cual); }); window.scrollTo(0, 0); }
     inp.value = leerTel();
+    $('puOlvide').hidden = true;
     ver('puerta'); mostrar('puForm');
 
-    function registrar(sel) {
+    // crear = true: primera vez con PIN (el servidor crea el PIN y registra la asistencia)
+    function registrar(sel, crear) {
       if (PU.busy) return;
       var tel = inp.value.replace(/\D/g, '');
-      if (tel.length < 8) { decir('bad', ASERR.telefono); return; }
-      PU.busy = true; btn.disabled = true; decir('', 'Registrando…');
+      if (tel.length < 8) { mostrar('puForm'); decir('bad', ASERR.telefono); return; }
+      var pin = soloDig(crear ? $('puPinN').value : $('puPin').value);
+      if (crear) {
+        if (pin.length !== 4) { decir('bad', 'El PIN tiene 4 números.'); return; }
+        if (pin !== soloDig($('puPinN2').value)) { decir('bad', 'Los dos PIN no coinciden.'); return; }
+      }
+      PU.busy = true; btn.disabled = true; $('btnPuCrear').disabled = true; decir('', 'Registrando…');
       var body = { accion: 'asistencia_registrar', tel: tel };
-      if (sel !== undefined) body.sel = sel;
+      if (pin) body.pin = pin;
+      if (crear) body.crear = true;
+      if (sel !== undefined) { body.sel = sel; PU.sel = sel; }
+      else if (!crear) PU.sel = undefined;
+      else if (PU.sel !== undefined) body.sel = PU.sel;
       fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
         .then(function (r) { return r.json(); })
         .then(function (d) {
-          PU.busy = false; btn.disabled = false;
+          PU.busy = false; btn.disabled = false; $('btnPuCrear').disabled = false;
           if (d && d.ok && d.eleccion) { elegir(d.eleccion); decir('', ''); return; }
-          if (d && d.ok) { PU.tel = tel; guardarTel(tel); exito(d); return; }
-          decir('bad', ASERR[d && d.error] || 'No pudimos registrar tu asistencia. Intenta de nuevo.');
+          if (d && d.ok) { PU.tel = tel; PU.pin = pin; guardarTel(tel); $('puPin').value = ''; $('puPinN').value = ''; $('puPinN2').value = ''; exito(d); return; }
+          if (d && d.error === 'pin_crear') { $('puPinN').value = ''; $('puPinN2').value = ''; mostrar('puCrear'); decir('', ''); return; }
+          if (d && /^pin_/.test(String(d.error))) $('puOlvide').hidden = false;
+          if (d && d.error === 'pin_existe') { mostrar('puForm'); decir('bad', ASERR.pin_existe); return; }
+          decir('bad', errPin(d) || 'No pudimos registrar tu asistencia. Intenta de nuevo.');
+          if (crear && d && (d.error === 'pin_debil' || d.error === 'pin_formato')) return;       // sigue en la pantalla de crear
+          if (!crear) { $('puPin').value = ''; mostrar('puForm'); decir('bad', errPin(d) || 'No pudimos registrar tu asistencia. Intenta de nuevo.'); }
         })
         .catch(function () {
-          PU.busy = false; btn.disabled = false;
+          PU.busy = false; btn.disabled = false; $('btnPuCrear').disabled = false;
           decir('bad', 'No pudimos registrar. Revisa tu internet e intenta de nuevo.');
         });
     }
@@ -1220,9 +1289,17 @@
     }
 
     btn.onclick = function () { registrar(); };
-    inp.onkeydown = function (e) { if (e.key === 'Enter') registrar(); };
-    $('btnPuCal').onclick = function () { abrirCalendario({ tel: PU.tel }, 'puerta'); };
-    $('btnPuOtro').onclick = function () { borrarTel(); inp.value = ''; decir('', ''); mostrar('puForm'); inp.focus(); };
+    inp.onkeydown = function (e) { if (e.key === 'Enter') $('puPin').focus(); };
+    $('puPin').onkeydown = function (e) { if (e.key === 'Enter') registrar(); };
+    $('puPinN').onkeydown = function (e) { if (e.key === 'Enter') $('puPinN2').focus(); };
+    $('puPinN2').onkeydown = function (e) { if (e.key === 'Enter') registrar(undefined, true); };
+    $('btnPuCrear').onclick = function () { registrar(undefined, true); };
+    $('btnPuCrearNo').onclick = function () { decir('', ''); mostrar('puForm'); };
+    $('puOlvide').onclick = function () {
+      this.href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hola Chino! Olvidé mi PIN de la app de Kalos. Mi celular es ' + soloDig(inp.value) + '. ¿Me lo reinicias? 🙏');
+    };
+    $('btnPuCal').onclick = function () { abrirCalendario({ tel: PU.tel, pin: PU.pin }, 'puerta'); };
+    $('btnPuOtro').onclick = function () { borrarTel(); inp.value = ''; PU.pin = ''; $('puPin').value = ''; decir('', ''); mostrar('puForm'); inp.focus(); };
     $('btnVolverA').onclick = function () { ver(AS.volver); };
   }
 
@@ -1328,6 +1405,61 @@
   var id = (new URLSearchParams(location.search).get('id') || '').trim().toUpperCase();
   var PUERTA = new URLSearchParams(location.search).has('puerta');
 
+  /* ---------- pantalla de PIN ---------- */
+  var PINS = { cid: '', tiene: true, origen: 'url', busy: false };
+  function pinDecir(c, t) { $('pinAv').className = 'aviso ' + c; $('pinAv').textContent = t; }
+  function soloDig(v) { return String(v || '').replace(/\D/g, ''); }
+  function mostrarPin(cid, tiene, origen, aviso) {
+    PINS.cid = cid; PINS.tiene = tiene; PINS.origen = origen || 'url'; PINS.busy = false;
+    $('detalle').hidden = true; $('card').className = 'card neutral';
+    $('pinTitulo').textContent = tiene ? 'INGRESA TU PIN' : 'CREA TU PIN';
+    $('pinSub').textContent = tiene
+      ? 'Escribe tu PIN de 4 dígitos para abrir tu tarjeta.'
+      : 'Por seguridad, tu tarjeta ahora tiene PIN. Escribe tu celular (el que diste en Kalos) y elige un PIN de 4 dígitos que recuerdes. Solo lo creas esta vez.';
+    $('pinTelBox').hidden = tiene; $('pinIn2Box').hidden = tiene;
+    $('pinIn').placeholder = tiene ? 'PIN de 4 dígitos' : 'Tu PIN nuevo';
+    $('btnPin').textContent = tiene ? 'ENTRAR' : 'CREAR MI PIN'; $('btnPin').disabled = false;
+    $('pinTel').value = leerTel(); $('pinIn').value = ''; $('pinIn2').value = '';
+    $('pinOlvide').hidden = !tiene;
+    $('pinOlvide').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hola Chino! Olvidé mi PIN de la app de Kalos. Mi código es ' + cid + '. ¿Me lo reinicias? 🙏');
+    pinDecir(aviso ? 'bad' : '', aviso || '');
+    ver('pin');
+    setTimeout(function () { try { (tiene ? $('pinIn') : $('pinTel')).focus(); } catch (e) {} }, 350);
+  }
+  function enviarPin() {
+    if (PINS.busy) return;
+    var pin = soloDig($('pinIn').value), body, tel = '';
+    if (pin.length !== 4) { pinDecir('bad', 'El PIN tiene 4 números.'); return; }
+    if (PINS.tiene) body = { accion: 'pin_entrar', id: PINS.cid, pin: pin };
+    else {
+      tel = soloDig($('pinTel').value);
+      if (tel.length < 8) { pinDecir('bad', ASERR.telefono); return; }
+      if (pin !== soloDig($('pinIn2').value)) { pinDecir('bad', 'Los dos PIN no coinciden.'); return; }
+      body = { accion: 'pin_crear', id: PINS.cid, tel: tel, pin: pin };
+    }
+    PINS.busy = true; $('btnPin').disabled = true; pinDecir('', 'Verificando…');
+    fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        PINS.busy = false; $('btnPin').disabled = false;
+        if (d && d.ok && d.t) {
+          TK = d.t; $('pinIn').value = ''; $('pinIn2').value = '';
+          if (tel) guardarTel(tel);
+          cargarTarjeta(PINS.cid, PINS.origen); return;
+        }
+        if (d && d.error === 'pin_existe') { mostrarPin(PINS.cid, true, PINS.origen, ASERR.pin_existe); return; }
+        if (d && d.error === 'pin_crear') { mostrarPin(PINS.cid, false, PINS.origen, ''); return; }
+        if (d && d.error === 'pin_inactivo') { TK = ''; cargarTarjeta(PINS.cid, PINS.origen); return; }
+        $('pinIn').value = ''; $('pinIn2').value = '';
+        pinDecir('bad', errPin(d) || 'No pudimos verificar. Intenta de nuevo.');
+      })
+      .catch(function () { PINS.busy = false; $('btnPin').disabled = false; pinDecir('bad', 'Sin conexión, intenta de nuevo.'); });
+  }
+  $('btnPin').onclick = enviarPin;
+  $('pinIn').onkeydown = function (e) { if (e.key === 'Enter') { if (PINS.tiene) enviarPin(); else $('pinIn2').focus(); } };
+  $('pinIn2').onkeydown = function (e) { if (e.key === 'Enter') enviarPin(); };
+  $('pinOtra').onclick = function () { cambiarTarjeta(); };
+
   function cargarTarjeta(cid, origen) {
     id = cid;
     ver('card');
@@ -1336,10 +1468,12 @@
     $('mensaje').textContent = 'Consultando la inscripción.'; $('mensaje').hidden = false;
     $('detalle').hidden = true; $('btnReintentar').hidden = true;
     // Sin cookies: así no importa cuántas cuentas de Google tenga abiertas el celular. Siempre datos frescos.
-    fetch(API + '?format=json&id=' + encodeURIComponent(cid), { credentials: 'omit', cache: 'no-store' })
+    fetch(API, { method: 'POST', credentials: 'omit', cache: 'no-store', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                 body: JSON.stringify({ accion: 'tarjeta', id: cid, t: TK }) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (window.splashListo) splashListo();
+        if (d && d.error === 'pin_requerido') { mostrarPin(cid, !!d.tiene, origen, ''); return; }
         if (d && d.ocupado) {
           pintar('warn', 'UN MOMENTO', 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.');
           $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
