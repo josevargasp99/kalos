@@ -176,6 +176,13 @@
     .pasos li{counter-increment:p;position:relative;padding:12px 12px 12px 48px;margin-top:10px;border:1px solid var(--line);border-radius:12px;background:#0a1206;font-size:15px;line-height:1.45}
     .pasos li::before{content:counter(p);position:absolute;left:12px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#06210f;font:700 14px Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:center}
     .pasos b{color:#fff}
+    .semsel{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+    .mdc{display:block;width:100%;text-align:left;margin-top:10px;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:15px Inter,Arial,sans-serif;cursor:pointer}
+    .mdc b{display:block;font-size:17px}.mdc span{display:block;margin-top:4px;font-size:13px;color:var(--muted)}
+    .mdr{display:flex;align-items:center;gap:8px;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0a1206;font-size:15px}
+    .mdr .f{flex:1}.mdr .f small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+    .mdr button{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:8px;padding:6px 9px;font-size:14px;cursor:pointer}
+    .mdr button.on{background:#7a1f1f;border-color:#7a1f1f}
     .dtabs{display:flex;gap:6px;margin-top:16px}
     .dtabs button{flex:1;padding:10px 0;border-radius:10px;border:1px solid var(--line);background:#0a1206;color:var(--muted);font:600 14px Inter,Arial,sans-serif;cursor:pointer}
     .dtabs button.on{background:var(--ok);color:#06210f;border-color:var(--ok)}
@@ -301,6 +308,8 @@
         <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
       </dl>
       <button id="btnRutina" class="btn" type="button" hidden>💪 MI RUTINA</button>
+      <button id="btnNutri" class="btn" type="button" hidden>🥗 MI PLAN ALIMENTICIO</button>
+      <button id="btnMedidas" class="btn out" type="button" hidden>📏 MIS MEDIDAS</button>
       <button id="btnLogros" class="btn out" type="button">🏆 MIS LOGROS</button>
       <button id="btnApuntes" class="btn out" type="button">📒 MIS APUNTES</button>
       <button id="btnAsist" class="btn out" type="button">📅 MI ASISTENCIA</button>
@@ -431,10 +440,57 @@
       <div id="rtTabs" class="dtabs"></div>
       <p id="rtNota" class="msg"></p>
       <div id="rtImgs" class="rimgs"></div>
+      <div id="rtSemBox" class="semsel" hidden>
+        <label class="apf" for="rtSemSel">¿En qué semana estás?</label>
+        <select id="rtSemSel" class="lginp"><option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option><option value="4">Semana 4</option></select>
+        <p class="msg" style="margin:8px 0 0">Cada lunes pasas sola/o a la semana siguiente. Si algo pasó y debes repetir una semana, cámbiala aquí.</p>
+        <button id="btnRtSem" class="btn out" type="button">ACTUALIZAR MI SEMANA</button>
+        <p id="rtSemAv" class="aviso" role="status"></p>
+      </div>
     </div>
     <button id="btnVolverR" class="btn sec" type="button">Volver</button>
   </section>
   <div id="lbR" hidden><button id="lbRx" type="button" aria-label="Cerrar">✕</button><img id="lbRImg" alt="Rutina"></div>
+
+  <section id="nutri" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>PLAN ALIMENTICIO</div>
+    <p id="nuCarga" class="msg">Cargando tu plan…</p>
+    <p id="nuNota" class="msg" style="margin-top:0"></p>
+    <div id="nuImgs" class="rimgs"></div>
+    <button id="btnVolverN" class="btn sec" type="button">Volver</button>
+  </section>
+
+  <section id="medidas" class="card pago ok" hidden>
+    <div class="status"><span class="dot"></span>MIS MEDIDAS</div>
+    <p id="mdCarga" class="msg">Cargando tus medidas…</p>
+    <div id="mdLista" hidden>
+      <p class="msg" style="margin-top:0">Crea las medidas que quieras seguir (peso, cintura, brazo…) y anota su valor con la fecha para ver tu progreso.</p>
+      <button id="btnMdNueva" class="btn" type="button">➕ NUEVA MEDIDA</button>
+      <div id="mdItems"></div>
+    </div>
+    <div id="mdDetalle" hidden>
+      <h2 id="mdTitulo" style="font-size:26px"></h2>
+      <p id="mdResumen" class="msg" style="margin-top:0"></p>
+      <button id="btnMdAgregar" class="btn" type="button">➕ AGREGAR VALOR</button>
+      <div id="mdHist"></div>
+      <button id="btnMdAtras" class="btn sec" type="button">‹ Todas mis medidas</button>
+    </div>
+    <div id="mdForm" hidden>
+      <h2 id="mdFormT" style="font-size:26px">NUEVA MEDIDA</h2>
+      <label class="apf" for="mdNombre">Nombre</label>
+      <input id="mdNombre" class="lginp" type="text" maxlength="30" placeholder="Ej: Cintura, Peso, Brazo derecho" autocomplete="off">
+      <label class="apf" for="mdUnidad">Unidad</label>
+      <input id="mdUnidad" class="lginp" type="text" maxlength="10" placeholder="Ej: cm, kg, %" autocomplete="off">
+      <label class="apf" for="mdValor">Valor</label>
+      <input id="mdValor" class="lginp" type="text" inputmode="decimal" maxlength="9" placeholder="Ej: 82.5" autocomplete="off">
+      <label class="apf" for="mdFecha">Fecha</label>
+      <input id="mdFecha" class="lginp" type="date">
+      <button id="btnMdGuardar" class="btn" type="button">GUARDAR</button>
+      <button id="btnMdCancelar" class="btn sec" type="button">Cancelar</button>
+    </div>
+    <p id="mdAviso" class="aviso" role="status"></p>
+    <button id="btnVolverMd" class="btn sec" type="button">Volver</button>
+  </section>
 
   <section id="pin" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>PIN</div>
@@ -530,6 +586,8 @@
     <div class="status"><span class="dot"></span>ASISTENCIA</div>
     <h2 id="asTitulo">Mi asistencia</h2>
     <p id="asCarga" class="msg">Cargando tu calendario…</p>
+    <button id="btnMarcar" class="btn" type="button" hidden>✅ MARCAR QUE ENTRENÉ HOY</button>
+    <p id="asMarcaAv" class="aviso" role="status"></p>
     <div id="asCont" hidden>
       <div class="stats">
         <div><b id="asMes">0</b><span>Este mes</span></div>
@@ -592,7 +650,7 @@
 
   var WA = '59177412120'; // WhatsApp del Chino
   /* ---- navegación entre pantallas con deslizamiento lateral ---- */
-  var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio', 'apuntes', 'pin'];
+  var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio', 'apuntes', 'pin', 'nutri', 'medidas'];
   var SOLO = { entrada: 1, puerta: 1, pin: 1 };
   var NAV = { cur: 'card', prev: '', pila: [], limpiar: null };
   var REDUCE = false; try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
@@ -939,7 +997,8 @@
     pin_formato: 'El PIN tiene 4 números.',
     pin_debil: 'Ese PIN es muy fácil de adivinar (1234, 0000…). Elige otro.',
     pin_existe: 'Ya tienes un PIN: escríbelo arriba.',
-    pin_requerido: 'Vuelve a ingresar tu PIN.'
+    pin_requerido: 'Vuelve a ingresar tu PIN.',
+    remoto: 'Eres alumno remoto: marca tu asistencia desde tu tarjeta → Mi asistencia → "Marcar que entrené hoy".'
   };
   function errPin(d) {
     var e = d && d.error;
@@ -998,6 +1057,7 @@
     AS.origen = origen; AS.volver = volver;
     $('asCont').hidden = true; $('asCarga').hidden = false; $('asCarga').textContent = 'Cargando tu calendario…';
     ver('asistencia');
+    $('btnMarcar').hidden = !(RM.remoto && origen && origen.id); $('asMarcaAv').textContent = ''; $('asMarcaAv').className = 'aviso';
     var body = { accion: 'asistencia_ver', t: TK };
     for (var k in origen) body[k] = origen[k];
     fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
@@ -1012,7 +1072,16 @@
 
   function activarAsistencia() {
     $('btnAsist').onclick = function () { abrirCalendario({ id: id }, 'card'); };
-    $('btnVolverA').onclick = function () { ver(AS.volver); };
+    $('btnVolverA').onclick = function () { ver(AS.volver); if (RM.recargar) { RM.recargar = false; refrescarTarjeta(); } };
+    $('btnMarcar').onclick = function () {
+      var b = $('btnMarcar'), av = $('asMarcaAv'); if (b.disabled) return;
+      b.disabled = true; av.className = 'aviso'; av.textContent = 'Guardando…';
+      enviar({ accion: 'rem_marcar' }).then(function (d) {
+        b.disabled = false;
+        if (d && d.ok && d.dias) { av.className = 'aviso ok'; av.textContent = d.ya ? 'Ya marcaste hoy 💪 ¡Sigue así!' : '¡Listo! Marcaste que entrenaste hoy 💪'; pintarCalendario(d); RM.recargar = true; }
+        else if (!d || d.error !== 'pin_requerido') { av.className = 'aviso bad'; av.textContent = ASERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.'; }
+      }).catch(function () { b.disabled = false; av.className = 'aviso bad'; av.textContent = 'Sin conexión, intenta de nuevo.'; });
+    };
   }
 
   /* ---------- mis apuntes (cuaderno) ---------- */
@@ -1342,32 +1411,54 @@
 
   /* ---------- mi rutina ---------- */
   var NDIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
-  var RT = { dias: null, fechas: null, dia: 1, tok: 0, cache: {} };
+  var RT = { dias: null, fechas: null, dia: 1, tok: 0, cache: {}, rem: false, hoy: 0 };
+  var RM = { remoto: false, recargar: false };
+  function etqRt(i) { return RT.rem ? 'Semana ' + (i + 1) : NDIAS[i]; }
   function diaHoy() {   // 1 = lunes … 5 = viernes; fin de semana = 0 (hora de Bolivia)
     var w = new Date().toLocaleDateString('en-US', { timeZone: 'America/La_Paz', weekday: 'short' });
     return { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5 }[w] || 0;
   }
-  function activarRutina(inst) {
-    var es = String(inst || '').trim().toLowerCase() === 'ian';
+  function refrescarTarjeta() {   // vuelve a pintar racha y etapa sin recargar toda la pantalla
+    enviar({ accion: 'tarjeta' }).then(function (d) {
+      if (d && d.ok && d.alumno) { pintarRacha(d.alumno.racha, d.alumno); pintarEtapa(d.alumno.etapa); }
+    }).catch(function () {});
+  }
+  function activarRutina(a) {
+    var es = typeof a.rutina === 'boolean' ? a.rutina : String(a.instructor || '').trim().toLowerCase() === 'ian';
     $('btnRutina').hidden = !es;
     $('btnRutina').onclick = abrirRutina;
     $('btnVolverR').onclick = function () { ver('card'); };
     $('lbRx').onclick = function () { $('lbR').hidden = true; $('lbRImg').removeAttribute('src'); };
+    $('btnRtSem').onclick = function () {
+      var av = $('rtSemAv'), b = $('btnRtSem'); if (b.disabled) return;
+      b.disabled = true; av.className = 'aviso'; av.textContent = 'Guardando…';
+      enviar({ accion: 'rutina_semana', n: Number($('rtSemSel').value) }).then(function (d) {
+        b.disabled = false;
+        if (d && d.ok) {
+          av.className = 'aviso ok'; av.textContent = 'Listo: estás en la semana ' + d.semana + '. Cada lunes avanzas a la siguiente.';
+          RT.hoy = d.semana; Array.prototype.forEach.call($('rtTabs').children, function (x) { x.classList.toggle('hoy', Number(x.dataset.d) === d.semana); });
+          verDiaRutina(d.semana); refrescarTarjeta();
+        } else if (!d || d.error !== 'pin_requerido') { av.className = 'aviso bad'; av.textContent = 'No se pudo guardar. Intenta de nuevo.'; }
+      }).catch(function () { b.disabled = false; av.className = 'aviso bad'; av.textContent = 'Sin conexión, intenta de nuevo.'; });
+    };
   }
   function abrirRutina() {
     ver('rutina'); RT.cache = {};
-    $('rtCarga').hidden = false; $('rtCarga').textContent = 'Cargando tu rutina…'; $('rtCont').hidden = true;
+    $('rtCarga').hidden = false; $('rtCarga').textContent = 'Cargando tu rutina…'; $('rtCont').hidden = true; $('rtSemAv').textContent = '';
     enviar({ accion: 'rutina_ver' }).then(function (d) {
-      if (!d || !d.ok) { $('rtCarga').textContent = d && d.error === 'ocupado' ? 'Hay muchas consultas. Intenta de nuevo en un minuto.' : 'No pudimos cargar tu rutina. Intenta de nuevo.'; return; }
-      RT.dias = d.dias; RT.fechas = d.fechas;
+      if (!d || !d.ok) { $('rtCarga').textContent = d && d.error === 'ocupado' ? 'Hay muchas consultas. Intenta de nuevo en un minuto.' : d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu rutina. Intenta de nuevo.'; return; }
+      RT.dias = d.dias; RT.fechas = d.fechas; RT.rem = !!d.remoto;
       var hay = d.dias.some(function (x) { return x.length; });
+      $('rtSemBox').hidden = !RT.rem;
+      if (RT.rem) $('rtSemSel').value = String(d.semana);
       if (!hay) { $('rtCarga').textContent = 'Tu instructor aún no cargó tu rutina. En cuanto la suba, aparecerá aquí 💪'; return; }
-      var hoy = diaHoy(), ini = hoy;
-      if (!ini || !d.dias[ini - 1].length) { ini = 0; for (var i = 0; i < 5; i++) if (d.dias[i].length) { ini = i + 1; break; } }
+      var hoy = RT.rem ? d.semana : diaHoy(), ini = hoy;
+      if (!ini || !d.dias[ini - 1].length) { ini = 0; for (var i = 0; i < d.dias.length; i++) if (d.dias[i].length) { ini = i + 1; break; } }
       RT.hoy = hoy; $('rtCarga').hidden = true; $('rtCont').hidden = false;
       var tabs = $('rtTabs'); tabs.textContent = '';
-      NDIAS.forEach(function (n, i) {
-        var b = document.createElement('button'); b.type = 'button'; b.textContent = n.charAt(0) === 'M' ? (i === 1 ? 'Ma' : 'Mi') : n.charAt(0);
+      d.dias.forEach(function (_, i) {
+        var n = etqRt(i);
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = RT.rem ? 'S' + (i + 1) : (n.charAt(0) === 'M' ? (i === 1 ? 'Ma' : 'Mi') : n.charAt(0));
         b.setAttribute('aria-label', n); b.dataset.d = String(i + 1);
         if (hoy === i + 1) b.className = 'hoy';
         b.onclick = function () { verDiaRutina(i + 1); };
@@ -1381,15 +1472,15 @@
     RT.dia = dia; var tok = ++RT.tok;
     Array.prototype.forEach.call($('rtTabs').children, function (b) { b.classList.toggle('on', Number(b.dataset.d) === dia); });
     var lst = RT.dias[dia - 1], c = $('rtImgs'); c.textContent = '';
-    if (RT.hoy) $('rtNota').textContent = lst.length ? NDIAS[dia - 1] + (dia === RT.hoy ? ' · hoy' : '') + ' · actualizada el ' + RT.fechas[dia - 1] : '';
-    if (!lst.length) { var p = document.createElement('p'); p.className = 'msg'; p.textContent = 'Sin rutina cargada para el ' + NDIAS[dia - 1].toLowerCase() + '.'; c.appendChild(p); return; }
+    if (RT.hoy) $('rtNota').textContent = lst.length ? etqRt(dia - 1) + (dia === RT.hoy ? (RT.rem ? ' · esta semana' : ' · hoy') : '') + ' · actualizada el ' + RT.fechas[dia - 1] : '';
+    if (!lst.length) { var p = document.createElement('p'); p.className = 'msg'; p.textContent = RT.rem ? 'Sin rutina cargada para la semana ' + dia + '.' : 'Sin rutina cargada para el ' + NDIAS[dia - 1].toLowerCase() + '.'; c.appendChild(p); return; }
     lst.forEach(function (x) {
       var ph = document.createElement('p'); ph.className = 'msg'; ph.textContent = 'Cargando imagen…'; c.appendChild(ph);
       var k = dia + '|' + x.orden;
       function poner(src) {
         if (tok !== RT.tok) return;
         if (!src) { ph.textContent = 'No se pudo cargar la imagen. Revisa tu internet.'; return; }
-        var im = new Image(); im.alt = 'Rutina del ' + NDIAS[dia - 1]; im.src = src;
+        var im = new Image(); im.alt = 'Rutina: ' + etqRt(dia - 1); im.src = src;
         im.onclick = function () { $('lbRImg').src = src; $('lbR').hidden = false; $('lbR').scrollTop = 0; };
         c.replaceChild(im, ph);
       }
@@ -1399,6 +1490,131 @@
       }).catch(function () { poner(null); });
     });
   }
+
+  /* ---------- alumnos remotos: plan alimenticio y medidas ---------- */
+  var NU = { tok: 0, cache: {} };
+  function hoyBolivia() { try { return new Date().toLocaleDateString('en-CA', { timeZone: 'America/La_Paz' }); } catch (e) { return new Date().toISOString().slice(0, 10); } }
+  function fechaCorta(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : ''; }
+  function activarRemoto(a) {
+    var rem = a.modalidad === 'Remoto';
+    RM.remoto = rem;
+    $('btnFisio').hidden = a.fisio === false;        // los remotos no tienen fisioterapia
+    $('btnNutri').hidden = !rem; $('btnMedidas').hidden = !rem;
+    if (!rem) return;
+    $('btnNutri').onclick = abrirNutri;
+    $('btnVolverN').onclick = function () { ver('card'); };
+    $('btnMedidas').onclick = abrirMedidas;
+    $('btnVolverMd').onclick = function () { ver('card'); };
+  }
+  function abrirNutri() {
+    ver('nutri'); var tok = ++NU.tok;
+    $('nuCarga').hidden = false; $('nuCarga').textContent = 'Cargando tu plan…'; $('nuImgs').textContent = ''; $('nuNota').textContent = '';
+    enviar({ accion: 'nutri_ver' }).then(function (d) {
+      if (tok !== NU.tok) return;
+      if (!d || !d.ok) { $('nuCarga').textContent = d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu plan. Intenta de nuevo.'; return; }
+      if (!d.paginas) { $('nuCarga').textContent = 'Tu instructor aún no cargó tu plan alimenticio. En cuanto lo suba, aparecerá aquí 🥗'; return; }
+      $('nuCarga').hidden = true; $('nuNota').textContent = 'Plan actualizado el ' + d.fecha + ' · toca una imagen para ampliarla';
+      var c = $('nuImgs'), fases = [];
+      for (var p = 1; p <= d.paginas; p++) { var ph = document.createElement('p'); ph.className = 'msg'; ph.textContent = 'Cargando página ' + p + '…'; c.appendChild(ph); fases.push(ph); }
+      (function cargar(p) {
+        if (p > d.paginas || tok !== NU.tok) return;
+        var k = d.fecha + '|' + p, ph = fases[p - 1];
+        function poner(src) {
+          if (tok !== NU.tok) return;
+          if (!src) { ph.textContent = 'No se pudo cargar la página ' + p + '. Revisa tu internet.'; cargar(p + 1); return; }
+          var im = new Image(); im.alt = 'Plan alimenticio, página ' + p; im.src = src;
+          im.onclick = function () { $('lbRImg').src = src; $('lbR').hidden = false; $('lbR').scrollTop = 0; };
+          c.replaceChild(im, ph); cargar(p + 1);
+        }
+        if (NU.cache[k]) { poner(NU.cache[k]); return; }
+        enviar({ accion: 'nutri_img', pag: p }).then(function (r) { if (r && r.ok) { NU.cache[k] = r.data; poner(r.data); } else poner(null); }).catch(function () { poner(null); });
+      })(1);
+    }).catch(function () { if (tok === NU.tok) $('nuCarga').textContent = 'Sin conexión, intenta de nuevo.'; });
+  }
+
+  var MD = { items: [], cur: null, edit: null, busy: false };
+  var MDERR = { nombre: 'Escribe el nombre de la medida (mínimo 2 letras).', valor: 'Escribe un número válido (ej: 82.5).', fecha: 'Elige una fecha válida (no futura).',
+                maximo: 'Llegaste al máximo de medidas o registros.', repetida: 'Ya tienes un valor de esa medida en esa fecha.', ocupado: 'Hay muchas consultas. Intenta en un minuto.' };
+  function mdDecir(c, t) { $('mdAviso').className = 'aviso ' + c; $('mdAviso').textContent = t; }
+  function mdVista(v) {
+    $('mdCarga').hidden = v !== 'carga'; $('mdLista').hidden = v !== 'lista'; $('mdDetalle').hidden = v !== 'detalle'; $('mdForm').hidden = v !== 'form';
+    $('btnVolverMd').hidden = v !== 'lista'; mdDecir('', ''); window.scrollTo(0, 0);
+  }
+  function num2(x) { return String(Math.round(x * 100) / 100).replace('.', ','); }
+  function abrirMedidas() {
+    ver('medidas'); mdVista('carga'); $('mdCarga').textContent = 'Cargando tus medidas…';
+    enviar({ accion: 'medidas_ver' }).then(function (d) {
+      if (d && d.ok) { MD.items = d.medidas; pintarMedidas(); }
+      else $('mdCarga').textContent = d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tus medidas. Intenta de nuevo.';
+    }).catch(function () { $('mdCarga').textContent = 'Sin conexión, intenta de nuevo.'; });
+  }
+  function pintarMedidas() {
+    mdVista('lista');
+    var c = $('mdItems'); c.textContent = '';
+    if (!MD.items.length) { var p = document.createElement('p'); p.className = 'msg'; p.textContent = 'Aún no tienes medidas. Toca "Nueva medida" para empezar.'; c.appendChild(p); return; }
+    MD.items.forEach(function (m, i) {
+      var ult = m.reg[m.reg.length - 1], pri = m.reg[0];
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'mdc';
+      var t = document.createElement('b'); t.textContent = m.nombre + ' · ' + num2(ult.v) + (m.unidad ? ' ' + m.unidad : '');
+      var s = document.createElement('span');
+      s.textContent = 'Último registro: ' + fechaCorta(ult.f) + (m.reg.length > 1 ? ' · ' + (ult.v - pri.v >= 0 ? '+' : '') + num2(ult.v - pri.v) + (m.unidad ? ' ' + m.unidad : '') + ' desde el ' + fechaCorta(pri.f) : '');
+      b.appendChild(t); b.appendChild(s); b.onclick = function () { verMedida(i); }; c.appendChild(b);
+    });
+  }
+  function verMedida(i) {
+    var m = MD.items[i]; if (!m) { pintarMedidas(); return; }
+    MD.cur = i; mdVista('detalle');
+    $('mdTitulo').textContent = m.nombre + (m.unidad ? ' (' + m.unidad + ')' : '');
+    var pri = m.reg[0], ult = m.reg[m.reg.length - 1];
+    $('mdResumen').textContent = m.reg.length > 1 ? 'Primera: ' + num2(pri.v) + ' (' + fechaCorta(pri.f) + ') → Última: ' + num2(ult.v) + ' (' + fechaCorta(ult.f) + ') · cambio ' + (ult.v - pri.v >= 0 ? '+' : '') + num2(ult.v - pri.v) : 'Un registro: ' + num2(ult.v) + ' (' + fechaCorta(ult.f) + ')';
+    var h = $('mdHist'); h.textContent = '';
+    m.reg.slice().reverse().forEach(function (r, k, arr) {
+      var prev = arr[k + 1], row = document.createElement('div'); row.className = 'mdr';
+      var f = document.createElement('div'); f.className = 'f';
+      f.appendChild(document.createTextNode(num2(r.v) + (m.unidad ? ' ' + m.unidad : '')));
+      var sm = document.createElement('small'); sm.textContent = fechaCorta(r.f) + (prev ? ' · ' + (r.v - prev.v >= 0 ? '+' : '') + num2(r.v - prev.v) : ''); f.appendChild(sm);
+      var be = document.createElement('button'); be.type = 'button'; be.textContent = '✏️'; be.setAttribute('aria-label', 'Corregir'); be.onclick = function () { formMedida(m, r); };
+      var bd = document.createElement('button'); bd.type = 'button'; bd.textContent = '🗑'; bd.setAttribute('aria-label', 'Borrar');
+      bd.onclick = function () {
+        if (!bd.classList.contains('on')) { bd.classList.add('on'); bd.textContent = 'Borrar'; setTimeout(function () { bd.classList.remove('on'); bd.textContent = '🗑'; }, 3500); return; }
+        if (MD.busy) return; MD.busy = true;
+        enviar({ accion: 'medidas_borrar', rid: r.r }).then(function (d) {
+          MD.busy = false;
+          if (d && d.ok) { MD.items = d.medidas; var j = MD.items.map(function (x) { return x.nombre; }).indexOf(m.nombre); if (j >= 0) verMedida(j); else pintarMedidas(); }
+          else mdDecir('bad', 'No se pudo borrar. Intenta de nuevo.');
+        }).catch(function () { MD.busy = false; mdDecir('bad', 'Sin conexión, intenta de nuevo.'); });
+      };
+      row.appendChild(f); row.appendChild(be); row.appendChild(bd); h.appendChild(row);
+    });
+    $('btnMdAgregar').onclick = function () { formMedida(m, null); };
+    $('btnMdAtras').onclick = pintarMedidas;
+  }
+  function formMedida(m, reg) {   // m = medida existente (o null = nueva), reg = registro a corregir (o null)
+    MD.edit = reg ? reg.r : null; mdVista('form');
+    $('mdFormT').textContent = reg ? 'CORREGIR VALOR' : m ? 'AGREGAR VALOR' : 'NUEVA MEDIDA';
+    $('mdNombre').value = m ? m.nombre : ''; $('mdUnidad').value = m ? m.unidad : '';
+    $('mdNombre').disabled = !!m; $('mdUnidad').disabled = !!m;
+    $('mdValor').value = reg ? String(reg.v).replace('.', ',') : ''; $('mdFecha').value = reg ? reg.f : hoyBolivia(); $('mdFecha').max = hoyBolivia();
+    $('btnMdCancelar').onclick = function () { if (m) { var j = MD.items.indexOf(m); if (j >= 0) { verMedida(j); return; } } pintarMedidas(); };
+    $('btnMdGuardar').onclick = function () {
+      if (MD.busy) return;
+      var body = { accion: reg ? 'medidas_editar' : 'medidas_crear', valor: $('mdValor').value.trim(), fecha: $('mdFecha').value };
+      if (reg) body.rid = reg.r; else { body.nombre = $('mdNombre').value.trim(); body.unidad = $('mdUnidad').value.trim(); }
+      if (!body.valor || isNaN(Number(body.valor.replace(',', '.')))) { mdDecir('bad', MDERR.valor); return; }
+      MD.busy = true; $('btnMdGuardar').disabled = true; mdDecir('', 'Guardando…');
+      enviar(body).then(function (d) {
+        MD.busy = false; $('btnMdGuardar').disabled = false;
+        if (d && d.ok) {
+          MD.items = d.medidas;
+          var nom = reg || m ? (m ? m.nombre : '') : body.nombre, j = -1;
+          MD.items.forEach(function (x, k) { if (x.nombre.toLowerCase() === nom.toLowerCase()) j = k; });
+          if (j >= 0) verMedida(j); else pintarMedidas();
+          mdDecir('ok', 'Guardado ✅');
+        } else if (!d || d.error !== 'pin_requerido') mdDecir('bad', MDERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
+      }).catch(function () { MD.busy = false; $('btnMdGuardar').disabled = false; mdDecir('bad', 'Sin conexión, intenta de nuevo.'); });
+    };
+  }
+  $('btnMdNueva').onclick = function () { formMedida(null, null); };
 
   /* ---------- tarjeta ---------- */
   var IR = new URLSearchParams(location.search).get('ir') || '';
@@ -1508,7 +1724,8 @@
         activarAvisos();
         pintarBono(a);
         $('btnCambiar').onclick = cambiarTarjeta;
-        activarRutina(a.instructor);
+        activarRutina(a);
+        activarRemoto(a);
         $('detalle').hidden = false;
         mostrarInstalar();
         if (IR === 'renovar' && !a.staff) { IR = ''; try { history.replaceState(null, '', location.pathname + '?app=1'); } catch (e) {} setTimeout(function () { ver('pago'); }, 450); }
@@ -1547,14 +1764,14 @@
     $('rLbl').textContent = r.racha === 1 ? 'día de racha' : 'días de racha';
     $('rRec').textContent = r.record > 0 ? 'Récord: ' + r.record : '';
     var sem = $('rSem'); while (sem.firstChild) sem.removeChild(sem.firstChild);
-    var tres = r.modo === '3x' || r.modo === '4x';
+    var tres = /^(\dx|r\d)$/.test(r.modo), rem = !!(a && a.modalidad === 'Remoto');
     (r.semana.dias || []).forEach(function (d) {
       var e = d.e, t = d.l;
       if (e === 'ok') t += ' ✅'; else if (e === 'falta') { if (tres) e = ''; else t += ' ❌'; } else if (e === 'hoy') t += ' •'; else if (e === 'feriado') t += ' 🎌';
       var sp = document.createElement('span'); sp.className = e === 'futuro' ? '' : e; sp.textContent = t; sem.appendChild(sp);
     });
     var msg = '', cls = '';
-    if (r.estado === 'nueva' || (!viva && r.estado !== 'perdida' && r.estado !== 'riesgo')) msg = '¡Comienza tu racha! 💪 Ve al gimnasio y escanea el QR de la puerta cada vez que entrenes. Solo cuentan lunes a viernes.';
+    if (r.estado === 'nueva' || (!viva && r.estado !== 'perdida' && r.estado !== 'riesgo')) msg = rem ? '¡Comienza tu racha! 💪 Entra a Mi asistencia y toca "Marcar que entrené hoy" cada vez que entrenes. Cuentan todos los días, también sábado y domingo.' : '¡Comienza tu racha! 💪 Ve al gimnasio y escanea el QR de la puerta cada vez que entrenes. Solo cuentan lunes a viernes.';
     else if (r.estado === 'perdida') {
       cls = 'perdida';
       msg = r.perdida ? 'Perdiste tu racha de ' + r.perdida.dias + (r.perdida.dias === 1 ? ' día' : ' días') + ' (' + fdm(r.perdida.fecha) + '). ' : '';
@@ -1563,8 +1780,8 @@
       else msg += 'Empieza una nueva hoy 💪';
     } else if (r.estado === 'riesgo') {
       cls = 'riesgo';
-      msg = tres ? '⚠️ Te ' + (r.semana.faltan === 1 ? 'falta 1 día' : 'faltan ' + r.semana.faltan + ' días') + ' esta semana y hoy te toca ir al gym para mantener tu racha.' : '⚠️ Hoy te toca ir al gym para no perder tu racha.';
-    } else if (tres) msg = 'Esta semana: ' + Math.min(r.semana.visitas, r.semana.necesita) + ' de ' + r.semana.necesita + ' días. ' + (r.semana.faltan === 0 ? 'Semana cumplida ✅' : 'Ven ' + r.semana.faltan + (r.semana.faltan === 1 ? ' día más' : ' días más') + ' para mantener tu racha.');
+      msg = tres ? '⚠️ Te ' + (r.semana.faltan === 1 ? 'falta 1 día' : 'faltan ' + r.semana.faltan + ' días') + ' esta semana y hoy te toca ' + (rem ? 'entrenar' : 'ir al gym') + ' para mantener tu racha.' : '⚠️ Hoy te toca ir al gym para no perder tu racha.';
+    } else if (tres) msg = 'Esta semana: ' + Math.min(r.semana.visitas, r.semana.necesita) + ' de ' + r.semana.necesita + ' días. ' + (r.semana.faltan === 0 ? 'Semana cumplida ✅' : (rem ? 'Entrena ' : 'Ven ') + r.semana.faltan + (r.semana.faltan === 1 ? ' día más' : ' días más') + ' para mantener tu racha.');
     else msg = r.semana.hoyToca ? 'Hoy te toca ir al gym.' : 'Tu racha sigue viva. ¡Vamos por más! 🔥';
     var m = $('rMsg'); m.className = 'rmsg ' + cls; m.textContent = msg;
     var b = $('rBtn');

@@ -132,9 +132,36 @@
     <div class="card">
       <h2 id="alNombre"></h2>
       <p id="alInfo" class="sub"></p>
-      <p class="sub" style="margin-top:14px">Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.</p>
+      <p id="subDias" class="sub" style="margin-top:14px">Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.</p>
       <div id="dias"></div>
+      <div id="remBtns" hidden>
+        <button id="btnNutri" class="btn" type="button">🥗 PLAN ALIMENTICIO</button>
+        <button id="btnMed" class="btn out" type="button">📏 VER MEDIDAS</button>
+      </div>
       <button id="btnApAl" class="btn out" type="button">📒 VER APUNTES DEL ALUMNO</button>
+    </div>
+  </section>
+
+  <section id="sNutri" hidden>
+    <button id="btnAtrasN" class="btn sec" type="button" style="margin-top:0">‹ <span id="nuAtrasNom"></span></button>
+    <div class="card">
+      <h2>PLAN ALIMENTICIO</h2>
+      <p id="nuSub" class="sub"></p>
+      <div id="nuLista" class="imgs"></div>
+      <button id="btnNuSubir" class="btn" type="button">SUBIR PLAN (PDF O IMÁGENES)</button>
+      <p class="sub">Al subir uno nuevo se reemplaza todo el plan anterior. Máximo 15 páginas.</p>
+      <p id="avNu" class="aviso" role="status"></p>
+      <div id="nuHecho" hidden><a id="btnWaN" class="btn wa" href="#" target="_blank" rel="noopener">AVISAR POR WHATSAPP</a></div>
+      <button id="btnNuQuitar" class="btn bad" type="button" hidden>Quitar plan alimenticio</button>
+    </div>
+  </section>
+
+  <section id="sMed" hidden>
+    <button id="btnAtrasM" class="btn sec" type="button" style="margin-top:0">‹ <span id="mdAtrasNom"></span></button>
+    <div class="card">
+      <h2>MEDIDAS</h2>
+      <p class="sub">Solo lectura · lo que anota el alumno.</p>
+      <div id="mdLista"></div>
     </div>
   </section>
 
@@ -183,6 +210,7 @@
 
 <div id="lb" hidden><button id="lbx" type="button" aria-label="Cerrar">✕</button><img id="lbImg" alt="Rutina"></div>
 <input id="archivo" type="file" accept="image/*" hidden>
+<input id="archivoNu" type="file" accept="application/pdf,image/*" multiple hidden>
 
 <script>
 (function () {
@@ -190,12 +218,13 @@
   var PAGINA = 'https://josevargasp99.github.io/kalos/';
   var NOMBRES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
   var $ = function (id) { return document.getElementById(id); };
-  var S = { clave: '', alumnos: [], al: null, dia: 1, dias: [[], [], [], [], []], fechas: ['', '', '', '', ''], busy: false, ultimoSubido: false };
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  var S = { rem: false, soloRem: false, clave: '', alumnos: [], al: null, dia: 1, dias: [[], [], [], [], []], fechas: ['', '', '', '', ''], busy: false, ultimoSubido: false };
   var IMG = {};   // caché de imágenes ya descargadas
 
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function limpiar(n) { while (n.firstChild) n.removeChild(n.firstChild); }
-  var PANT = ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sApuntes', 'sDia', 'sCopiar'];
+  var PANT = ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sApuntes', 'sDia', 'sCopiar', 'sNutri', 'sMed'];
   var CUR = '', LIMP = null, REDUCE = false;
   try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
   function pantalla(k) {
@@ -229,7 +258,9 @@
     maximo: 'Ya hay 3 imágenes ese día. Reemplaza o quita una.',
     no_existe: 'Esa imagen ya no existe.',
     destinos: 'Elige al menos un alumno.',
-    dia: 'Día no válido.'
+    dia: 'Día no válido.',
+    no_remoto: 'Eso solo aplica a alumnos remotos.',
+    pagina: 'Página no válida (máximo 15).'
   };
 
   function api(body) {
@@ -263,7 +294,7 @@
     pantalla('sLista'); limpiar($('lista')); decir('avLista', '', 'Cargando tus alumnos…'); $('subLista').textContent = '';
     api({ accion: 'coach_lista' }).then(function (d) {
       if (!d.ok) { if (d.error === 'clave') { pantalla('sLogin'); if (fallo) fallo(d); else decir('avLogin', 'bad', errTxt(d)); return; } decir('avLista', 'bad', errTxt(d)); return; }
-      S.alumnos = d.alumnos || [];
+      S.alumnos = d.alumnos || []; S.soloRem = !!d.soloRemotos;
       $('quien').textContent = 'Instructor · ' + d.coach;
       Array.prototype.forEach.call(document.querySelectorAll('.tabs'), function (t) { t.hidden = d.pagos === false; });
       decir('avLista', '', '');
@@ -280,7 +311,8 @@
       var b = el('button', 'row'); b.type = 'button';
       var t = el('div', 't'); t.appendChild(el('div', 'n', a.nombre));
       var cargados = (a.cuenta || []).filter(function (x) { return x > 0; }).length;
-      t.appendChild(el('div', 's', (a.prueba ? '🧪 PRUEBA · ' : '') + (a.horario || '—') + ' · ' + cargados + ' de 5 días con rutina'));
+      t.appendChild(el('div', 's', (a.prueba ? '🧪 PRUEBA · ' : '') + (a.remoto ? '🌎 Remoto · ' + cargados + ' de 4 semanas con rutina · plan alimenticio ' + (a.nutri ? '✓' : '—') :
+        S.soloRem ? (a.horario || '—') + ' · presencial' : (a.horario || '—') + ' · ' + cargados + ' de 5 días con rutina')));
       b.appendChild(t);
       var clase = a.estado === 'ACTIVO' ? 'ok' : (a.estado === 'POR VENCER' ? 'warn' : 'bad');
       b.appendChild(el('span', 'pill ' + clase, a.estado));
@@ -334,7 +366,11 @@
   /* ---------- alumno ---------- */
   function abrirAlumno(a) {
     S.al = a; $('alNombre').textContent = a.nombre; $('alInfo').textContent = (a.plan || '') + ' · ' + (a.horario || '');
-    pantalla('sAlumno'); limpiar($('dias')); $('dias').appendChild(el('p', 'aviso', 'Cargando…'));
+    S.rem = !!a.remoto; $('remBtns').hidden = !S.rem;
+    $('subDias').textContent = S.rem ? 'Toca una semana para cargar o cambiar su rutina (Semana 1 a 4). El alumno avanza de semana cada lunes.' : 'Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.';
+    pantalla('sAlumno'); limpiar($('dias'));
+    if (S.soloRem && !S.rem) { $('subDias').textContent = 'Alumno presencial: su rutina se consulta en el gimnasio.'; return; }
+    $('dias').appendChild(el('p', 'aviso', 'Cargando…'));
     api({ accion: 'coach_ver', id: a.id }).then(function (d) {
       if (!d.ok) { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', errTxt(d))); return; }
       S.dias = d.dias; S.fechas = d.fechas; a.cuenta = d.dias.map(function (x) { return x.length; }); pintarDias();
@@ -342,7 +378,8 @@
   }
   function pintarDias() {
     var c = $('dias'); limpiar(c);
-    NOMBRES.forEach(function (n, i) {
+    NOMBRES.slice(0, S.rem ? 4 : 5).forEach(function (n, i) {
+      if (S.rem) n = 'Semana ' + (i + 1);
       var b = el('button', 'row'); b.type = 'button';
       var t = el('div', 't'); t.appendChild(el('div', 'n', n));
       var k = S.dias[i].length;
@@ -352,6 +389,135 @@
       c.appendChild(b);
     });
   }
+  /* ---------- remotos: plan alimenticio y medidas ---------- */
+  var NUT = { tok: 0, cache: {} };
+  function cargarPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    return new Promise(function (ok, no) {
+      var sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js';
+      sc.onload = function () { if (window.pdfjsLib) { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); } else no(new Error('pdfjs')); };
+      sc.onerror = function () { no(new Error('pdfjs')); };
+      document.head.appendChild(sc);
+    });
+  }
+  function aJpeg(canvas) {
+    var out = canvas.toDataURL('image/jpeg', 0.82);
+    if (out.length > 1350000) out = canvas.toDataURL('image/jpeg', 0.6);
+    if (out.length > 1450000) throw new Error('grande');
+    return out;
+  }
+  function paginasDePdf(file, tope) {
+    return cargarPdfJs().then(function (lib) {
+      return file.arrayBuffer().then(function (buf) { return lib.getDocument({ data: buf }).promise; });
+    }).then(function (pdf) {
+      if (pdf.numPages > tope) throw new Error('paginas');
+      var res = [], p = Promise.resolve();
+      for (var i = 1; i <= pdf.numPages; i++) (function (n) {
+        p = p.then(function () { return pdf.getPage(n); }).then(function (pg) {
+          var v0 = pg.getViewport({ scale: 1 }), k = Math.min(2.2, 1400 / Math.max(v0.width, v0.height) * 1.0);
+          if (k < 0.5) k = 0.5;
+          var v = pg.getViewport({ scale: Math.min(2.5, 1100 / v0.width) }), c = document.createElement('canvas');
+          c.width = Math.round(v.width); c.height = Math.round(v.height);
+          var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+          return pg.render({ canvasContext: x, viewport: v }).promise.then(function () { res.push(aJpeg(c)); });
+        });
+      })(i);
+      return p.then(function () { return res; });
+    });
+  }
+  function abrirNutri() {
+    var a = S.al, tok = ++NUT.tok; $('nuAtrasNom').textContent = a.nombre; decir('avNu', '', ''); $('nuHecho').hidden = true;
+    pantalla('sNutri'); limpiar($('nuLista')); $('nuSub').textContent = 'Cargando…'; $('btnNuQuitar').hidden = true;
+    api({ accion: 'coach_nutri_ver', id: a.id }).then(function (d) {
+      if (tok !== NUT.tok) return;
+      if (!d.ok) { $('nuSub').textContent = ''; decir('avNu', 'bad', errTxt(d)); return; }
+      pintarNutri(d, tok);
+    }).catch(function () { $('nuSub').textContent = ''; decir('avNu', 'bad', 'Sin conexión, intenta de nuevo.'); });
+  }
+  function pintarNutri(d, tok) {
+    var c = $('nuLista'); limpiar(c);
+    $('nuSub').textContent = d.paginas ? d.paginas + (d.paginas === 1 ? ' página' : ' páginas') + ' · actualizado el ' + d.fecha : 'Aún no hay plan alimenticio cargado.';
+    $('btnNuSubir').textContent = d.paginas ? 'REEMPLAZAR PLAN (PDF O IMÁGENES)' : 'SUBIR PLAN (PDF O IMÁGENES)';
+    $('btnNuQuitar').hidden = !d.paginas;
+    S.al.nutri = d.paginas;
+    for (var p = 1; p <= d.paginas; p++) (function (pag) {
+      var w = el('div', 'im'), ph = el('div', 'ph', 'Cargando página ' + pag + '…'); w.appendChild(ph); c.appendChild(w);
+      var k = S.al.id + '|' + d.fecha + '|' + pag;
+      function poner(src) {
+        if (tok !== NUT.tok) return;
+        if (!src) { ph.textContent = 'No se pudo cargar la página ' + pag + '.'; return; }
+        var im = new Image(); im.alt = 'Plan, página ' + pag; im.src = src; im.onclick = function () { zoom(src); }; w.replaceChild(im, ph);
+      }
+      if (NUT.cache[k]) { poner(NUT.cache[k]); return; }
+      api({ accion: 'coach_nutri_img', id: S.al.id, pag: pag }).then(function (r) { if (r.ok) { NUT.cache[k] = r.data; poner(r.data); } else poner(null); }).catch(function () { poner(null); });
+    })(p);
+  }
+  $('btnNutri').onclick = abrirNutri;
+  $('btnAtrasN').onclick = function () { pintarLista(); pantalla('sAlumno'); };
+  $('btnNuSubir').onclick = function () { if (S.busy) return; $('archivoNu').value = ''; $('archivoNu').click(); };
+  $('archivoNu').onchange = function () {
+    var fs = Array.prototype.slice.call(this.files || []); if (!fs.length || S.busy) return;
+    var pdf = fs.filter(function (f) { return f.type === 'application/pdf' || /\.pdf$/i.test(f.name); });
+    if (pdf.length && fs.length > 1) { decir('avNu', 'bad', 'Elige un solo PDF, o varias imágenes (no mezcles).'); return; }
+    if (!pdf.length && fs.some(function (f) { return !/^image\//.test(f.type); })) { decir('avNu', 'bad', 'Elige un PDF o imágenes.'); return; }
+    if (fs.length > 15) { decir('avNu', 'bad', 'Máximo 15 páginas.'); return; }
+    S.busy = true; $('nuHecho').hidden = true; decir('avNu', '', 'Preparando el plan…');
+    var al = S.al, tok = ++NUT.tok;
+    var prep = pdf.length ? paginasDePdf(pdf[0], 15) : fs.reduce(function (p, f) { return p.then(function (acc) { return comprimir(f).then(function (u) { if (u.length > 1450000) throw new Error('grande'); acc.push(u); return acc; }); }); }, Promise.resolve([]));
+    prep.then(function (pags) {
+      if (!pags.length) throw new Error('vacio');
+      var p = Promise.resolve(null);
+      pags.forEach(function (u, i) {
+        p = p.then(function () {
+          decir('avNu', '', 'Subiendo página ' + (i + 1) + ' de ' + pags.length + '…');
+          return api({ accion: 'coach_nutri_subir', id: al.id, pag: i + 1, data: u, nuevo: i === 0 }).then(function (d) {
+            if (!d.ok) { var e = new Error('srv'); e.d = d; throw e; }
+            NUT.cache[al.id + '|' + d.fecha + '|' + (i + 1)] = u; return d;
+          });
+        });
+      });
+      return p;
+    }).then(function (d) {
+      S.busy = false;
+      decir('avNu', 'ok', '✅ Plan guardado. Ya lo ve ' + al.nombre.split(' ')[0] + ' en su tarjeta.');
+      pintarNutri(d, NUT.tok);
+      if (al.tel) { $('btnWaN').href = 'https://wa.me/591' + al.tel + '?text=' + encodeURIComponent('¡Hola ' + al.nombre.split(' ')[0] + '! Tienes tu plan alimenticio nuevo en tu tarjeta de Kalos 🥗 ' + PAGINA + '?id=' + al.id); $('nuHecho').hidden = false; }
+    }).catch(function (e) {
+      S.busy = false;
+      var t = e && e.message === 'paginas' ? 'El PDF tiene más de 15 páginas.' : e && e.message === 'pdfjs' ? 'No se pudo preparar el PDF (revisa tu internet) o súbelo como imágenes.' : e && e.d ? errTxt(e.d) + ' El plan puede haber quedado incompleto: vuelve a subirlo.' : 'No pudimos subir el plan. Revisa tu internet e intenta de nuevo.';
+      decir('avNu', 'bad', t);
+      api({ accion: 'coach_nutri_ver', id: al.id }).then(function (d) { if (d.ok) pintarNutri(d, NUT.tok); }).catch(function () {});
+    });
+  };
+  $('btnNuQuitar').onclick = function () {
+    var b = $('btnNuQuitar');
+    if (b.dataset.c !== '1') { b.dataset.c = '1'; b.textContent = 'Toca otra vez para confirmar'; setTimeout(function () { b.dataset.c = ''; b.textContent = 'Quitar plan alimenticio'; }, 3500); return; }
+    b.dataset.c = ''; b.textContent = 'Quitar plan alimenticio'; b.disabled = true;
+    api({ accion: 'coach_nutri_quitar', id: S.al.id }).then(function (d) {
+      b.disabled = false;
+      if (d.ok) { NUT.cache = {}; pintarNutri({ paginas: 0, fecha: '' }, NUT.tok); decir('avNu', 'ok', 'Plan quitado.'); } else decir('avNu', 'bad', errTxt(d));
+    }).catch(function () { b.disabled = false; decir('avNu', 'bad', 'Sin conexión, intenta de nuevo.'); });
+  };
+  $('btnMed').onclick = function () {
+    var a = S.al, c = $('mdLista'); $('mdAtrasNom').textContent = a.nombre;
+    pantalla('sMed'); limpiar(c); c.appendChild(el('p', 'aviso', 'Cargando…'));
+    api({ accion: 'coach_medidas', id: a.id }).then(function (d) {
+      limpiar(c);
+      if (!d.ok) { c.appendChild(el('p', 'aviso bad', errTxt(d))); return; }
+      if (!d.medidas.length) { c.appendChild(el('p', 'aviso', 'Este alumno aún no anotó medidas.')); return; }
+      function n2(x) { return String(Math.round(x * 100) / 100).replace('.', ','); }
+      d.medidas.forEach(function (m) {
+        c.appendChild(el('h3', '', m.nombre + (m.unidad ? ' (' + m.unidad + ')' : '')));
+        m.reg.slice().reverse().forEach(function (r, k, arr) {
+          var f = r.f.split('-'), prev = arr[k + 1], bx = el('div', 'box');
+          bx.appendChild(el('div', 'n', n2(r.v) + (m.unidad ? ' ' + m.unidad : '') + (prev ? '  (' + (r.v - prev.v >= 0 ? '+' : '') + n2(r.v - prev.v) + ')' : '')));
+          bx.appendChild(el('div', 's', f[2] + '/' + f[1] + '/' + f[0])); c.appendChild(bx);
+        });
+      });
+    }).catch(function () { limpiar(c); c.appendChild(el('p', 'aviso bad', 'Sin conexión, intenta de nuevo.')); });
+  };
+  $('btnAtrasM').onclick = function () { pantalla('sAlumno'); };
+
   $('btnAtras1').onclick = function () { pintarLista(); pantalla('sLista'); };
   $('btnApAl').onclick = function () {
     var a = S.al, c = $('apLista'); $('apAtrasNom').textContent = a.nombre; $('apSub').textContent = 'Solo lectura · lo que anota el alumno en su cuaderno.';
@@ -379,13 +545,14 @@
   /* ---------- día ---------- */
   function abrirDia(dia) {
     S.dia = dia; S.ultimoSubido = false; $('postSubida').hidden = true; decir('avDia', '', '');
-    $('atrasNom').textContent = S.al.nombre; $('diaTitulo').textContent = NOMBRES[dia - 1];
+    $('atrasNom').textContent = S.al.nombre; $('diaTitulo').textContent = nomDia(dia);
     pantalla('sDia'); pintarDia();
   }
+  function nomDia(d) { return S.rem ? 'Semana ' + d : NOMBRES[d - 1]; }
   function clave(dia, orden) { return S.al.id + '|' + dia + '|' + orden; }
   function pintarDia() {
     var lst = S.dias[S.dia - 1];
-    $('diaSub').textContent = lst.length ? 'Actualizada el ' + S.fechas[S.dia - 1] + ' · se repite cada ' + NOMBRES[S.dia - 1].toLowerCase() + '.' : 'Aún no hay rutina para este día.';
+    $('diaSub').textContent = lst.length ? 'Actualizada el ' + S.fechas[S.dia - 1] + (S.rem ? '.' : ' · se repite cada ' + NOMBRES[S.dia - 1].toLowerCase() + '.') : (S.rem ? 'Aún no hay rutina para esta semana.' : 'Aún no hay rutina para este día.');
     var c = $('imgs'); limpiar(c);
     lst.forEach(function (x) {
       var w = el('div', 'im'), ph = el('div', 'ph', 'Cargando imagen…'); w.appendChild(ph);
@@ -479,10 +646,10 @@
   $('btnCopiar').onclick = function () {
     SEL = {}; $('cpHecho').hidden = true; limpiar($('cpHecho')); $('cpConfirma').hidden = true; decir('avCp', '', '');
     $('btnHacerCopia').hidden = false; $('btnTodos').hidden = false;
-    $('cpTitulo').textContent = 'Copiar rutina del ' + NOMBRES[S.dia - 1].toLowerCase();
+    $('cpTitulo').textContent = 'Copiar rutina ' + (S.rem ? 'de la semana ' + S.dia : 'del ' + NOMBRES[S.dia - 1].toLowerCase());
     $('cpSub').textContent = 'De ' + S.al.nombre + ' a los alumnos que marques. Las imágenes se copian: después puedes cambiar cada una por separado.';
     var c = $('cpLista'); limpiar(c);
-    var otros = S.alumnos.filter(function (a) { return a.id !== S.al.id; });
+    var otros = S.alumnos.filter(function (a) { return a.id !== S.al.id && !!a.remoto === !!S.al.remoto; });
     if (!otros.length) c.appendChild(el('p', 'aviso', 'No tienes otros alumnos asignados.'));
     otros.forEach(function (a) {
       var l = el('label', 'chk'), i = document.createElement('input'); i.type = 'checkbox';
@@ -497,7 +664,7 @@
   $('btnTodos').onclick = function () {
     var cs = $('cpLista').querySelectorAll('input[type=checkbox]');
     var todos = Array.prototype.every.call(cs, function (c) { return c.checked; });
-    var otros = S.alumnos.filter(function (a) { return a.id !== S.al.id; });
+    var otros = S.alumnos.filter(function (a) { return a.id !== S.al.id && !!a.remoto === !!S.al.remoto; });
     SEL = {};
     Array.prototype.forEach.call(cs, function (c, i) { c.checked = !todos; if (!todos) SEL[otros[i].id] = true; });
   };
@@ -511,7 +678,7 @@
       S.busy = false;
       if (!d.ok) { decir('avCp', 'bad', errTxt(d)); return; }
       if (d.conflictos) {
-        $('cpConfTxt').textContent = d.conflictos.join(', ') + (d.conflictos.length === 1 ? ' ya tiene' : ' ya tienen') + ' rutina el ' + NOMBRES[S.dia - 1].toLowerCase() + '. ¿La reemplazo por esta?';
+        $('cpConfTxt').textContent = d.conflictos.join(', ') + (d.conflictos.length === 1 ? ' ya tiene' : ' ya tienen') + ' rutina ' + (S.rem ? 'la semana ' + S.dia : 'el ' + NOMBRES[S.dia - 1].toLowerCase()) + '. ¿La reemplazo por esta?';
         $('cpConfirma').hidden = false; decir('avCp', '', ''); return;
       }
       ids.forEach(function (id) { var a = S.alumnos.filter(function (x) { return x.id === id; })[0]; if (a) { a.cuenta = a.cuenta || [0, 0, 0, 0, 0]; a.cuenta[S.dia - 1] = S.dias[S.dia - 1].length; } });
