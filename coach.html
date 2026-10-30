@@ -222,6 +222,7 @@
   var S = { rem: false, soloRem: false, clave: '', alumnos: [], al: null, dia: 1, dias: [[], [], [], [], []], fechas: ['', '', '', '', ''], busy: false, ultimoSubido: false };
   var IMG = {};   // caché de imágenes ya descargadas
 
+  function waNum(t) { t = String(t || ''); return t.length === 8 ? '591' + t : t; }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function limpiar(n) { while (n.firstChild) n.removeChild(n.firstChild); }
   var PANT = ['sLogin', 'sLista', 'sPagos', 'sAlumno', 'sApuntes', 'sDia', 'sCopiar', 'sNutri', 'sMed'];
@@ -481,7 +482,7 @@
       S.busy = false;
       decir('avNu', 'ok', '✅ Plan guardado. Ya lo ve ' + al.nombre.split(' ')[0] + ' en su tarjeta.');
       pintarNutri(d, NUT.tok);
-      if (al.tel) { $('btnWaN').href = 'https://wa.me/591' + al.tel + '?text=' + encodeURIComponent('¡Hola ' + al.nombre.split(' ')[0] + '! Tienes tu plan alimenticio nuevo en tu tarjeta de Kalos 🥗 ' + PAGINA + '?id=' + al.id); $('nuHecho').hidden = false; }
+      if (al.tel) { $('btnWaN').href = 'https://wa.me/' + waNum(al.tel) + '?text=' + encodeURIComponent('¡Hola ' + al.nombre.split(' ')[0] + '! Tienes tu plan alimenticio nuevo en tu tarjeta de Kalos 🥗 ' + PAGINA + '?id=' + al.id); $('nuHecho').hidden = false; }
     }).catch(function (e) {
       S.busy = false;
       var t = e && e.message === 'paginas' ? 'El PDF tiene más de 15 páginas.' : e && e.message === 'pdfjs' ? 'No se pudo preparar el PDF (revisa tu internet) o súbelo como imágenes.' : e && e.d ? errTxt(e.d) + ' El plan puede haber quedado incompleto: vuelve a subirlo.' : 'No pudimos subir el plan. Revisa tu internet e intenta de nuevo.';
@@ -625,7 +626,7 @@
   };
   function mostrarAviso() {
     var a = S.al; $('postSubida').hidden = !a.tel;
-    if (a.tel) $('btnWa').href = 'https://wa.me/591' + a.tel + '?text=' + encodeURIComponent('¡Hola ' + a.nombre.split(' ')[0] + '! Tienes rutina nueva en tu tarjeta de Kalos 💪 ' + PAGINA + '?id=' + a.id);
+    if (a.tel) $('btnWa').href = 'https://wa.me/' + waNum(a.tel) + '?text=' + encodeURIComponent('¡Hola ' + a.nombre.split(' ')[0] + '! Tienes rutina nueva en tu tarjeta de Kalos 💪 ' + PAGINA + '?id=' + a.id);
   }
 
   function quitar(orden, btn) {
@@ -689,7 +690,7 @@
       ids.forEach(function (id) {
         var a = S.alumnos.filter(function (x) { return x.id === id; })[0]; if (!a || !a.tel) return;
         var l = el('a', 'btn wa', 'Avisar a ' + a.nombre.split(' ')[0]); l.target = '_blank'; l.rel = 'noopener';
-        l.href = 'https://wa.me/591' + a.tel + '?text=' + encodeURIComponent('¡Hola ' + a.nombre.split(' ')[0] + '! Tienes rutina nueva en tu tarjeta de Kalos 💪 ' + PAGINA + '?id=' + a.id);
+        l.href = 'https://wa.me/' + waNum(a.tel) + '?text=' + encodeURIComponent('¡Hola ' + a.nombre.split(' ')[0] + '! Tienes rutina nueva en tu tarjeta de Kalos 💪 ' + PAGINA + '?id=' + a.id);
         h.appendChild(l);
       });
     }).catch(function () { S.busy = false; decir('avCp', 'bad', 'Sin conexión, intenta de nuevo.'); });

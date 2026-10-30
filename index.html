@@ -497,7 +497,7 @@
     <h2 id="pinTitulo">INGRESA TU PIN</h2>
     <p id="pinSub" class="msg"></p>
     <div id="pinTelBox" hidden>
-      <input id="pinTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" placeholder="Tu celular" aria-label="Tu número de celular">
+      <input id="pinTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" placeholder="Tu celular (o con código de país)" aria-label="Tu número de celular">
     </div>
     <input id="pinIn" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="PIN de 4 dígitos" aria-label="PIN de 4 dígitos">
     <div id="pinIn2Box" hidden>
@@ -514,7 +514,7 @@
     <div id="enForm">
       <h2>Encuentra tu tarjeta</h2>
       <p class="msg">Escribe tu número de celular, el mismo con el que te inscribiste en Kalos.</p>
-      <input id="enTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="7XXXXXXX" aria-label="Tu número de celular">
+      <input id="enTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="7XXXXXXX (o con código de país)" aria-label="Tu número de celular">
       <p id="enAviso" class="aviso" role="status"></p>
       <button id="btnEntrar" class="btn" type="button">VER MI TARJETA</button>
     </div>
@@ -989,7 +989,7 @@
   var AS = { volver: 'card', origen: null };
   var MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
   var ASERR = {
-    telefono: 'Escribe tu número de celular (8 dígitos).',
+    telefono: 'Escribe tu número de celular (8 dígitos). Si vives fuera de Bolivia: con código de país y sin +.',
     no_encontrado: 'No encontramos ese número. Revísalo o consulta en recepción.',
     ocupado: 'Hay muchas consultas en este momento. Intenta de nuevo en un minuto.',
     invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.',
