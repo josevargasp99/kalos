@@ -39,6 +39,7 @@
     .btn:disabled{opacity:.5;cursor:default}
     input[type=text],input[type=search]{width:100%;margin-top:12px;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:16px Inter,Arial,sans-serif}
     input:focus{outline:2px solid var(--sage);border-color:transparent}
+    select{width:100%;margin-top:6px;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:16px Inter,Arial,sans-serif}
     .aviso{margin-top:12px;font-size:14px;line-height:1.5;min-height:20px;color:var(--muted)}
     .aviso.bad{color:var(--bad)} .aviso.ok{color:var(--ok)}
     .row{display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0a1206;color:var(--text);text-align:left;cursor:pointer;font:inherit}
@@ -135,6 +136,10 @@
       <p id="subDias" class="sub" style="margin-top:14px">Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.</p>
       <div id="dias"></div>
       <div id="remBtns" hidden>
+        <p class="sub" style="margin:14px 0 6px">Semana en la que va el alumno (avanza sola cada lunes)</p>
+        <select id="semSel" aria-label="Semana en la que va el alumno"><option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option><option value="4">Semana 4</option></select>
+        <button id="btnSem" class="btn out" type="button">ACTUALIZAR SEMANA</button>
+        <p id="avSem" class="aviso" role="status"></p>
         <button id="btnNutri" class="btn" type="button">🥗 PLAN ALIMENTICIO</button>
         <button id="btnMed" class="btn out" type="button">📏 VER MEDIDAS</button>
       </div>
@@ -261,7 +266,8 @@
     destinos: 'Elige al menos un alumno.',
     dia: 'Día no válido.',
     no_remoto: 'Eso solo aplica a alumnos remotos.',
-    pagina: 'Página no válida (máximo 15).'
+    pagina: 'Página no válida (máximo 15).',
+    semana: 'Semana no válida (1 a 4).'
   };
 
   function api(body) {
@@ -368,6 +374,7 @@
   function abrirAlumno(a) {
     S.al = a; $('alNombre').textContent = a.nombre; $('alInfo').textContent = (a.plan || '') + ' · ' + (a.horario || '');
     S.rem = !!a.remoto; $('remBtns').hidden = !S.rem;
+    if (S.rem) { $('semSel').value = String(a.semana || 1); $('avSem').textContent = ''; $('avSem').className = 'aviso'; }
     $('subDias').textContent = S.rem ? 'Toca una semana para cargar o cambiar su rutina (Semana 1 a 4). El alumno avanza de semana cada lunes.' : 'Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.';
     pantalla('sAlumno'); limpiar($('dias'));
     if (S.soloRem && !S.rem) { $('subDias').textContent = 'Alumno presencial: su rutina se consulta en el gimnasio.'; return; }
@@ -498,6 +505,16 @@
       b.disabled = false;
       if (d.ok) { NUT.cache = {}; pintarNutri({ paginas: 0, fecha: '' }, NUT.tok); decir('avNu', 'ok', 'Plan quitado.'); } else decir('avNu', 'bad', errTxt(d));
     }).catch(function () { b.disabled = false; decir('avNu', 'bad', 'Sin conexión, intenta de nuevo.'); });
+  };
+  $('btnSem').onclick = function () {
+    if (!S.al || !S.rem) return;
+    var b = $('btnSem'), n = Number($('semSel').value);
+    b.disabled = true; decir('avSem', '', 'Guardando…');
+    api({ accion: 'coach_semana', id: S.al.id, n: n }).then(function (d) {
+      b.disabled = false;
+      if (d && d.ok) { S.al.semana = d.semana; decir('avSem', 'ok', 'Listo ✅ Ahora va en la Semana ' + d.semana + ' y avanza sola cada lunes.'); }
+      else decir('avSem', 'bad', errTxt(d));
+    }).catch(function () { b.disabled = false; decir('avSem', 'bad', 'Sin conexión, intenta de nuevo.'); });
   };
   $('btnMed').onclick = function () {
     var a = S.al, c = $('mdLista'); $('mdAtrasNom').textContent = a.nombre;
