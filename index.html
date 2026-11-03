@@ -277,6 +277,33 @@
     @keyframes kUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion:reduce){.pre .cs{opacity:1}.go .cs{animation:none}}
 
+
+    /* ---------- pantallas internas (opción A) · etapa 2 ---------- */
+    .card.pago{background:none;border:0;border-radius:0;padding:0;overflow:visible;position:static}
+    .card.pago:before{display:none}
+    .card.pago>.status{margin-bottom:6px;display:flex;align-items:center;gap:8px;font:600 12px Inter,Arial,sans-serif;letter-spacing:2.5px;color:var(--muted);text-shadow:none;text-transform:uppercase}
+    .card.pago>.status .dot{width:8px;height:8px;box-shadow:none;background:var(--c)}
+    .card.pago h2,.pago h2{font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:40px;line-height:.95;letter-spacing:1px;margin:4px 0 0;word-break:break-word}
+    .card.pago .msg{color:#9aa696}
+    .card.pago .btn{border-radius:16px;min-height:52px;padding:14px 16px;font-size:21px}
+    .card.pago .btn.sec{border-radius:14px;min-height:44px;background:var(--panel);color:#C9D3C5;border:1px solid var(--line);font:500 14px Inter,Arial,sans-serif;letter-spacing:0}
+    #buzon{--c:var(--ok)}
+    .card.pago .tel::placeholder{font-size:15px;letter-spacing:0;font-weight:500}
+    .card.pago .btn.out{border-radius:16px}
+    .card.pago .btn.wa{background:#25D366;color:#06210f}
+    .card.pago textarea,.card.pago .lginp,.card.pago .tel,.card.pago .selmes select{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+    .card.pago .fdesc,.card.pago .racha{background:var(--panel);border-radius:18px}
+    .card.pago li.lg,.card.pago .aprow,.card.pago .apit,.card.pago .mdc,.card.pago .mdr,.card.pago .pasos li,.card.pago .stats div,.card.pago .dtabs button,.card.pago .selmes button{background:var(--panel);border-radius:16px}
+    .card.pago .stats div{border-radius:18px}
+    .card.pago .dtabs button{border-radius:12px}
+    .card.pago .dtabs button.on{background:var(--ok)}
+    .card.pago .qrbox{border-radius:18px}
+    .card.pago .rimgs img,.card.pago .fcar img{border-radius:16px}
+    .card.pago details.hist{border-top:1px solid var(--line)}
+    .card.pago .dias i{background:var(--panel);border-radius:9px}
+    .card.pago .dias i.asist{background:var(--ok)}
+    .card.pago .dias i.vacio{background:none}
+    #modal .box{border-radius:22px}
     /* ---------- pantalla de inicio (neblina) ---------- */
     #splash{position:fixed;inset:0;z-index:100;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}
     #splash .sp-fog{position:absolute;left:50%;top:50%;width:130vmax;height:130vmax;margin:-65vmax 0 0 -65vmax;border-radius:50%;will-change:transform,opacity;
