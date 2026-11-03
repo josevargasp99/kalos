@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0D1708; --panel:#121e0d; --line:#24321e; --sage:#8A9686;
+      --bg:#070B05; --panel:#10180C; --line:#24321e; --sage:#8A9686;
       --ok:#62D97E; --warn:#F2B33D; --bad:#FF5A5A; --neutral:#8A9686;
       --text:#ffffff; --muted:#8A9686;
     }
@@ -194,6 +194,89 @@
     #lbRx{position:fixed;top:12px;right:12px;z-index:51;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px;cursor:pointer}
     [hidden]{display:none!important}
 
+    /* ---------- inicio (opción A) ---------- */
+    .wrap{isolation:isolate}
+    .card.home{position:static;background:none;border:0;border-radius:0;padding:0;overflow:visible}
+    .card.home:before,.card.home>.status{display:none}
+    .card.home #detalle{display:flex;flex-direction:column;gap:18px}
+    .yy{position:absolute;top:-70px;right:-150px;width:470px;height:470px;opacity:.07;pointer-events:none;z-index:-1}
+    .bell{position:absolute;top:20px;right:16px;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:#C9D3C5;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+    .bell:not(.on):after{content:"";position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:50%;background:var(--warn)}
+    .bell.on{color:var(--ok);border-color:rgba(98,217,126,.45)}
+    .home .hdate{display:block;font-size:12px;font-weight:600;letter-spacing:2.5px;color:var(--muted);text-transform:uppercase}
+    .home .name{font-size:clamp(34px,12vw,48px);line-height:.92;margin:6px 0 0}
+    .hrow{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:rgba(98,217,126,.12);color:var(--c);font-family:'Bebas Neue',Impact,sans-serif;font-size:18px;letter-spacing:1.5px;line-height:1}
+    .chip .dot{width:8px;height:8px;box-shadow:none}
+    .warn .chip{background:rgba(242,179,61,.12)} .bad .chip{background:rgba(255,90,90,.12)} .neutral .chip{background:rgba(138,150,134,.14)}
+    .home .days{font-size:13px}
+    .home .bar{height:4px;margin:12px 0 0;background:#1D2918;border-radius:4px}
+    .home .bar span{opacity:.8}
+    .home .aviso{margin:-8px 0 0;min-height:0;font-size:13px}
+    .home .aviso:empty{display:none}
+    .home .racha{margin:0;padding:18px;border:1px solid rgba(242,179,61,.45);border-radius:22px;background:var(--panel);display:flex;flex-direction:column;gap:14px}
+    .home .racha.off{border-color:var(--line)}
+    .home .rtop{gap:14px}
+    .home .rtop>div{display:flex;align-items:baseline;gap:8px}
+    .home .fuego{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:16px;background:rgba(242,179,61,.14);color:var(--warn);flex:none;filter:none;opacity:1}
+    .home .racha.off .fuego{background:rgba(138,150,134,.14);color:var(--muted)}
+    .home .rnum{font-size:60px;line-height:.85}
+    .home .rlbl{display:inline;margin:0;font-size:14px;color:#C9D3C5}
+    .home .rrec{font-size:12px}
+    .home .rsem{margin:0;gap:6px}
+    .home .rsem span{min-width:0;height:46px;padding:0;border-radius:12px;background:transparent;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--muted);font-size:12px;line-height:1.1}
+    .home .rsem span b{font-weight:600}
+    .home .rsem span small{font-size:10px;font-weight:500}
+    .home .rsem span.ok{border-color:var(--ok);background:rgba(98,217,126,.10);color:var(--ok)}
+    .home .rsem span.hoy{border:1.5px solid var(--warn);color:var(--warn)}
+    .home .rsem span.falta{border-color:rgba(255,90,90,.5);color:var(--bad)}
+    .home .rmsg{margin:0;font-size:13px;line-height:1.45;color:#C9D3C5}
+    .home .rmsg.riesgo{color:var(--warn)} .home .rmsg.perdida{color:var(--bad)}
+    .home .rbtn{margin:0}
+    .rutina{display:flex;flex-direction:column;gap:12px;border-radius:22px;padding:16px 18px;background:var(--panel);border:1px solid var(--line)}
+    .rutina.on{background:var(--ok);border:0;color:#070B05;padding:18px;cursor:pointer}
+    .rutina .rbt{display:block;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:0;cursor:pointer}
+    .rt1{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .rtk{display:block;font-size:12px;font-weight:700;letter-spacing:2px;opacity:.75}
+    .rtt{display:block;font-family:'Bebas Neue',Impact,sans-serif;font-size:40px;line-height:.9;letter-spacing:1px;margin-top:4px}
+    .rta{width:44px;height:44px;border-radius:50%;background:#070B05;color:var(--ok);display:flex;align-items:center;justify-content:center;flex:none}
+    .rutina .etapa{margin:0;gap:5px}
+    .rutina .etapa div{text-align:left}
+    .rutina.on .etapa div{color:#070B05;opacity:.7;font-weight:500}
+    .rutina.on .etapa div.on{opacity:1;font-weight:600}
+    .rutina.on .etapa div.act{opacity:1;font-weight:700}
+    .rutina.on .etapa i{background:rgba(7,11,5,.25)}
+    .rutina.on .etapa div.on i{background:#070B05}
+    .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .fx{border:1px solid var(--line);border-radius:22px;padding:16px;background:var(--panel);color:var(--text);display:flex;flex-direction:column;gap:10px;min-height:124px;text-align:left;cursor:pointer;font:inherit}
+    .fx.ancha{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;gap:14px}
+    .fx .ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(138,150,134,.16);color:#C9D3C5;flex:none}
+    .fx .ic.v{background:rgba(98,217,126,.12);color:var(--ok)} .fx .ic.a{background:rgba(242,179,61,.14);color:var(--warn)}
+    .fx b{display:block;font-size:15px;font-weight:600}
+    .fx small{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
+    .plan{border:1px solid var(--line);border-radius:22px;padding:18px;background:var(--panel);display:flex;flex-direction:column;gap:14px}
+    .ptop{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:600}
+    .ptop .code{font-size:12px;letter-spacing:1px}
+    .pmid{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+    .pmid b{display:block;font-size:20px;font-weight:600;word-break:break-word}
+    .psub{display:block;margin-top:4px;font-size:13px;color:#C9D3C5;word-break:break-word}
+    .renov{flex:none;min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--ok);background:transparent;color:var(--ok);font-family:'Bebas Neue',Impact,sans-serif;font-size:19px;letter-spacing:1.5px;cursor:pointer}
+    .warn .renov,.bad .renov{background:var(--c);border-color:var(--c);color:#070B05}
+    .pfechas{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+    .pfechas b{font-weight:500;color:#C9D3C5}
+    .brow{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:14px 16px;border:1px solid var(--line);border-radius:18px;background:transparent;color:var(--text);cursor:pointer;text-align:left;font:inherit}
+    .brow .ic2{color:#C9D3C5;flex:none} .brow>span{flex:1} .brow b{display:block;font-size:14px;font-weight:600}
+    .brow small{display:block;font-size:12px;color:var(--muted);margin-top:2px} .brow .chev{color:var(--muted);flex:none}
+    .foot{display:flex;flex-direction:column;align-items:center;gap:4px}
+    .home .inst{margin:0}
+    .pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:#C9D3C5;font:500 13px Inter,Arial,sans-serif;cursor:pointer}
+    .fx:active,.brow:active,.renov:active,.pill:active{transform:scale(.97);transition:transform .08s}
+    /* cascada al abrir: solo la primera vez que se pinta la tarjeta */
+    .pre .cs{opacity:0}
+    .go .cs{animation:kUp .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*70ms)}
+    @keyframes kUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    @media (prefers-reduced-motion:reduce){.pre .cs{opacity:1}.go .cs{animation:none}}
+
     /* ---------- pantalla de inicio (neblina) ---------- */
     #splash{position:fixed;inset:0;z-index:100;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}
     #splash .sp-fog{position:absolute;left:50%;top:50%;width:130vmax;height:130vmax;margin:-65vmax 0 0 -65vmax;border-radius:50%;will-change:transform,opacity;
@@ -287,42 +370,57 @@
     <p id="mensaje" class="msg">Consultando la inscripción.</p>
 
     <div id="detalle" hidden>
-      <h1 id="nombre" class="name"></h1>
-      <div id="etapa" class="etapa" hidden role="img"></div>
-      <div id="racha" class="racha" hidden>
-        <div class="rtop"><span class="fuego" aria-hidden="true">🔥</span>
+      <img class="yy" src="isotipo-splash.png" alt="" aria-hidden="true">
+      <button id="btnAvisos" class="bell" type="button" aria-label="Activar avisos" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg></button>
+      <div class="hero cs" style="--i:0">
+        <span id="hFecha" class="hdate"></span>
+        <h1 id="nombre" class="name"></h1>
+        <div class="hrow">
+          <span class="chip"><span class="dot"></span><span id="estadoH"></span></span>
+          <p id="dias" class="days"></p>
+        </div>
+        <div class="bar" role="progressbar" aria-label="Avance de tu mes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="barra"></span></div>
+      </div>
+      <p id="avAvisos" class="aviso"></p>
+      <div id="racha" class="racha cs" style="--i:1" hidden>
+        <div class="rtop"><span class="fuego" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4 0 7-3 7-7 0-4-3-6-4-9-1 2-2 3-3 3 0-2-1-4-3-6 0 4-4 6-4 12 0 4 3 7 7 7z"></path></svg></span>
           <div><span id="rNum" class="rnum"></span><span id="rLbl" class="rlbl"></span></div>
           <span id="rRec" class="rrec"></span></div>
         <div id="rSem" class="rsem"></div>
         <p id="rMsg" class="rmsg"></p>
         <a id="rBtn" class="rbtn" href="#" target="_blank" rel="noopener" hidden></a>
       </div>
-      <p id="dias" class="days"></p>
-      <div class="bar"><span id="barra"></span></div>
-      <dl class="grid">
-        <div><dt>Desde</dt><dd id="inicio"></dd></div>
-        <div><dt>Hasta</dt><dd id="fin"></dd></div>
-        <div><dt>Plan</dt><dd id="plan"></dd></div>
-        <div><dt>Horario</dt><dd id="horario"></dd></div>
-        <div><dt>Instructor</dt><dd id="instructor"></dd></div>
-        <div><dt>Código</dt><dd id="codigo" class="code"></dd></div>
-      </dl>
-      <button id="btnRutina" class="btn" type="button" hidden>💪 MI RUTINA</button>
-      <button id="btnNutri" class="btn" type="button" hidden>🥗 MI PLAN ALIMENTICIO</button>
-      <button id="btnMedidas" class="btn out" type="button" hidden>📏 MIS MEDIDAS</button>
-      <button id="btnLogros" class="btn out" type="button">🏆 MIS LOGROS</button>
-      <button id="btnApuntes" class="btn out" type="button">📒 MIS APUNTES</button>
-      <button id="btnAsist" class="btn out" type="button">📅 MI ASISTENCIA</button>
-      <button id="btnFisio" class="btn out" type="button">🩺 FISIOTERAPIA · KINE-REGENERATUS</button>
-      <button id="btnBuzon" class="btn out" type="button">BUZÓN DE SUGERENCIAS</button>
-      <button id="btnRenovar" class="btn" type="button">RENOVAR MI MES</button>
-      <button id="btnAvisos" class="btn out" type="button" hidden>🔔 ACTIVAR AVISOS</button>
-      <p id="avAvisos" class="aviso"></p>
-      <div id="inst" class="inst" hidden>
-        <button id="btnInstalar" class="btn out" type="button">📲 INSTALAR APP</button>
-        <button id="btnInstNo" class="no" type="button">Ahora no</button>
+      <div id="rutinaBox" class="rutina cs" style="--i:2" hidden>
+        <button id="btnRutina" class="rbt" type="button" hidden>
+          <span class="rt1"><span><span class="rtk">ENTRENAMIENTO DE HOY</span><span class="rtt">MI RUTINA</span></span>
+          <span class="rta" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></span>
+        </button>
+        <div id="etapa" class="etapa" hidden role="img"></div>
       </div>
-      <button id="btnCambiar" class="cambiar" type="button">¿No es tu tarjeta? Cambiar</button>
+      <div id="fichas" class="tiles">
+        <button id="btnNutri" class="fx cs" style="--i:3" type="button" hidden><span class="ic v"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4 0-7-3-7-8 0-4 3-6 7-6s7 2 7 6c0 5-3 8-7 8z"></path><path d="M12 7c0-2 1-4 3-5"></path></svg></span><span><b>Mi plan alimenticio</b><small>Tu alimentación del mes</small></span></button>
+        <button id="btnMedidas" class="fx cs" style="--i:3" type="button" hidden><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17L17 3l4 4L7 21z"></path><path d="M7 13l2 2M10 10l2 2M13 7l2 2"></path></svg></span><span><b>Mis medidas</b><small>Tu progreso corporal</small></span></button>
+        <button id="btnAsist" class="fx cs" style="--i:3" type="button"><span class="ic v"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span><span><b>Mi asistencia</b><small>Tu mes en calendario</small></span></button>
+        <button id="btnLogros" class="fx cs" style="--i:4" type="button"><span class="ic a"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg></span><span><b>Mis logros</b><small>Tus metas del mes</small></span></button>
+        <button id="btnApuntes" class="fx cs" style="--i:4" type="button"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"></path><path d="M6 3v18M10 8h5M10 12h5"></path></svg></span><span><b>Mis apuntes</b><small>Tus ejercicios y cargas</small></span></button>
+        <button id="btnFisio" class="fx cs" style="--i:5" type="button"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"></path></svg></span><span><b>Fisioterapia</b><small>Kine-Regeneratus</small></span></button>
+      </div>
+      <section class="plan cs" style="--i:6">
+        <div class="ptop"><span>MI PLAN</span><span id="codigo" class="code"></span></div>
+        <div class="pmid">
+          <div><b id="plan"></b><span class="psub"><span id="horario"></span><span id="pInst"> · Instructor <span id="instructor"></span></span></span></div>
+          <button id="btnRenovar" class="renov" type="button">RENOVAR</button>
+        </div>
+        <div class="pfechas"><span>Desde <b id="inicio"></b></span><span>Hasta <b id="fin"></b></span></div>
+      </section>
+      <button id="btnBuzon" class="brow cs" style="--i:7" type="button"><svg class="ic2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span><b>Buzón de sugerencias</b><small>Anónimo · lo lee el equipo Kalos</small></span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+      <div class="foot cs" style="--i:8">
+        <div id="inst" class="inst" hidden>
+          <button id="btnInstalar" class="pill" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>Instalar app</button>
+          <button id="btnInstNo" class="no" type="button">Ahora no</button>
+        </div>
+        <button id="btnCambiar" class="cambiar" type="button">¿No es tu tarjeta? Cambiar</button>
+      </div>
     </div>
     <button id="btnReintentar" class="btn out" type="button" hidden>REINTENTAR</button>
   </section>
@@ -1218,7 +1316,7 @@
   }
   function activarAvisos() {
     var b = $('btnAvisos'), av = $('avAvisos');
-    function pintarBtn(on) { b.textContent = on ? '🔔 AVISOS ACTIVADOS · toca para desactivar' : '🔔 ACTIVAR AVISOS'; b.className = on ? 'btn sec' : 'btn out'; b.dataset.on = on ? '1' : ''; }
+    function pintarBtn(on) { b.setAttribute('aria-label', on ? 'Avisos activados. Toca para desactivar' : 'Activar avisos'); b.title = b.getAttribute('aria-label'); b.className = on ? 'bell on' : 'bell'; b.dataset.on = on ? '1' : ''; }
     if (!pushSoportado()) {
       if (esIOS() && !instalada()) { b.hidden = false; pintarBtn(false); b.onclick = function () { lgDecir(av, '', 'En iPhone, primero instala la app: toca Compartir y luego "Añadir a pantalla de inicio". Ábrela desde ahí y activa los avisos.'); }; }
       return;
@@ -1420,13 +1518,14 @@
   }
   function refrescarTarjeta() {   // vuelve a pintar racha y etapa sin recargar toda la pantalla
     enviar({ accion: 'tarjeta' }).then(function (d) {
-      if (d && d.ok && d.alumno) { pintarRacha(d.alumno.racha, d.alumno); pintarEtapa(d.alumno.etapa); }
+      if (d && d.ok && d.alumno) { pintarRacha(d.alumno.racha, d.alumno); pintarEtapa(d.alumno.etapa); pintarRutinaBox(); }
     }).catch(function () {});
   }
   function activarRutina(a) {
     var es = typeof a.rutina === 'boolean' ? a.rutina : String(a.instructor || '').trim().toLowerCase() === 'ian';
     $('btnRutina').hidden = !es;
     $('btnRutina').onclick = abrirRutina;
+    $('rutinaBox').onclick = function (e) { if (!$('btnRutina').hidden && !(e.target.closest && e.target.closest('#btnRutina'))) abrirRutina(); };
     $('btnVolverR').onclick = function () { ver('card'); };
     $('lbRx').onclick = function () { $('lbR').hidden = true; $('lbRImg').removeAttribute('src'); };
     $('btnRtSem').onclick = function () {
@@ -1703,8 +1802,11 @@
         var a = d.alumno;
         guardarId(cid);
         pintar(a.clase, a.estado, '');
+        $('card').classList.add('home');
+        $('estadoH').textContent = a.estado;
+        $('hFecha').textContent = fechaLarga();
         $('nombre').textContent = a.nombre;
-        $('dias').textContent = a.staff ? 'STAFF · Kalos' : a.textoDias;
+        $('dias').textContent = a.staff ? 'STAFF · Kalos' : a.textoDias + ((a.estado === 'ACTIVO' || a.estado === 'POR VENCER') && a.fin ? ' · hasta ' + String(a.fin).slice(0, 5) : '');
         pintarRacha(a.racha, a);
         pintarEtapa(a.etapa);
         $('btnRenovar').hidden = !!a.staff;
@@ -1713,7 +1815,7 @@
         $('fin').textContent = a.fin;
         $('plan').textContent = a.plan || '—';
         $('horario').textContent = a.horario || '—';
-        $('instructor').textContent = a.instructor || '—';
+        $('instructor').textContent = a.instructor || '—'; $('pInst').hidden = !a.instructor;
         $('codigo').textContent = a.id;
         activarRenovar(a.nombre);
         activarBuzon();
@@ -1726,18 +1828,69 @@
         $('btnCambiar').onclick = cambiarTarjeta;
         activarRutina(a);
         activarRemoto(a);
+        pintarRutinaBox(); acomodarFichas();
+        var tomada = introInicio(a);
         $('detalle').hidden = false;
         mostrarInstalar();
         if (IR === 'renovar' && !a.staff) { IR = ''; try { history.replaceState(null, '', location.pathname + '?app=1'); } catch (e) {} setTimeout(function () { ver('pago'); }, 450); }
-        requestAnimationFrame(function () {
-          $('barra').style.width = Math.max(0, Math.min(100, Number(a.progreso) || 0)) + '%';
-        });
+        if (!tomada) requestAnimationFrame(function () { pintarBarra(a.progreso); });
       })
       .catch(function () {
         if (window.splashListo) splashListo();
         pintar('warn', 'SIN CONEXIÓN', 'Sin conexión, intenta de nuevo.');
         $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
       });
+  }
+
+  /* ---------- inicio: fecha, fichas, cascada ---------- */
+  var DSEM = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  function fechaLarga() {
+    var p = hoyBolivia().split('-'), d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    return DSEM[d.getUTCDay()] + ' ' + (+p[2]) + ' de ' + MESES[+p[1] - 1];
+  }
+  function pintarBarra(pr) {
+    var v = Math.max(0, Math.min(100, Number(pr) || 0)), b = $('barra');
+    b.style.width = v + '%'; b.parentNode.setAttribute('aria-valuenow', String(v));
+  }
+  function pintarRutinaBox() {
+    var bt = $('btnRutina'), r = $('rutinaBox');
+    r.hidden = bt.hidden && $('etapa').hidden;
+    r.classList.toggle('on', !bt.hidden); r.classList.toggle('off', bt.hidden);
+  }
+  function acomodarFichas() {   // si queda un número impar de fichas visibles, la última ocupa todo el ancho
+    var v = Array.prototype.filter.call($('fichas').children, function (x) { return !x.hidden; });
+    v.forEach(function (x) { x.classList.remove('ancha'); });
+    if (v.length % 2) v[v.length - 1].classList.add('ancha');
+  }
+  function contar(el, n) {
+    var k = (el._k = (el._k || 0) + 1), t0 = performance.now();
+    (function paso(t) {
+      if (el._k !== k) return;
+      var p = Math.min(1, (t - t0) / 800);
+      el.textContent = String(Math.round(n * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(paso);
+    })(t0);
+  }
+  var INTRO = { hecha: false };
+  function introInicio(a) {   // cascada: solo la primera vez que se pinta la tarjeta; devuelve true si ella pinta la barra
+    if (INTRO.hecha || REDUCE) return false;
+    INTRO.hecha = true;
+    var d = $('detalle'), rn = $('rNum'), n = Number(rn.textContent) || 0, t0 = Date.now(), listo = false;
+    var cerrada = false;
+    function fin() { if (cerrada) return; cerrada = true; d.classList.remove('pre'); d.classList.remove('go'); pintarBarra(a.progreso); if (n && rn._k) { rn._k++; rn.textContent = String(n); } }
+    setTimeout(fin, 9000);                                   // seguro: pase lo que pase, el inicio queda visible
+    d.classList.add('pre');
+    if (n) rn.textContent = '0';
+    function arrancar() {
+      if (listo) return; listo = true;
+      d.classList.remove('pre'); d.classList.add('go');
+      setTimeout(function () { pintarBarra(a.progreso); }, 450);
+      if (n) contar(rn, n);
+      setTimeout(fin, 1700);
+    }
+    (function esperar() { var sp = $('splash'); if (window.KALOS_SPLASH || !sp || /\bzoom\b/.test(sp.className) || Date.now() - t0 > 7000) arrancar(); else setTimeout(esperar, 60); })();   // arranca cuando el splash empieza a abrirse
+    return true;
   }
 
   /* ---------- racha ---------- */
@@ -1759,16 +1912,19 @@
     if (!r || !r.semana) r = { modo: (r && r.modo) || 'diario', racha: 0, record: (r && r.record) || 0, estado: (r && r.estado) || 'nueva', perdida: null, restaurable: null, bloqueada: false, semana: { dias: [], visitas: 0, necesita: 3, faltan: 3, hoyToca: false } };
     box.hidden = false;
     var viva = r.racha > 0;
-    box.className = 'racha ' + (viva ? 'on' : 'off');
+    box.className = 'racha cs ' + (viva ? 'on' : 'off'); $('rNum')._k = ($('rNum')._k || 0) + 1;
     $('rNum').textContent = r.racha;
     $('rLbl').textContent = r.racha === 1 ? 'día de racha' : 'días de racha';
     $('rRec').textContent = r.record > 0 ? 'Récord: ' + r.record : '';
     var sem = $('rSem'); while (sem.firstChild) sem.removeChild(sem.firstChild);
     var tres = /^(\dx|r\d)$/.test(r.modo), rem = !!(a && a.modalidad === 'Remoto');
     (r.semana.dias || []).forEach(function (d) {
-      var e = d.e, t = d.l;
-      if (e === 'ok') t += ' ✅'; else if (e === 'falta') { if (tres) e = ''; else t += ' ❌'; } else if (e === 'hoy') t += ' •'; else if (e === 'feriado') t += ' 🎌';
-      var sp = document.createElement('span'); sp.className = e === 'futuro' ? '' : e; sp.textContent = t; sem.appendChild(sp);
+      var e = d.e, m = '';
+      if (e === 'ok') m = '✓'; else if (e === 'falta') { if (tres) e = ''; else m = '✕'; } else if (e === 'hoy') m = 'hoy'; else if (e === 'feriado') m = 'feriado';
+      var sp = document.createElement('span'); sp.className = e === 'futuro' ? '' : e;
+      var lt = document.createElement('b'); lt.textContent = d.l; sp.appendChild(lt);
+      if (m) { var sm = document.createElement('small'); sm.textContent = m; sp.appendChild(sm); }
+      sem.appendChild(sp);
     });
     var msg = '', cls = '';
     if (r.estado === 'nueva' || (!viva && r.estado !== 'perdida' && r.estado !== 'riesgo')) msg = rem ? '¡Comienza tu racha! 💪 Entra a Mi asistencia y toca "Marcar que entrené hoy" cada vez que entrenes. Cuentan todos los días, también sábado y domingo.' : '¡Comienza tu racha! 💪 Ve al gimnasio y escanea el QR de la puerta cada vez que entrenes. Solo cuentan lunes a viernes.';
