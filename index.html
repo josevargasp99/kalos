@@ -303,6 +303,179 @@
     .card.pago .dias i{background:var(--panel);border-radius:9px}
     .card.pago .dias i.asist{background:var(--ok)}
     .card.pago .dias i.vacio{background:none}
+
+    /* ---------- pantallas internas (opción A) · etapa 3A: cabecera y estructura ---------- */
+    body.interna .brand,body.interna .clock,body.interna .ig{display:none}
+    .card.pago .oculto{display:none!important}
+    .hd{display:flex;align-items:center;gap:12px;margin:2px 0 16px}
+    .hd .back,.hd .mas{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;cursor:pointer;padding:0}
+    .hd .back{background:var(--panel);border:1px solid var(--line);color:#fff}
+    .hd .mas{background:var(--ok);border:0;color:#06210f}
+    .hd .tt{flex:1;min-width:0}
+    .hd .eb{display:block;font:600 11px Inter,Arial,sans-serif;letter-spacing:2.5px;color:var(--muted);text-transform:uppercase}
+    .hd .ti{display:block;font:400 38px/.95 'Bebas Neue',Impact,sans-serif;letter-spacing:1px;margin-top:3px;word-break:break-word}
+    .hd .badge{flex:none;padding:7px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--ok);font:600 12px Inter,Arial,sans-serif}
+    #apuntes:has(#apLista[hidden]) .hd .mas,#medidas:has(#mdLista[hidden]) .hd .mas{display:none}
+    .card.pago h2.sub{font:600 22px Inter,Arial,sans-serif;letter-spacing:0;line-height:1.2;margin:2px 0 0}
+    .anon{display:flex;align-items:center;gap:12px;margin:14px 0 0;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:16px;font-size:14px;line-height:1.4}
+    .anon .lk{flex:none;width:36px;height:36px;border-radius:10px;background:#142410;color:var(--ok);display:grid;place-items:center}
+    .anon p{margin:0}.anon b{color:#fff}
+    .card.pago label.apf{display:block;margin:16px 0 8px;font:600 11px Inter,Arial,sans-serif;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+    .card.pago .btn svg{vertical-align:-3px;margin-right:8px}
+    .plancard{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:18px}
+    .plancard .k{display:block;font:600 10px Inter,Arial,sans-serif;letter-spacing:2px;color:var(--muted)}
+    .plancard b{display:block;font:600 20px Inter,Arial,sans-serif;margin-top:4px}
+    .plancard small{display:block;margin-top:3px;color:#9aa696;font-size:13px}
+    .plancard .vence{text-align:right}
+    .plancard .vence b{font:400 44px/1 'Bebas Neue',Impact,sans-serif;color:var(--ok);margin-top:2px;letter-spacing:1px}
+    .card.pago .bono{display:flex;align-items:center;gap:14px;margin:14px 0 0;padding:14px;background:#17130a;border:1px solid #6b5420;border-radius:18px}
+    .bono .mas2{flex:none;font:400 40px/1 'Bebas Neue',Impact,sans-serif;color:var(--warn)}
+    .bono b{display:block;color:var(--warn);font-size:15px}
+    .bono span{display:block;margin-top:3px;color:#d8dfd4;font-size:13px;line-height:1.4}
+    .qrcard{margin:14px 0 0;padding:18px 14px 14px;background:var(--panel);border:1px solid var(--line);border-radius:20px;text-align:center}
+    .qrcard .qrbox{margin:0 auto;width:min(100%,260px)}
+    .qrcard p{margin:12px 0 0;color:#9aa696;font-size:14px}.qrcard b{color:#fff}
+    #pago .pasos{margin-top:14px}
+    .fhero{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:20px;border:1px solid var(--line);background:var(--panel);cursor:zoom-in}
+    .d30{display:flex;align-items:center;gap:14px;margin:14px 0 0;padding:14px;background:#17130a;border:1px solid #6b5420;border-radius:18px}
+    .d30 .p{flex:none;font:400 44px/1 'Bebas Neue',Impact,sans-serif;color:var(--warn)}
+    .d30 b{display:block;color:var(--warn);font-size:15px}
+    .d30 span{display:block;margin-top:3px;color:#d8dfd4;font-size:13px;line-height:1.4}
+    #fisio .fcar img{flex:0 0 36%;width:36%;aspect-ratio:1/1.1}
+    .frow{display:flex;gap:10px;margin-top:6px}
+    .frow .btn{flex:1;margin:0;font-size:17px;display:flex;align-items:center;justify-content:center;text-align:center}
+    .card.pago .dtabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:56px;padding:6px 0;line-height:1.1}
+    .card.pago .dtabs button small{font:700 9px Inter,Arial,sans-serif;letter-spacing:1px;margin-top:3px}
+    #nuTabs{margin:0 0 14px}
+    #nuTabs button{flex:0 0 auto;padding:8px 18px;min-height:0}
+    .nuinfo{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:18px;margin-bottom:14px}
+    .nuinfo .ic{flex:none;width:40px;height:40px;border-radius:12px;background:#142410;color:var(--ok);display:grid;place-items:center}
+    .nuinfo b{display:block;font-size:16px}.nuinfo small{display:block;color:#9aa696;font-size:13px;margin-top:2px}
+    .nufin{text-align:center;font-size:13px;color:var(--muted)}
+    #nuImgs.paged>*{display:none}
+    #nuImgs.paged[data-p="1"]>:nth-child(1){display:block}#nuImgs.paged[data-p="2"]>:nth-child(2){display:block}#nuImgs.paged[data-p="3"]>:nth-child(3){display:block}#nuImgs.paged[data-p="4"]>:nth-child(4){display:block}#nuImgs.paged[data-p="5"]>:nth-child(5){display:block}#nuImgs.paged[data-p="6"]>:nth-child(6){display:block}#nuImgs.paged[data-p="7"]>:nth-child(7){display:block}#nuImgs.paged[data-p="8"]>:nth-child(8){display:block}#nuImgs.paged[data-p="9"]>:nth-child(9){display:block}#nuImgs.paged[data-p="10"]>:nth-child(10){display:block}#nuImgs.paged[data-p="11"]>:nth-child(11){display:block}#nuImgs.paged[data-p="12"]>:nth-child(12){display:block}#nuImgs.paged[data-p="13"]>:nth-child(13){display:block}#nuImgs.paged[data-p="14"]>:nth-child(14){display:block}#nuImgs.paged[data-p="15"]>:nth-child(15){display:block}#nuImgs.paged[data-p="16"]>:nth-child(16){display:block}#nuImgs.paged[data-p="17"]>:nth-child(17){display:block}#nuImgs.paged[data-p="18"]>:nth-child(18){display:block}#nuImgs.paged[data-p="19"]>:nth-child(19){display:block}#nuImgs.paged[data-p="20"]>:nth-child(20){display:block}#nuImgs.paged[data-p="21"]>:nth-child(21){display:block}#nuImgs.paged[data-p="22"]>:nth-child(22){display:block}#nuImgs.paged[data-p="23"]>:nth-child(23){display:block}#nuImgs.paged[data-p="24"]>:nth-child(24){display:block}
+    #entrada>.status{display:none}
+    #entrada .gr{color:var(--ok)}
+    #entrada .eb{display:block;font:600 11px Inter,Arial,sans-serif;letter-spacing:2.5px;color:var(--muted);text-transform:uppercase;margin-top:28px}
+    #entrada h2{font-size:56px;line-height:.92;margin-top:10px}
+    #entrada .fld{position:relative}
+    #entrada .fld svg{position:absolute;left:16px;top:50%;margin-top:0;transform:translateY(-50%);color:var(--muted)}
+    #entrada .fld .tel{padding-left:46px;margin-top:0;text-align:left}
+    #entrada .ayuda{margin:10px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+
+    /* ---------- PIN (opción A): puntos + teclado / recuadros ---------- */
+    #pin>.status{display:none}
+    #pin .pintop{display:flex;align-items:center;justify-content:space-between;min-height:30px}
+    #pin .solo{display:none;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font:600 12px Inter,Arial,sans-serif;color:#C9D3C5}
+    #pin[data-modo="crea"] .solo{display:inline-flex}
+    #pin .lockic{display:none;width:60px;height:60px;margin:18px auto 0;border-radius:18px;background:#142410;color:var(--ok);place-items:center}
+    #pin[data-modo="ingresa"] .lockic{display:grid}
+    #pin h2{margin-top:14px}
+    #pin[data-modo="ingresa"] h2,#pin[data-modo="ingresa"] #pinSub{text-align:center}
+    #pin[data-modo="ingresa"] h2{font-size:44px}
+    #pin[data-modo="crea"] h2{font-size:52px}
+    #pin #pinTitulo .gr{color:var(--ok)}
+    #pin .cajas{position:relative;display:flex;gap:10px}
+    #pin .cajas i{flex:1;height:60px;border-radius:14px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-style:normal}
+    #pin .cajas i.on{border-color:var(--ok)}
+    #pin .cajas i.on:after{content:"";width:14px;height:14px;border-radius:50%;background:#fff}
+    #pin .cajas i.sig{border-color:var(--warn)}
+    #pin .cajas input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;padding:0;border:0;font-size:16px}
+    #pin .ln{display:flex;align-items:center;gap:8px}
+    #pin .ln .n{width:20px;height:20px;border-radius:50%;background:var(--ok);color:#06210f;font:700 11px Inter,Arial,sans-serif;display:grid;place-items:center}
+    #pin .ln.p2 .n{background:none;border:1px solid var(--muted);color:var(--muted)}
+    #pin #pinTelBox .tel{margin-top:0;text-align:left;font-size:20px;letter-spacing:1px;padding:16px;border-radius:14px}
+    #pin .hint{margin:10px 0 0;font-size:12px;color:var(--muted)}
+    #pin .pts{display:none;justify-content:center;gap:16px;margin:22px 0 6px}
+    #pin[data-modo="ingresa"] .pts{display:flex}
+    #pin .pts i{width:16px;height:16px;border-radius:50%;border:2px solid var(--muted);display:block}
+    #pin .pts i.on{background:var(--ok);border-color:var(--ok)}
+    #pin .kp{display:none;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px auto 0;max-width:300px}
+    #pin[data-modo="ingresa"] .kp{display:grid}
+    #pin .kp button{height:64px;border-radius:18px;border:1px solid var(--line);background:var(--panel);color:#fff;font:500 26px Inter,Arial,sans-serif;cursor:pointer;display:grid;place-items:center;-webkit-tap-highlight-color:transparent}
+    #pin .kp button:active{background:#1b2a14}
+    #pin .kp .vac{visibility:hidden}
+    #pin .kp .del{background:none;border:0;color:#C9D3C5}
+    #pin[data-modo="ingresa"] .pinsec{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
+    #pin[data-modo="ingresa"] #btnPin{display:none}
+    #pin[data-modo="ingresa"] #pinIn2Box,#pin[data-modo="ingresa"] #pinTelBox{display:none}
+    #pin[data-modo="ingresa"] #pinAv{text-align:center;min-height:20px}
+    #pin #pinOlvide{display:none}
+    #pin[data-modo="ingresa"] #pinOlvide:not([hidden]){display:flex;width:auto;margin:22px auto 0;min-height:44px;padding:0 20px;border-radius:999px;background:none;border:1px solid var(--ok);color:var(--ok);font:600 14px Inter,Arial,sans-serif;letter-spacing:0;align-items:center;justify-content:center}
+    #pin #pinOtra{background:none;border:0;min-height:0;margin-top:14px;color:var(--ok);text-decoration:underline;font:500 14px Inter,Arial,sans-serif;display:block;margin-left:auto;margin-right:auto;width:auto}
+
+    /* ---------- etapa 3C: Asistencia · Logros · Apuntes · Medidas ---------- */
+    .card.pago h3.sec{font:600 11px Inter,Arial,sans-serif;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:22px 0 10px}
+    #asCont .stats{margin-top:6px}
+    #asCont .stats div{text-align:left;padding:14px 12px}
+    #asCont .stats b{font:600 34px/1 Inter,Arial,sans-serif;color:#fff}
+    #asCont .stats .g b{color:var(--ok)}
+    #asCont .stats .am{border-color:#6b5420}#asCont .stats .am b{color:var(--warn)}
+    #asCont .stats span{display:block;margin-top:6px;font-size:13px;letter-spacing:0;text-transform:none;color:#C9D3C5;line-height:1.2}
+    .calcard{margin-top:14px;padding:14px 12px 12px;background:var(--panel);border:1px solid var(--line);border-radius:22px}
+    .calcard .selmes{margin-top:0}
+    .calcard .selmes button{background:#0b1208;border-radius:14px;height:46px}
+    .calcard .selmes select{background:none!important;border:0!important;font:400 30px 'Bebas Neue',Impact,sans-serif;letter-spacing:1.5px;text-align:center;text-align-last:center;text-transform:uppercase;appearance:none;-webkit-appearance:none;padding:6px 0}
+    .calcard .meses{margin-top:12px!important}
+    .calcard .sem span{font-size:11px;font-weight:600;padding-bottom:6px}
+    .card.pago .calcard .dias i{background:#0b1208;border:1px solid var(--line);border-radius:12px;font-size:14px;color:#C9D3C5}
+    .card.pago .calcard .dias i.fin{background:#0d150a;border-color:transparent;color:#5b6a56}
+    .card.pago .calcard .dias i.asist{background:var(--ok);border-color:var(--ok);color:#06210f;font-weight:700}
+    .card.pago .calcard .dias i.vacio{background:none;border:0}
+    .calcard .leyenda{margin-top:12px;gap:14px}
+    .ult{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+    .ult div{padding:15px 16px;font-size:15px;font-weight:500}
+    .ult div+div{border-top:1px solid var(--line)}
+    /* logros */
+    .lgcard{display:flex;align-items:center;gap:16px;margin-top:6px;padding:16px;background:var(--panel);border:1px solid #6b5420;border-radius:22px}
+    .lgcard .ring{position:relative;flex:none;width:86px;height:86px}
+    .lgcard .ring svg{display:block;width:86px;height:86px}
+    .lgcard .ring circle{fill:none;stroke-width:9}
+    .lgcard .ring .rb{stroke:#1c2616}
+    .lgcard .ring .rf{stroke:var(--warn);stroke-linecap:round;stroke-dasharray:0 213.6;transition:stroke-dasharray .6s ease}
+    .lgcard .ring b{position:absolute;inset:0;display:grid;place-items:center;font:500 26px Inter,Arial,sans-serif}
+    .lgcard .rk{display:block;font:700 11px Inter,Arial,sans-serif;letter-spacing:2px;color:var(--warn)}
+    .lgcard .vas{display:block;font:600 19px Inter,Arial,sans-serif;margin-top:4px}
+    .lgcard small{display:block;margin-top:6px;color:#9aa696;font-size:13px;line-height:1.35}
+    ul.lgs{margin-top:14px}
+    .card.pago li.lg{display:grid;grid-template-columns:44px 1fr auto;column-gap:12px;align-items:center;padding:10px 12px;border-radius:16px}
+    .card.pago li.lg .tx{grid-column:2;font-weight:600;font-size:16px}
+    .card.pago li.lg .fch{grid-column:2;font-size:12px;color:#9aa696;margin-top:2px;white-space:normal}
+    .card.pago li.lg>button:first-child{grid-row:1/span 2;width:44px;height:44px;padding:0;border-radius:12px;border:1px solid var(--line);background:#0b1208;display:grid;place-items:center;font-size:22px;color:#06210f}
+    .card.pago li.lg.hecho>button:first-child{background:var(--ok);border-color:var(--ok)}
+    .card.pago li.lg .ed{grid-column:3;grid-row:1/span 2;width:36px;height:36px;display:grid;place-items:center;color:#9aa696;opacity:1}
+    .card.pago li.lg.editando{display:flex}
+    .lgayuda{margin:14px 0 0;color:#9aa696;font-size:14px;line-height:1.4}
+    #btnLgComp{margin-top:14px}
+    .card.pago details.hist{margin-top:14px;padding:0;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+    .card.pago details.hist summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;color:var(--text);cursor:pointer}
+    details.hist summary::-webkit-details-marker{display:none}
+    details.hist summary b{display:block;font-size:16px}details.hist summary small{display:block;margin-top:3px;color:#9aa696;font-size:13px}
+    details.hist summary svg{flex:none;color:#9aa696;transition:transform .2s}
+    details.hist[open] summary svg{transform:rotate(180deg)}
+    details.hist #lgHistCont{padding:0 16px 14px}
+    /* apuntes y medidas: tarjeta abierta + filas */
+    .card.pago .apit.abierto,.card.pago .mdc.abierto{display:block;margin-top:14px;padding:16px;border:1px solid rgba(98,217,126,.45);border-radius:22px;background:var(--panel);cursor:pointer}
+    .apit.abierto .tt,.mdc.abierto .tt{font:600 20px Inter,Arial,sans-serif;display:block}
+    .apit.abierto .fl{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:15px;opacity:1}
+    .apit.abierto .fl span{margin:0;font-size:15px;opacity:1}.apit.abierto .fl span:first-child{color:#9aa696;width:46px}
+    .apit.abierto .fl span:nth-child(2){flex:1}.apit.abierto .fl span:last-child{font-weight:700;text-align:right}
+    .apit.abierto .fl:last-of-type{border-bottom:0}
+    .apit.abierto .btn,.mdc.abierto .btn{margin-top:14px;width:100%}
+    .card.pago button.apit:not(.abierto){display:flex;align-items:center;gap:10px;justify-content:space-between;padding:16px;border-radius:18px;margin-top:10px}
+    .apit .l1 b{display:block;font-size:16px}.apit .l1 span{display:block;margin-top:3px;font-size:13px;opacity:.7}
+    .apit .l2{display:flex;align-items:center;gap:6px;color:#9aa696;font-size:13px;flex:none}
+    .mdc .nm{font:600 11px Inter,Arial,sans-serif;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:block}
+    .mdc.abierto .vl{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+    .mdc.abierto .vl b{font:600 40px/1 Inter,Arial,sans-serif}.mdc.abierto .vl span{margin:0;font-size:15px;color:#9aa696}
+    .chip2{display:inline-block;padding:4px 10px;border-radius:999px;background:#12200f;color:var(--ok);font:600 12px Inter,Arial,sans-serif}
+    .chip2.gris{background:#1b2616;color:#C9D3C5}
+    .mdc.abierto .top{display:flex;justify-content:space-between;align-items:flex-start}
+    .mdc.abierto svg.gr{display:block;width:100%;height:76px;margin-top:10px;overflow:visible}
+    .mdc.abierto .et{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:#9aa696}
+    .card.pago button.mdc:not(.abierto){display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-radius:18px;margin-top:10px}
+    .mdc .rv{display:flex;align-items:baseline;gap:8px;flex:none}.mdc .rv b{font:500 28px/1 Inter,Arial,sans-serif;display:inline}.mdc .rv small{font-size:13px;color:#9aa696}
+    .mdc .lb b{font-size:16px}
     #modal .box{border-radius:22px}
     /* ---------- pantalla de inicio (neblina) ---------- */
     #splash{position:fixed;inset:0;z-index:100;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}
@@ -468,13 +641,17 @@
     </div>
 
     <div id="lgLista" hidden>
-      <div class="lgprog"><b id="lgProg"></b><span id="lgRonda"></span></div>
+      <div class="lgcard"><div class="ring"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="rb" cx="40" cy="40" r="34"></circle><circle id="lgRing" class="rf" cx="40" cy="40" r="34" transform="rotate(-90 40 40)"></circle></svg><b id="lgRingTxt"></b></div>
+        <div><span id="lgRondaK" class="rk"></span><span id="lgVas" class="vas"></span><small id="lgSub"></small></div></div>
+      <div class="oculto"><div class="lgprog"><b id="lgProg"></b><span id="lgRonda"></span></div>
       <div class="bar" style="margin:10px 0 0"><span id="lgBarra"></span></div>
-      <p id="lgTotal" class="lgtotal"></p>
+      <p id="lgTotal" class="lgtotal"></p></div>
       <ul id="lgItems" class="lgs"></ul>
+      <p id="lgAyuda" class="lgayuda">Cuando cumplas las 3 lo celebramos y defines tus próximas metas.</p>
       <p id="lgAvisoL" class="aviso" role="status"></p>
       <button id="btnNuevaRonda" class="btn" type="button" hidden>DEFINIR MIS PRÓXIMAS 3 METAS</button>
-      <details id="lgHist" class="hist" hidden><summary>Ver rondas anteriores</summary><div id="lgHistCont"></div></details>
+      <button id="btnLgComp" class="btn out" type="button" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg>COMPARTIR MI LOGRO</button>
+      <details id="lgHist" class="hist" hidden><summary><span><b>Rondas anteriores</b><small id="lgHistSub"></small></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></summary><div id="lgHistCont"></div></details>
     </div>
 
     <button id="btnVolverL" class="btn sec" type="button">Volver</button>
@@ -518,15 +695,14 @@
   <section id="fisio" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>FISIOTERAPIA</div>
     <h2>KINE-REGENERATUS</h2>
-    <p class="msg" style="margin-top:0">Centro de rehabilitación</p>
-    <div class="fdesc">
-      <b>🎁 Descuento especial por ser alumno de Kalos</b>
-      <span>30 % de descuento en sus servicios individuales. Consulta también por el seguro y por el pago anticipado.</span>
-    </div>
+    <img id="fiHero" class="fhero" src="kine1.jpg" alt="Kine-Regeneratus, centro de rehabilitación" width="640" height="400">
+    <div class="d30"><span class="p">30%</span><div><b>Descuento por ser alumno de Kalos</b><span>En sus servicios individuales. Consulta también por el seguro y por el pago anticipado.</span></div></div>
     <div id="fiCar" class="fcar"></div>
-    <p class="fhint">Desliza para ver más · toca una imagen para ampliarla</p>
-    <a id="btnFiMaps" class="btn out" href="https://maps.app.goo.gl/P3mE5J7D6FEiEbCm7?g_st=iw" target="_blank" rel="noopener">📍 CÓMO LLEGAR</a>
-    <a id="btnFiWa" class="btn wa" href="#" target="_blank" rel="noopener">💬 ESCRIBIR A SERGIO</a>
+    <p class="fhint">Desliza para ver más · toca una foto para ampliar</p>
+    <div class="frow">
+      <a id="btnFiMaps" class="btn out" href="https://maps.app.goo.gl/P3mE5J7D6FEiEbCm7?g_st=iw" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>CÓMO LLEGAR</a>
+      <a id="btnFiWa" class="btn wa" href="#" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>ESCRIBIR A SERGIO</a>
+    </div>
     <button id="btnVolverF" class="btn sec" type="button">Volver</button>
   </section>
 
@@ -534,13 +710,15 @@
 
   <section id="buzon" class="card pago neutral" hidden>
     <div class="status"><span class="dot"></span>BUZÓN</div>
-    <h2>Déjanos saber tu opinión</h2>
-    <p class="msg">Tu mensaje es <b style="color:#fff">anónimo</b>: no guardamos tu nombre ni tu código. Cuéntanos qué mejorarías o qué te gustaría ver en Kalos.</p>
+    <h2 class="sub">Déjanos saber tu opinión</h2>
+    <p class="msg" style="margin-top:8px">Cuéntanos qué mejorarías o qué te gustaría ver en Kalos.</p>
+    <div class="anon"><span class="lk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span><p><b>Es anónimo:</b> no guardamos tu nombre ni tu código.</p></div>
     <div id="buzonForm">
+      <label class="apf" for="txtSug">Tu mensaje</label>
       <textarea id="txtSug" maxlength="500" placeholder="Escribe aquí tu sugerencia…" aria-label="Tu sugerencia"></textarea>
       <div class="count"><span id="cuenta">0</span>/500</div>
       <p id="avisoSug" class="aviso" role="status"></p>
-      <button id="btnEnviar" class="btn" type="button">ENVIAR</button>
+      <button id="btnEnviar" class="btn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"></path></svg>ENVIAR</button>
     </div>
     <div id="buzonGracias" hidden>
       <p class="aviso ok" style="font-size:17px;margin-top:20px">¡Gracias! Tu mensaje llegó al equipo de Kalos.</p>
@@ -551,20 +729,24 @@
   <section id="pago" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>RENOVAR</div>
     <h2>Escanea y paga con tu app del banco</h2>
-    <div id="pgBono" class="fdesc" hidden><b>🎁 Renueva a tiempo y gana 2 días extra</b><span id="pgBonoTxt"></span></div>
-    <div class="qrbox"><img src="qr-pago.png" alt="QR de pago" width="640" height="640"></div>
-    <p class="msg">El QR está a nombre de <b style="color:#fff">Luis Carlos Camacho</b>, no te olvides enviar el comprobante a Chino!</p>
-    <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener">ENVIAR COMPROBANTE POR WHATSAPP</a>
+    <div class="plancard"><div><span class="k">TU PLAN</span><b id="pgPlan"></b><small id="pgSub"></small></div><div class="vence"><span class="k">VENCE</span><b id="pgVence"></b></div></div>
+    <div id="pgBono" class="bono" hidden><span class="mas2">+2</span><div><b>Renueva a tiempo y gana 2 días extra</b><span id="pgBonoTxt"></span></div></div>
+    <div class="qrcard"><div class="qrbox"><img src="qr-pago.png" alt="QR de pago" width="640" height="640"></div>
+      <p>A nombre de <b>Luis Carlos Camacho</b></p></div>
+    <ol class="pasos"><li>Escanea el QR con la app de tu banco</li><li>Paga el monto de tu plan</li><li>Manda el comprobante a Chino por WhatsApp</li></ol>
+    <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>ENVIAR COMPROBANTE POR WHATSAPP</a>
     <button id="btnVolver" class="btn sec" type="button">Volver</button>
   </section>
 
   <section id="rutina" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>MI RUTINA</div>
+    <span id="rtBadge" class="badge" hidden></span>
     <p id="rtCarga" class="msg">Cargando tu rutina…</p>
     <div id="rtCont" hidden>
       <div id="rtTabs" class="dtabs"></div>
       <p id="rtNota" class="msg"></p>
       <div id="rtImgs" class="rimgs"></div>
+      <button id="btnRtApuntes" class="btn out" type="button" style="margin-top:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"></path><path d="M6 3v18M10 8h5M10 12h5"></path></svg>ANOTAR EN MIS APUNTES</button>
       <div id="rtSemBox" class="semsel" hidden>
         <label class="apf" for="rtSemSel">¿En qué semana estás?</label>
         <select id="rtSemSel" class="lginp"><option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option><option value="4">Semana 4</option></select>
@@ -580,8 +762,11 @@
   <section id="nutri" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>PLAN ALIMENTICIO</div>
     <p id="nuCarga" class="msg">Cargando tu plan…</p>
-    <p id="nuNota" class="msg" style="margin-top:0"></p>
+    <p id="nuNota" class="msg oculto" style="margin-top:0"></p>
+    <div id="nuInfo" class="nuinfo" hidden><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4 0-7-3-7-8 0-4 3-6 7-6s7 2 7 6c0 5-3 8-7 8z"></path><path d="M12 7c0-2 1-4 3-5"></path></svg></span><div><b id="nuPags"></b><small id="nuQuien"></small></div></div>
+    <div id="nuTabs" class="dtabs" hidden></div>
     <div id="nuImgs" class="rimgs"></div>
+    <p id="nuFin" class="nufin" hidden>Cuando el instructor sube un plan nuevo, reemplaza a este.</p>
     <button id="btnVolverN" class="btn sec" type="button">Volver</button>
   </section>
 
@@ -617,31 +802,45 @@
     <button id="btnVolverMd" class="btn sec" type="button">Volver</button>
   </section>
 
-  <section id="pin" class="card pago ok" hidden>
+  <section id="pin" class="card pago ok" data-modo="ingresa" hidden>
     <div class="status"><span class="dot"></span>PIN</div>
+    <div class="pintop"><span></span><span class="solo"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Solo esta vez</span></div>
+    <div class="lockic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></div>
     <h2 id="pinTitulo">INGRESA TU PIN</h2>
     <p id="pinSub" class="msg"></p>
     <div id="pinTelBox" hidden>
+      <label class="apf ln" for="pinTel"><span class="n">1</span>Tu celular</label>
       <input id="pinTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" placeholder="Tu celular (o con código de país)" aria-label="Tu número de celular">
     </div>
-    <input id="pinIn" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="PIN de 4 dígitos" aria-label="PIN de 4 dígitos">
+    <div class="pts" id="pinPts" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="pinsec">
+      <label class="apf ln" for="pinIn"><span class="n">2</span>Elige tu PIN</label>
+      <div class="cajas" id="pinC1"><i></i><i></i><i></i><i></i><input id="pinIn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="PIN de 4 dígitos" aria-label="PIN de 4 dígitos"></div>
+    </div>
     <div id="pinIn2Box" hidden>
-      <input id="pinIn2" class="tel" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="Repite tu PIN" aria-label="Repite tu PIN">
+      <label class="apf ln p2" for="pinIn2"><span class="n">3</span>Repítelo</label>
+      <div class="cajas" id="pinC2"><i></i><i></i><i></i><i></i><input id="pinIn2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="Repite tu PIN" aria-label="Repite tu PIN"></div>
+      <p class="hint">Evita PINs fáciles como 1234 o 0000.</p>
     </div>
     <p id="pinAv" class="aviso" role="status"></p>
+    <div class="kp" id="pinKp"><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" class="vac" tabindex="-1" aria-hidden="true"></button><button type="button" data-k="0">0</button><button type="button" class="del" data-k="b" aria-label="Borrar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"></path><path d="M16 9.5l-5 5M11 9.5l5 5"></path></svg></button></div>
     <button id="btnPin" class="btn" type="button">ENTRAR</button>
-    <a id="pinOlvide" class="btn wa" href="#" target="_blank" rel="noopener" hidden>OLVIDÉ MI PIN</a>
+    <a id="pinOlvide" class="btn wa" href="#" target="_blank" rel="noopener" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:8px"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Olvidé mi PIN</a>
     <button id="pinOtra" class="btn sec" type="button">No es mi tarjeta · cambiar</button>
   </section>
 
   <section id="entrada" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>KALOS WORKOUT</div>
     <div id="enForm">
-      <h2>Encuentra tu tarjeta</h2>
+      <span class="eb">Bienvenido a tu tarjeta</span>
+      <h2>Encuentra <span class="gr">tu tarjeta</span></h2>
       <p class="msg">Escribe tu número de celular, el mismo con el que te inscribiste en Kalos.</p>
-      <input id="enTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="7XXXXXXX (o con código de país)" aria-label="Tu número de celular">
+      <label class="apf" for="enTel">Tu celular</label>
+      <div class="fld"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+      <input id="enTel" class="tel" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="7XXXXXXX (o con código de país)" aria-label="Tu número de celular"></div>
+      <p class="ayuda">8 dígitos. Si eres alumno remoto del extranjero, escribe el número completo con código de país y sin "+".</p>
       <p id="enAviso" class="aviso" role="status"></p>
-      <button id="btnEntrar" class="btn" type="button">VER MI TARJETA</button>
+      <button id="btnEntrar" class="btn" type="button">BUSCAR MI TARJETA →</button>
     </div>
     <div id="enElige" hidden>
       <h2>¿Quién eres?</h2>
@@ -715,17 +914,20 @@
     <p id="asMarcaAv" class="aviso" role="status"></p>
     <div id="asCont" hidden>
       <div class="stats">
-        <div><b id="asMes">0</b><span>Este mes</span></div>
-        <div><b id="asAnio">0</b><span>Este año</span></div>
-        <div><b id="asRacha">0</b><span>Semanas seguidas</span></div>
+        <div class="g"><b id="asMes">0</b><span id="asMesLbl">este mes</span></div>
+        <div><b id="asAnio">0</b><span>este año</span></div>
+        <div class="am"><b id="asRacha">0</b><span>semanas seguidas</span></div>
       </div>
-      <div class="selmes">
-        <button id="mesAnt" type="button" aria-label="Mes anterior">‹</button>
-        <select id="mesSel" aria-label="Elegir mes"></select>
-        <button id="mesSig" type="button" aria-label="Mes siguiente">›</button>
+      <div class="calcard">
+        <div class="selmes">
+          <button id="mesAnt" type="button" aria-label="Mes anterior">‹</button>
+          <select id="mesSel" aria-label="Elegir mes"></select>
+          <button id="mesSig" type="button" aria-label="Mes siguiente">›</button>
+        </div>
+        <div id="asMeses" class="meses"></div>
+        <div class="leyenda"><span><b style="background:var(--ok)"></b>Fuiste</span><span><b style="background:#0b1208;border:1px solid var(--line)"></b>No fuiste</span><span><b style="background:#0d150a"></b>Fin de semana</span></div>
       </div>
-      <div id="asMeses" class="meses"></div>
-      <div class="leyenda"><span><b style="background:var(--ok)"></b>Fuiste</span><span><b style="background:#0a1206;border:1px solid var(--line)"></b>No fuiste</span></div>
+      <div id="asUlt" hidden><h3 class="sec">Últimas visitas</h3><div id="asUltL" class="ult"></div></div>
     </div>
     <button id="btnVolverA" class="btn sec" type="button">Volver</button>
   </section>
@@ -777,6 +979,8 @@
   /* ---- navegación entre pantallas con deslizamiento lateral ---- */
   var VISTAS = ['card', 'logros', 'buzon', 'pago', 'asistencia', 'puerta', 'entrada', 'guia', 'rutina', 'fisio', 'apuntes', 'pin', 'nutri', 'medidas'];
   var SOLO = { entrada: 1, puerta: 1, pin: 1 };
+  var INTERNAS = { logros: 1, buzon: 1, pago: 1, asistencia: 1, guia: 1, rutina: 1, fisio: 1, apuntes: 1, nutri: 1, medidas: 1 };
+  function marcaInterna(v) { try { document.body.classList.toggle('interna', !!INTERNAS[v]); } catch (e) {} }
   var NAV = { cur: 'card', prev: '', pila: [], limpiar: null };
   var REDUCE = false; try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
   try { history.scrollRestoration = 'manual'; } catch (e) {}
@@ -786,12 +990,12 @@
     var prev = NAV.cur;
     if (prev === cual) {
       VISTAS.forEach(function (k) { $(k).hidden = (k !== cual); });
-      window.scrollTo(0, 0); return;
+      marcaInterna(cual); window.scrollTo(0, 0); return;
     }
     if (pop) NAV.pila.pop();
     else if (!atras && prev && !SOLO[cual] && !SOLO[prev]) { NAV.pila.push(prev); try { history.pushState({ v: cual }, ''); } catch (e) {} }
     else if (SOLO[cual] || SOLO[prev]) NAV.pila = [];
-    NAV.prev = prev; NAV.cur = cual;
+    NAV.prev = prev; NAV.cur = cual; marcaInterna(cual);
     window.scrollTo(0, 0);
     var out = $(prev), inn = $(cual);
     var anim = window.KALOS_SPLASH && !REDUCE && prev !== cual && !out.hidden;
@@ -813,6 +1017,8 @@
 
   function ver(cual) {
     if (window.splashListo && cual !== 'card') splashListo();
+    if (cual === 'pago') llenarPago();
+    if (cual === 'rutina') pintarBadgeRt();
     if (cual === NAV.cur) { ir(cual, false, false); return; }
     var top = NAV.pila[NAV.pila.length - 1];
     if (top === cual) {                       // "Volver": dejamos que el historial del celular haga el regreso
@@ -825,6 +1031,61 @@
   window.addEventListener('popstate', function () {
     if (NAV.pila.length) ir(NAV.pila[NAV.pila.length - 1], true, true);
   });
+
+
+  /* ---- cabecera común de las pantallas internas (botón ‹, etiqueta y título) ---- */
+  var CABS = {
+    logros:   { eb: 'Progreso', ti: 'Mis logros', atras: ['btnCancelarForm', 'btnVolverL'] },
+    asistencia: { eb: 'Progreso', ti: 'Mi asistencia', atras: ['btnVolverA'] },
+    apuntes:  { eb: 'Mi cuaderno', ti: 'Mis apuntes', atras: ['btnApCancelar', 'btnApAtras', 'btnVolverAp'], mas: 'btnApNuevo', oculta: ['btnApNuevo'] },
+    medidas:  { eb: 'Progreso', ti: 'Mis medidas', atras: ['btnMdCancelar', 'btnMdAtras', 'btnVolverMd'], mas: 'btnMdNueva', oculta: ['btnMdNueva'] },
+    rutina:   { eb: 'Entrenamiento', ti: 'Mi rutina', atras: ['btnVolverR'], badge: 'rtBadge' },
+    nutri:    { eb: 'Alimentación', ti: 'Mi plan alimenticio', atras: ['btnVolverN'] },
+    fisio:    { eb: 'Fisioterapia', ti: 'Kine-Regeneratus', atras: ['btnVolverF'] },
+    buzon:    { eb: 'Comunidad', ti: 'Buzón de sugerencias', atras: ['btnVolverB'] },
+    pago:     { eb: 'Mi plan', ti: 'Renovar mi mes', atras: ['btnVolver'] },
+    guia:     { eb: 'Ayuda', ti: 'Instalar app', atras: ['btnVolverG'] }
+  };
+  var SVG_ATRAS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
+  var SVG_MAS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>';
+  function armarCabeceras() {
+    Object.keys(CABS).forEach(function (k) {
+      var sec = $(k), c = CABS[k]; if (!sec) return;
+      var hd = document.createElement('div'); hd.className = 'hd';
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'back'; b.setAttribute('aria-label', 'Volver'); b.innerHTML = SVG_ATRAS;
+      b.onclick = function () {
+        for (var i = 0; i < c.atras.length; i++) { var x = $(c.atras[i]); if (x && !x.closest('[hidden]')) { x.click(); return; } }
+        ver('card');
+      };
+      var t = document.createElement('div'); t.className = 'tt';
+      var e1 = document.createElement('span'); e1.className = 'eb'; e1.textContent = c.eb;
+      var e2 = document.createElement('span'); e2.className = 'ti'; e2.textContent = c.ti;
+      t.appendChild(e1); t.appendChild(e2); hd.appendChild(b); hd.appendChild(t);
+      if (c.mas) { var m = document.createElement('button'); m.type = 'button'; m.className = 'mas'; m.setAttribute('aria-label', 'Nuevo'); m.innerHTML = SVG_MAS; m.onclick = function () { $(c.mas).click(); }; hd.appendChild(m); }
+      if (c.badge) hd.appendChild($(c.badge));
+      sec.insertBefore(hd, sec.firstChild);
+      var st = sec.querySelector(':scope>.status'); if (st) st.classList.add('oculto');
+      var h2 = sec.querySelector(':scope>h2:not(.sub)'); if (h2 && k !== 'guia') h2.classList.add('oculto');
+      (c.oculta || []).forEach(function (id) { $(id).classList.add('oculto'); });
+      c.atras.forEach(function (id) { var x = $(id); if (x && /^btnVolver/.test(id)) x.classList.add('oculto'); });
+    });
+    $('fisio').querySelector('.fhero').onclick = function () { $('fiImg').src = this.src; $('fiImg').parentNode.className = 'fzs'; $('fiZoom').hidden = false; };
+    $('btnRtApuntes').onclick = function () { $('btnApuntes').click(); };
+  }
+  var ETAPA_TXT = '';
+  function pintarBadgeRt() {
+    var g = $('rtBadge'); if (!g) return;
+    g.textContent = ETAPA_TXT; g.hidden = !ETAPA_TXT;
+  }
+  function llenarPago() {
+    try {
+      $('pgPlan').textContent = $('plan').textContent;
+      $('pgSub').textContent = $('horario').textContent + ($('pInst').hidden ? '' : $('pInst').textContent);
+      $('pgVence').textContent = String($('fin').textContent || '').slice(0, 5);
+    } catch (e) {}
+  }
+
+  armarCabeceras();
 
   function activarRenovar(nombre) {
     var texto = 'Hola Chino! Soy ' + nombre + ' y quiero renovar mi mes!';
@@ -962,6 +1223,15 @@
     $('lgProg').textContent = hechas + ' de ' + cur.metas.length;
     $('lgRonda').textContent = 'Ronda ' + e.actual;
     $('lgBarra').style.width = Math.round(hechas / cur.metas.length * 100) + '%';
+    var nm = cur.metas.length;
+    $('lgRingTxt').textContent = hechas + '/' + nm; $('lgRing').style.strokeDasharray = (213.6 * hechas / nm) + ' 213.6';
+    $('lgRondaK').textContent = 'RONDA ' + e.actual;
+    $('lgVas').textContent = e.completa ? '¡Completaste la ronda!' : 'Vas ' + hechas + ' de ' + nm + ' metas';
+    $('lgSub').textContent = e.total + (e.total === 1 ? ' meta cumplida' : ' metas cumplidas') + ' desde que llegaste a Kalos';
+    $('lgAyuda').hidden = !!e.completa;
+    var ultima = null; cur.metas.forEach(function (m) { if (m.hecho) ultima = m; });
+    $('btnLgComp').hidden = !ultima;
+    $('btnLgComp').onclick = function () { if (e.completa) compartir('', true); else if (ultima) compartir(ultima.texto, false); };
     $('lgTotal').textContent = '🏆 ' + e.total + (e.total === 1 ? ' logro conseguido' : ' logros conseguidos') + ' en Kalos';
     lgDecir($('lgAvisoL'), '', '');
 
@@ -972,6 +1242,7 @@
     var previas = e.rondas.slice(0, -1).reverse();
     $('lgHist').hidden = !previas.length;
     var cont = $('lgHistCont'); cont.textContent = '';
+    if (previas.length) { var pr = previas[0]; $('lgHistSub').textContent = 'Ronda ' + pr.ronda + ' · ' + pr.metas.filter(function (m) { return m.hecho; }).length + ' de ' + pr.metas.length + ' metas'; }
     previas.forEach(function (r) {
       var h = document.createElement('h3'); h.textContent = 'Ronda ' + r.ronda; cont.appendChild(h);
       var l = document.createElement('ul'); l.className = 'lgs'; l.style.marginTop = '0';
@@ -983,11 +1254,11 @@
   function itemLogro(m, activo) {
     var li = document.createElement('li'); li.className = 'lg' + (m.hecho ? ' hecho' : '');
     var chk = document.createElement('button'); chk.type = 'button';
-    chk.textContent = m.hecho ? '✅' : '○';
+    chk.textContent = m.hecho ? '✓' : '';
     chk.setAttribute('aria-label', m.hecho ? 'Desmarcar logro' : 'Marcar como logrado');
     var tx = document.createElement('span'); tx.className = 'tx'; tx.textContent = m.texto;
     li.appendChild(chk); li.appendChild(tx);
-    if (m.hecho && m.logrado) { var f = document.createElement('span'); f.className = 'fch'; f.textContent = m.logrado; li.appendChild(f); }
+    if (m.hecho && m.logrado) { var f = document.createElement('span'); f.className = 'fch'; f.textContent = 'Cumplida el ' + m.logrado; li.appendChild(f); }
     if (!activo) { chk.disabled = true; return li; }
 
     chk.onclick = function () {
@@ -1001,7 +1272,7 @@
     };
 
     if (!m.hecho) {
-      var ed = document.createElement('button'); ed.type = 'button'; ed.className = 'ed'; ed.textContent = '✏️';
+      var ed = document.createElement('button'); ed.type = 'button'; ed.className = 'ed'; ed.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>';
       ed.setAttribute('aria-label', 'Editar meta');
       ed.onclick = function () { editarLogro(li, m); };
       li.appendChild(ed);
@@ -1024,7 +1295,7 @@
   }
 
   function editarLogro(li, m) {
-    li.textContent = '';
+    li.textContent = ''; li.classList.add('editando');
     var inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 60; inp.value = m.texto;
     inp.setAttribute('aria-label', 'Editar meta');
     var ok = document.createElement('button'); ok.type = 'button'; ok.textContent = '✔️'; ok.setAttribute('aria-label', 'Guardar');
@@ -1139,12 +1410,17 @@
   function pintarCalendario(d) {
     AS.d = d;
     $('asMes').textContent = d.mes; $('asAnio').textContent = d.total; $('asRacha').textContent = d.racha;
+    try { $('asMesLbl').textContent = 'en ' + MESES[Number(d.hoy.slice(5, 7)) - 1].toLowerCase(); } catch (e) {}
+    var vis = d.dias.filter(function (f) { return f <= d.hoy; }).sort().reverse().slice(0, 3), ul = $('asUltL'); ul.textContent = '';
+    var NDS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    vis.forEach(function (f) { var r = document.createElement('div'); r.textContent = NDS[new Date(Date.UTC(+f.slice(0, 4), +f.slice(5, 7) - 1, +f.slice(8, 10))).getUTCDay()] + ' ' + f.slice(8, 10) + '/' + f.slice(5, 7); ul.appendChild(r); });
+    $('asUlt').hidden = !vis.length;
     $('asTitulo').textContent = 'Asistencia ' + d.anio;
     var sel = $('mesSel'); sel.textContent = '';
     for (var m = 0; m < 12; m++) {
       var n = d.dias.filter(function (f) { return Number(f.slice(5, 7)) - 1 === m; }).length;
       var o = document.createElement('option'); o.value = m;
-      o.textContent = MESES[m].charAt(0) + MESES[m].slice(1).toLowerCase() + ' — ' + n + (n === 1 ? ' día' : ' días');
+      o.textContent = MESES[m].charAt(0).toUpperCase() + MESES[m].slice(1).toLowerCase() + ' ' + d.anio;
       sel.appendChild(o);
     }
     sel.onchange = function () { pintarMes(Number(sel.value)); };
@@ -1161,7 +1437,7 @@
     var set = {}; d.dias.forEach(function (f) { set[f] = true; });
     var cont = $('asMeses'); cont.textContent = '';
     var sem = document.createElement('div'); sem.className = 'sem';
-    ['L','M','M','J','V','S','D'].forEach(function (x) { var sp = document.createElement('span'); sp.textContent = x; sem.appendChild(sp); });
+    ['L','M','X','J','V','S','D'].forEach(function (x) { var sp = document.createElement('span'); sp.textContent = x; sem.appendChild(sp); });
     cont.appendChild(sem);
     var g = document.createElement('div'); g.className = 'dias';
     var primero = (new Date(Date.UTC(d.anio, m, 1)).getUTCDay() + 6) % 7;
@@ -1171,6 +1447,7 @@
       var f = d.anio + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + dia).slice(-2);
       var c = document.createElement('i'); c.textContent = dia;
       if (set[f]) c.className = 'asist';
+      else if ((primero + dia - 1) % 7 >= 5) c.className = 'fin';
       else if (f < d.hoy) c.className = 'pasado';
       if (f === d.hoy) c.className += ' hoy';
       g.appendChild(c);
@@ -1236,10 +1513,28 @@
     r.orden.forEach(function (k) {
       if (q && k.indexOf(q) < 0) return;
       n++;
-      var ult = r.g[k][0], b = document.createElement('button'); b.type = 'button'; b.className = 'apit';
-      var t = document.createElement('b'); t.textContent = ult.ejercicio;
-      var sp = document.createElement('span'); sp.textContent = ult.intensidad + ' · ' + ult.reps + ' reps · ' + apCorta(ult.fecha) + ' · ' + r.g[k].length + (r.g[k].length === 1 ? ' registro' : ' registros');
-      b.appendChild(t); b.appendChild(sp); b.onclick = function () { apAbrir(k); };
+      var ult = r.g[k][0], abierto = (n === 1 && !q), b = document.createElement(abierto ? 'div' : 'button');
+      if (!abierto) b.type = 'button'; b.className = 'apit' + (abierto ? ' abierto' : '');
+      if (abierto) {
+        var tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = ult.ejercicio; b.appendChild(tt);
+        r.g[k].slice(0, 3).forEach(function (x) {
+          var fl = document.createElement('div'); fl.className = 'fl';
+          [apCorta(x.fecha), x.intensidad, x.reps].forEach(function (v) { var sp = document.createElement('span'); sp.textContent = v; fl.appendChild(sp); });
+          b.appendChild(fl);
+        });
+        var ba = document.createElement('button'); ba.type = 'button'; ba.className = 'btn out'; ba.textContent = 'AGREGAR REGISTRO';
+        ba.onclick = function (ev) { ev.stopPropagation(); AP.ej = k; apForm(null); };
+        b.appendChild(ba); b.setAttribute('role', 'button'); b.tabIndex = 0;
+        b.onkeydown = function (ev) { if (ev.key === 'Enter' && ev.target === b) apAbrir(k); };
+      } else {
+        var l1 = document.createElement('span'); l1.className = 'l1';
+        var t = document.createElement('b'); t.textContent = ult.ejercicio;
+        var sp = document.createElement('span'); sp.textContent = ult.intensidad + ' · ' + ult.reps + ' · ' + apCorta(ult.fecha);
+        l1.appendChild(t); l1.appendChild(sp);
+        var l2 = document.createElement('span'); l2.className = 'l2'; l2.textContent = r.g[k].length + (r.g[k].length === 1 ? ' registro' : ' registros') + ' ›';
+        b.appendChild(l1); b.appendChild(l2);
+      }
+      b.onclick = function () { apAbrir(k); };
       cont.appendChild(b);
     });
     $('apMsg').textContent = AP.items.length ? 'Toca un ejercicio para ver tu historial.' : 'Aún no tienes apuntes. Anota tu primer ejercicio y empieza a ver tu progreso 💪';
@@ -1538,6 +1833,11 @@
   var NDIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
   var RT = { dias: null, fechas: null, dia: 1, tok: 0, cache: {}, rem: false, hoy: 0 };
   var RM = { remoto: false, recargar: false };
+  function marcaHoyTab(b, h) {
+    var s = b.querySelector('small');
+    if (h && !s) { s = document.createElement('small'); s.textContent = 'HOY'; b.appendChild(s); }
+    else if (!h && s) b.removeChild(s);
+  }
   function etqRt(i) { return RT.rem ? 'Semana ' + (i + 1) : NDIAS[i]; }
   function diaHoy() {   // 1 = lunes … 5 = viernes; fin de semana = 0 (hora de Bolivia)
     var w = new Date().toLocaleDateString('en-US', { timeZone: 'America/La_Paz', weekday: 'short' });
@@ -1562,7 +1862,7 @@
         b.disabled = false;
         if (d && d.ok) {
           av.className = 'aviso ok'; av.textContent = 'Listo: estás en la semana ' + d.semana + '. Cada lunes avanzas a la siguiente.';
-          RT.hoy = d.semana; Array.prototype.forEach.call($('rtTabs').children, function (x) { x.classList.toggle('hoy', Number(x.dataset.d) === d.semana); });
+          RT.hoy = d.semana; Array.prototype.forEach.call($('rtTabs').children, function (x) { var h = Number(x.dataset.d) === d.semana; x.classList.toggle('hoy', h); if (!RT.rem) marcaHoyTab(x, h); });
           verDiaRutina(d.semana); refrescarTarjeta();
         } else if (!d || d.error !== 'pin_requerido') { av.className = 'aviso bad'; av.textContent = 'No se pudo guardar. Intenta de nuevo.'; }
       }).catch(function () { b.disabled = false; av.className = 'aviso bad'; av.textContent = 'Sin conexión, intenta de nuevo.'; });
@@ -1584,9 +1884,9 @@
       var tabs = $('rtTabs'); tabs.textContent = '';
       d.dias.forEach(function (_, i) {
         var n = etqRt(i);
-        var b = document.createElement('button'); b.type = 'button'; b.textContent = RT.rem ? 'S' + (i + 1) : (n.charAt(0) === 'M' ? (i === 1 ? 'Ma' : 'Mi') : n.charAt(0));
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = RT.rem ? 'S' + (i + 1) : n.slice(0, 3);
         b.setAttribute('aria-label', n); b.dataset.d = String(i + 1);
-        if (hoy === i + 1) b.className = 'hoy';
+        if (hoy === i + 1) { b.className = 'hoy'; if (!RT.rem) marcaHoyTab(b, true); }
         b.onclick = function () { verDiaRutina(i + 1); };
         tabs.appendChild(b);
       });
@@ -1635,11 +1935,23 @@
   function abrirNutri() {
     ver('nutri'); var tok = ++NU.tok;
     $('nuCarga').hidden = false; $('nuCarga').textContent = 'Cargando tu plan…'; $('nuImgs').textContent = ''; $('nuNota').textContent = '';
+    $('nuInfo').hidden = true; $('nuTabs').hidden = true; $('nuTabs').textContent = ''; $('nuFin').hidden = true; $('nuImgs').className = 'rimgs'; $('nuImgs').removeAttribute('data-p');
     enviar({ accion: 'nutri_ver' }).then(function (d) {
       if (tok !== NU.tok) return;
       if (!d || !d.ok) { $('nuCarga').textContent = d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu plan. Intenta de nuevo.'; return; }
       if (!d.paginas) { $('nuCarga').textContent = 'Tu instructor aún no cargó tu plan alimenticio. En cuanto lo suba, aparecerá aquí 🥗'; return; }
       $('nuCarga').hidden = true; $('nuNota').textContent = 'Plan actualizado el ' + d.fecha + ' · toca una imagen para ampliarla';
+      $('nuPags').textContent = d.paginas + (d.paginas === 1 ? ' página' : ' páginas'); $('nuQuien').textContent = 'Actualizado el ' + d.fecha;
+      $('nuInfo').hidden = false; $('nuFin').hidden = false;
+      if (d.paginas > 1 && d.paginas <= 24) {
+        var nt = $('nuTabs'), ni = $('nuImgs'); ni.className = 'rimgs paged'; ni.setAttribute('data-p', '1');
+        for (var q = 1; q <= d.paginas; q++) (function (q) {
+          var tb = document.createElement('button'); tb.type = 'button'; tb.textContent = 'Pág. ' + q; tb.className = q === 1 ? 'on' : '';
+          tb.onclick = function () { ni.setAttribute('data-p', String(q)); Array.prototype.forEach.call(nt.children, function (x, j) { x.classList.toggle('on', j === q - 1); }); };
+          nt.appendChild(tb);
+        })(q);
+        nt.hidden = false;
+      }
       var c = $('nuImgs'), fases = [];
       for (var p = 1; p <= d.paginas; p++) { var ph = document.createElement('p'); ph.className = 'msg'; ph.textContent = 'Cargando página ' + p + '…'; c.appendChild(ph); fases.push(ph); }
       (function cargar(p) {
@@ -1679,12 +1991,37 @@
     var c = $('mdItems'); c.textContent = '';
     if (!MD.items.length) { var p = document.createElement('p'); p.className = 'msg'; p.textContent = 'Aún no tienes medidas. Toca "Nueva medida" para empezar.'; c.appendChild(p); return; }
     MD.items.forEach(function (m, i) {
-      var ult = m.reg[m.reg.length - 1], pri = m.reg[0];
-      var b = document.createElement('button'); b.type = 'button'; b.className = 'mdc';
-      var t = document.createElement('b'); t.textContent = m.nombre + ' · ' + num2(ult.v) + (m.unidad ? ' ' + m.unidad : '');
-      var s = document.createElement('span');
-      s.textContent = 'Último registro: ' + fechaCorta(ult.f) + (m.reg.length > 1 ? ' · ' + (ult.v - pri.v >= 0 ? '+' : '') + num2(ult.v - pri.v) + (m.unidad ? ' ' + m.unidad : '') + ' desde el ' + fechaCorta(pri.f) : '');
-      b.appendChild(t); b.appendChild(s); b.onclick = function () { verMedida(i); }; c.appendChild(b);
+      var ult = m.reg[m.reg.length - 1], prev = m.reg.length > 1 ? m.reg[m.reg.length - 2] : null, abierto = i === 0;
+      var b = document.createElement(abierto ? 'div' : 'button'); if (!abierto) b.type = 'button'; b.className = 'mdc' + (abierto ? ' abierto' : '');
+      var uni = m.unidad ? ' ' + m.unidad : '';
+      var chip = document.createElement('span'); chip.className = 'chip2' + (prev ? '' : ' gris');
+      chip.textContent = prev ? (ult.v - prev.v >= 0 ? '+' : '−') + num2(Math.abs(ult.v - prev.v)) + uni : '1 dato';
+      if (abierto) {
+        var top = document.createElement('div'); top.className = 'top';
+        var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = m.nombre; top.appendChild(nm); top.appendChild(chip); b.appendChild(top);
+        var vl = document.createElement('div'); vl.className = 'vl'; var vb = document.createElement('b'); vb.textContent = num2(ult.v); var vu = document.createElement('span'); vu.textContent = m.unidad || ''; vl.appendChild(vb); vl.appendChild(vu); b.appendChild(vl);
+        var pts = m.reg.slice(-6);
+        if (pts.length > 1) {
+          var mn = Math.min.apply(null, pts.map(function (x) { return x.v; })), mx = Math.max.apply(null, pts.map(function (x) { return x.v; })), W = 300, H = 60, rg = (mx - mn) || 1;
+          var xy = pts.map(function (x, j) { return [8 + j * ((W - 16) / (pts.length - 1)), mx === mn ? H / 2 : 6 + (mx - x.v) / rg * (H - 12)]; });
+          var NS = 'http://www.w3.org/2000/svg', sv = document.createElementNS(NS, 'svg'); sv.setAttribute('viewBox', '0 0 ' + W + ' ' + H); sv.setAttribute('preserveAspectRatio', 'none'); sv.setAttribute('class', 'gr'); sv.setAttribute('aria-hidden', 'true');
+          var pl = document.createElementNS(NS, 'polyline'); pl.setAttribute('points', xy.map(function (q) { return q[0] + ',' + q[1]; }).join(' ')); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', '#62D97E'); pl.setAttribute('stroke-width', '3'); pl.setAttribute('stroke-linejoin', 'round'); pl.setAttribute('vector-effect', 'non-scaling-stroke'); sv.appendChild(pl);
+          xy.forEach(function (q, j) { var ci = document.createElementNS(NS, 'circle'); ci.setAttribute('cx', q[0]); ci.setAttribute('cy', q[1]); ci.setAttribute('r', j === xy.length - 1 ? 5 : 4); ci.setAttribute('fill', j === xy.length - 1 ? '#fff' : '#62D97E'); sv.appendChild(ci); });
+          b.appendChild(sv);
+          var et = document.createElement('div'); et.className = 'et';
+          [pts[0], pts[Math.floor((pts.length - 1) / 2)], pts[pts.length - 1]].forEach(function (x) { var sp = document.createElement('span'); sp.textContent = fechaCorta(x.f).slice(0, 5) + ' · ' + num2(x.v); et.appendChild(sp); });
+          b.appendChild(et);
+        }
+        var ba = document.createElement('button'); ba.type = 'button'; ba.className = 'btn out'; ba.textContent = 'AGREGAR VALOR';
+        ba.onclick = function (ev) { ev.stopPropagation(); formMedida(m, null); };
+        b.appendChild(ba); b.setAttribute('role', 'button'); b.tabIndex = 0;
+        b.onkeydown = function (ev) { if (ev.key === 'Enter' && ev.target === b) verMedida(i); };
+      } else {
+        var lb = document.createElement('span'); lb.className = 'lb'; var t = document.createElement('b'); t.textContent = m.nombre; var s2 = document.createElement('span'); s2.style.cssText = 'display:block;margin-top:3px;font-size:13px;color:#9aa696'; s2.textContent = 'Último: ' + fechaCorta(ult.f); lb.appendChild(t); lb.appendChild(s2);
+        var rv = document.createElement('span'); rv.className = 'rv'; var rb = document.createElement('b'); rb.textContent = num2(ult.v); var rs = document.createElement('small'); rs.textContent = m.unidad || ''; rv.appendChild(rb); rv.appendChild(rs); rv.appendChild(chip);
+        b.appendChild(lb); b.appendChild(rv);
+      }
+      b.onclick = function () { verMedida(i); }; c.appendChild(b);
     });
   }
   function verMedida(i) {
@@ -1754,17 +2091,19 @@
   function mostrarPin(cid, tiene, origen, aviso) {
     PINS.cid = cid; PINS.tiene = tiene; PINS.origen = origen || 'url'; PINS.busy = false;
     $('detalle').hidden = true; $('card').className = 'card neutral';
-    $('pinTitulo').textContent = tiene ? 'INGRESA TU PIN' : 'CREA TU PIN';
+    $('pin').setAttribute('data-modo', tiene ? 'ingresa' : 'crea');
+    if (tiene) $('pinTitulo').textContent = 'INGRESA TU PIN'; else { $('pinTitulo').textContent = 'CREA TU '; var gp = document.createElement('span'); gp.className = 'gr'; gp.textContent = 'PIN'; $('pinTitulo').appendChild(gp); }
+    $('pinIn').setAttribute('inputmode', tiene ? 'none' : 'numeric');
     $('pinSub').textContent = tiene
       ? 'Escribe tu PIN de 4 dígitos para abrir tu tarjeta.'
-      : 'Por seguridad, tu tarjeta ahora tiene PIN. Escribe tu celular (el que diste en Kalos) y elige un PIN de 4 dígitos que recuerdes. Solo lo creas esta vez.';
+      : 'Por seguridad, tu tarjeta tiene PIN. Confirma tu celular y elige 4 dígitos que recuerdes.';
     $('pinTelBox').hidden = tiene; $('pinIn2Box').hidden = tiene;
     $('pinIn').placeholder = tiene ? 'PIN de 4 dígitos' : 'Tu PIN nuevo';
     $('btnPin').textContent = tiene ? 'ENTRAR' : 'CREAR MI PIN'; $('btnPin').disabled = false;
     $('pinTel').value = leerTel(); $('pinIn').value = ''; $('pinIn2').value = '';
     $('pinOlvide').hidden = !tiene;
     $('pinOlvide').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hola Chino! Olvidé mi PIN de la app de Kalos. Mi código es ' + cid + '. ¿Me lo reinicias? 🙏');
-    pinDecir(aviso ? 'bad' : '', aviso || '');
+    pinDecir(aviso ? 'bad' : '', aviso || ''); pintarPin();
     ver('pin');
     setTimeout(function () { try { (tiene ? $('pinIn') : $('pinTel')).focus(); } catch (e) {} }, 350);
   }
@@ -1785,18 +2124,35 @@
       .then(function (d) {
         PINS.busy = false; $('btnPin').disabled = false;
         if (d && d.ok && d.t) {
-          TK = d.t; $('pinIn').value = ''; $('pinIn2').value = '';
+          TK = d.t; $('pinIn').value = ''; $('pinIn2').value = ''; pintarPin();
           if (tel) guardarTel(tel);
           cargarTarjeta(PINS.cid, PINS.origen); return;
         }
         if (d && d.error === 'pin_existe') { mostrarPin(PINS.cid, true, PINS.origen, ASERR.pin_existe); return; }
         if (d && d.error === 'pin_crear') { mostrarPin(PINS.cid, false, PINS.origen, ''); return; }
         if (d && d.error === 'pin_inactivo') { TK = ''; cargarTarjeta(PINS.cid, PINS.origen); return; }
-        $('pinIn').value = ''; $('pinIn2').value = '';
+        $('pinIn').value = ''; $('pinIn2').value = ''; pintarPin();
         pinDecir('bad', errPin(d) || 'No pudimos verificar. Intenta de nuevo.');
       })
       .catch(function () { PINS.busy = false; $('btnPin').disabled = false; pinDecir('bad', 'Sin conexión, intenta de nuevo.'); });
   }
+  /* puntos / recuadros que reflejan los campos reales (los campos siguen siendo los de siempre) */
+  function pintarPin() {
+    var v1 = soloDig($('pinIn').value), v2 = soloDig($('pinIn2').value);
+    Array.prototype.forEach.call($('pinPts').children, function (e, i) { e.className = i < v1.length ? 'on' : ''; });
+    [['pinC1', v1, true], ['pinC2', v2, false]].forEach(function (c) {
+      var ant = c[0] === 'pinC2' ? v1.length === 4 : true;
+      Array.prototype.forEach.call($(c[0]).querySelectorAll('i'), function (e, i) { e.className = i < c[1].length ? 'on' : (i === c[1].length && c[1].length < 4 && ant ? 'sig' : ''); });
+    });
+  }
+  $('pinIn').addEventListener('input', pintarPin); $('pinIn2').addEventListener('input', pintarPin);
+  $('pinKp').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-k]') : null; if (!b || PINS.busy) return;
+    var v = soloDig($('pinIn').value), k = b.getAttribute('data-k');
+    if (k === 'b') v = v.slice(0, -1); else if (v.length < 4) v += k;
+    $('pinIn').value = v; pintarPin();
+    if (v.length === 4 && PINS.tiene) setTimeout(enviarPin, 140);
+  });
   $('btnPin').onclick = enviarPin;
   $('pinIn').onkeydown = function (e) { if (e.key === 'Enter') { if (PINS.tiene) enviarPin(); else $('pinIn2').focus(); } };
   $('pinIn2').onkeydown = function (e) { if (e.key === 'Enter') enviarPin(); };
@@ -1926,11 +2282,12 @@
   function pintarEtapa(e) {
     var box = $('etapa');
     while (box.firstChild) box.removeChild(box.firstChild);
-    if (!e || typeof e.idx !== 'number' || e.idx < 0 || e.idx > 3) { box.hidden = true; return; }
+    if (!e || typeof e.idx !== 'number' || e.idx < 0 || e.idx > 3) { ETAPA_TXT = ''; box.hidden = true; return; }
     ETAPAS.forEach(function (n, i) {
       var d = document.createElement('div'); d.className = (i <= e.idx ? 'on' : '') + (i === e.idx ? ' act' : '');
       d.appendChild(document.createElement('i')); d.appendChild(document.createTextNode(n)); box.appendChild(d);
     });
+    ETAPA_TXT = 'Semana ' + (e.idx + 1) + ' · ' + ETAPAS[e.idx];
     box.setAttribute('aria-label', 'Etapa de esta semana: ' + ETAPAS[e.idx] + ' (semana ' + (e.idx + 1) + ' de 4)');
     box.hidden = false;
   }
