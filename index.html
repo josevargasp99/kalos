@@ -79,6 +79,10 @@
     .rmsg.riesgo{color:var(--warn)} .rmsg.perdida{color:var(--bad)}
     .rbtn{display:block;margin-top:10px;padding:12px;border-radius:12px;text-align:center;text-decoration:none;background:#25D366;color:#06210f;font-weight:600;font-size:14px}
     .msg{color:var(--muted);font-size:14px;line-height:1.5;margin-top:14px}
+    .esq{height:64px;border-radius:16px;margin-top:12px;background:linear-gradient(100deg,rgba(255,255,255,.04) 30%,rgba(255,255,255,.10) 50%,rgba(255,255,255,.04) 70%);background-size:220% 100%;animation:esqBrilla 1.3s linear infinite}
+    .esq.alto{height:140px}.esq.bajo{height:36px;width:60%}
+    @keyframes esqBrilla{from{background-position:120% 0}to{background-position:-120% 0}}
+    @media (prefers-reduced-motion:reduce){.esq{animation:none}}
     .loading .status{opacity:.7}
     .clock{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
     .clock b{color:var(--text);font-variant-numeric:tabular-nums;font-weight:600}
@@ -969,7 +973,7 @@
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { tOculta = Date.now(); return; }
     var fuera = tOculta ? Date.now() - tOculta : 0; tOculta = 0;
-    if (TK && fuera > PIN_SEGUNDO_PLANO_MS) { TK = ''; if (id) mostrarPin(id, true, 'guardado', ''); }   // más de 45 min en segundo plano
+    if (TK && fuera > PIN_SEGUNDO_PLANO_MS) { TK = ''; limpiarCache(); if (id) mostrarPin(id, true, 'guardado', ''); }   // más de 45 min en segundo plano
   });
 
   function reloj() {
@@ -1165,9 +1169,69 @@
     body.id = id; body.t = TK;
     return fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (d) {
-      if (d && d.error === 'pin_requerido' && body.accion !== 'push_baja') { TK = ''; if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }   // el permiso venció: vuelve a pedir el PIN
+      if (d && d.error === 'pin_requerido' && body.accion !== 'push_baja') { TK = ''; limpiarCache(); if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }   // el permiso venció: vuelve a pedir el PIN
+      else cacheEscritura(body.accion, d);
       return d;
     });
+  }
+
+  /* ---- caché de lecturas (solo en memoria, solo de esta tarjeta): al abrir un apartado se muestra lo último que se vio y se actualiza por detrás ---- */
+  var CA = {}, CAP = {}, CAV = 0;
+  function limpiarCache() { CA = {}; CAP = {}; CAV++; try { RT.cache = {}; RT.pend = {}; NU.cache = {}; NU.pend = {}; } catch (e) {} }
+  function cacheEscritura(accion, d) {   // una escritura exitosa deja la copia al día (o la borra si no trae los datos nuevos)
+    if (!d || !d.ok || accion === 'logros_leer' || accion === 'apuntes_leer' || accion === 'medidas_ver') return;
+    var a = String(accion || '');
+    if (a.indexOf('logros_') === 0) { CAV++; if (d.estado) CA.logros_leer = { ok: true, estado: d.estado }; else delete CA.logros_leer; }
+    else if (a.indexOf('apuntes_') === 0) { CAV++; if (d.items) CA.apuntes_leer = { ok: true, items: d.items }; else delete CA.apuntes_leer; }
+    else if (a.indexOf('medidas_') === 0 && a !== 'medidas_ver') { CAV++; if (d.medidas) CA.medidas_ver = { ok: true, medidas: d.medidas }; else delete CA.medidas_ver; }
+    else if (a === 'rutina_semana') { CAV++; delete CA.rutina_ver; }
+    else if (a === 'rem_marcar') { CAV++; delete CA.asistencia_ver; }
+  }
+  function pedir(accion, extra) {   // si ya hay un pedido igual en camino, lo comparte (por ejemplo el de la precarga)
+    if (CAP[accion]) return CAP[accion];
+    var b = { accion: accion }; for (var q in extra) b[q] = extra[q];
+    var v = CAV;
+    var pr = enviar(b).then(function (d) { delete CAP[accion]; if (d && d.ok && v === CAV) CA[accion] = d; return d; },
+                            function (e) { delete CAP[accion]; throw e; });
+    CAP[accion] = pr; return pr;
+  }
+  // pinta(d, deCache): se llama con lo guardado (si hay) y otra vez si lo nuevo es distinto; falla(d, sinRed): solo si no había nada que mostrar
+  function conCache(accion, extra, pinta, falla) {
+    var hay = CA[accion], s0 = hay ? JSON.stringify(hay) : '', v = CAV;
+    if (hay) pinta(hay, true);
+    pedir(accion, extra).then(function (d) {
+      if (d && d.ok) { if (!hay || (v === CAV && JSON.stringify(d) !== s0)) pinta(d, false); }
+      else if (!hay) falla(d, false);
+    }).catch(function () { if (!hay) falla(null, true); });
+    return !!hay;
+  }
+  function esq(el, n) {   // pantalla de espera con la forma del contenido
+    el.textContent = '';
+    for (var i = 0; i < (n || 3); i++) { var d = document.createElement('div'); d.className = 'esq' + (i === 0 ? ' alto' : ''); el.appendChild(d); }
+  }
+  // Después del PIN, trae en segundo plano los apartados del alumno para que abran al instante
+  function precargar(a) {
+    var cid = a.id;
+    setTimeout(function () {
+      if (id !== cid) return;
+      pedir('logros_leer').catch(function () {});
+      if (!$('btnRutina').hidden) pedir('rutina_ver').then(precargarRutina).catch(function () {});
+    }, 700);
+    setTimeout(function () {
+      if (id !== cid) return;
+      pedir('apuntes_leer').catch(function () {});
+      if (RM.remoto) { pedir('medidas_ver').catch(function () {}); pedir('nutri_ver').then(precargarNutri).catch(function () {}); }
+    }, 2200);
+  }
+  function precargarRutina(d) {
+    if (!d || !d.ok) return;
+    var dia = d.remoto ? d.semana : diaHoy();
+    if (!dia || !d.dias[dia - 1]) return;
+    d.dias[dia - 1].forEach(function (x) { imgRt(dia, x, d.fechas[dia - 1]); });
+  }
+  function precargarNutri(d) {
+    if (!d || !d.ok || !d.paginas) return;
+    for (var p = 1; p <= Math.min(d.paginas, 2); p++) imgNu(d.fecha, p);
   }
 
   function lgDecir(el, clase, t) { el.className = 'aviso ' + clase; el.textContent = t; }
@@ -1183,12 +1247,14 @@
 
   function cargarLogros() {
     $('lgForm').hidden = true; $('lgLista').hidden = true;
-    $('lgCarga').hidden = false; $('lgCarga').textContent = 'Cargando tus logros…';
-    enviar({ accion: 'logros_leer' }).then(function (d) {
-      if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
-      else { $('lgCarga').textContent = LGERR[d && d.error] || 'No pudimos cargar tus logros. Intenta de nuevo.'; }
-    }).catch(function () {
-      $('lgCarga').textContent = 'No pudimos cargar tus logros. Revisa tu internet e intenta de nuevo.';
+    if (!CA.logros_leer) { $('lgCarga').hidden = false; esq($('lgCarga')); }
+    conCache('logros_leer', {}, function (d, deCache) {
+      LG.est = d.estado;
+      if (!deCache && !$('lgForm').hidden) return;       // si está escribiendo metas, no se le cambia la pantalla
+      pintarLogros();
+    }, function (d, sinRed) {
+      $('lgCarga').hidden = false;
+      $('lgCarga').textContent = sinRed ? 'No pudimos cargar tus logros. Revisa tu internet e intenta de nuevo.' : (LGERR[d && d.error] || 'No pudimos cargar tus logros. Intenta de nuevo.');
     });
   }
 
@@ -1472,7 +1538,8 @@
 
   function abrirCalendario(origen, volver) {
     AS.origen = origen; AS.volver = volver;
-    $('asCont').hidden = true; $('asCarga').hidden = false; $('asCarga').textContent = 'Cargando tu calendario…';
+    var cacheable = !!(origen && origen.id), hayAs = cacheable ? CA.asistencia_ver : null, vAs = CAV;
+    if (hayAs) pintarCalendario(hayAs); else { $('asCont').hidden = true; $('asCarga').hidden = false; esq($('asCarga')); }
     ver('asistencia');
     $('btnMarcar').hidden = !(RM.remoto && origen && origen.id); $('asMarcaAv').textContent = ''; $('asMarcaAv').className = 'aviso';
     var body = { accion: 'asistencia_ver', t: TK };
@@ -1480,11 +1547,15 @@
     fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d && d.error === 'pin_requerido') { TK = ''; if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }
-        else if (d && d.ok && d.dias) pintarCalendario(d);
-        else $('asCarga').textContent = ASERR[d && d.error] || 'No pudimos cargar tu calendario. Intenta de nuevo.';
+        if (d && d.error === 'pin_requerido') { TK = ''; limpiarCache(); if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }
+        else if (d && d.ok && d.dias) {
+          var igual = hayAs && JSON.stringify(hayAs) === JSON.stringify(d);
+          if (cacheable && vAs === CAV) CA.asistencia_ver = d;
+          if (!igual && vAs === CAV) pintarCalendario(d);
+        }
+        else if (!hayAs) $('asCarga').textContent = ASERR[d && d.error] || 'No pudimos cargar tu calendario. Intenta de nuevo.';
       })
-      .catch(function () { $('asCarga').textContent = 'No pudimos cargar tu calendario. Revisa tu internet e intenta de nuevo.'; });
+      .catch(function () { if (!hayAs) $('asCarga').textContent = 'No pudimos cargar tu calendario. Revisa tu internet e intenta de nuevo.'; });
   }
 
   function activarAsistencia() {
@@ -1623,11 +1694,12 @@
     }
     $('btnApuntes').onclick = function () {
       ver('apuntes'); apMostrar('lista'); AP.ej = null;
-      $('apMsg').textContent = 'Cargando…';
-      enviar({ accion: 'apuntes_leer' }).then(function (d) {
-        if (d && d.ok) { AP.items = d.items || []; apPintarLista(); }
-        else { $('apMsg').textContent = 'No se pudieron cargar tus apuntes.'; }
-      }).catch(function () { $('apMsg').textContent = 'Sin conexión. Intenta de nuevo.'; });
+      if (!CA.apuntes_leer) $('apMsg').textContent = 'Cargando…';
+      conCache('apuntes_leer', {}, function (d) {
+        AP.items = d.items || [];
+        if (AP.ej && $('apLista') && $('apLista').hidden) return;   // está viendo un ejercicio: no se le mueve la pantalla
+        apPintarLista();
+      }, function (d, sinRed) { $('apMsg').textContent = sinRed ? 'Sin conexión. Intenta de nuevo.' : 'No se pudieron cargar tus apuntes.'; });
     };
     $('btnVolverAp').onclick = function () { ver('card'); };
     $('apBuscar').oninput = apPintarLista;
@@ -1902,10 +1974,10 @@
     };
   }
   function abrirRutina() {
-    ver('rutina'); RT.cache = {};
-    $('rtCarga').hidden = false; $('rtCarga').textContent = 'Cargando tu rutina…'; $('rtCont').hidden = true; $('rtSemAv').textContent = '';
-    enviar({ accion: 'rutina_ver' }).then(function (d) {
-      if (!d || !d.ok) { $('rtCarga').textContent = d && d.error === 'ocupado' ? 'Hay muchas consultas. Intenta de nuevo en un minuto.' : d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu rutina. Intenta de nuevo.'; return; }
+    ver('rutina');
+    $('rtSemAv').textContent = '';
+    if (!CA.rutina_ver) { $('rtCarga').hidden = false; esq($('rtCarga')); $('rtCont').hidden = true; }
+    conCache('rutina_ver', {}, function (d) {
       RT.dias = d.dias; RT.fechas = d.fechas; RT.rem = !!d.remoto;
       var hay = d.dias.some(function (x) { return x.length; });
       $('rtSemBox').hidden = !RT.rem;
@@ -1926,7 +1998,10 @@
       });
       verDiaRutina(ini);
       if (!hoy) { $('rtNota').textContent = 'Hoy es descanso 😴 Esta es tu rutina del ' + NDIAS[ini - 1].toLowerCase() + '.'; }
-    }).catch(function () { $('rtCarga').textContent = 'Sin conexión, intenta de nuevo.'; });
+    }, function (d, sinRed) {
+      $('rtCarga').hidden = false; $('rtCont').hidden = true;
+      $('rtCarga').textContent = sinRed ? 'Sin conexión, intenta de nuevo.' : d && d.error === 'ocupado' ? 'Hay muchas consultas. Intenta de nuevo en un minuto.' : d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu rutina. Intenta de nuevo.';
+    });
   }
   function verDiaRutina(dia) {
     RT.dia = dia; var tok = ++RT.tok;
@@ -1936,7 +2011,6 @@
     if (!lst.length) { var p = document.createElement('p'); p.className = 'msg'; p.textContent = RT.rem ? 'Sin rutina cargada para la semana ' + dia + '.' : 'Sin rutina cargada para el ' + NDIAS[dia - 1].toLowerCase() + '.'; c.appendChild(p); return; }
     lst.forEach(function (x) {
       var ph = document.createElement('p'); ph.className = 'msg'; ph.textContent = 'Cargando imagen…'; c.appendChild(ph);
-      var k = dia + '|' + x.orden;
       function poner(src) {
         if (tok !== RT.tok) return;
         if (!src) { ph.textContent = 'No se pudo cargar la imagen. Revisa tu internet.'; return; }
@@ -1944,11 +2018,29 @@
         im.onclick = function () { $('lbRImg').src = src; $('lbR').hidden = false; $('lbR').scrollTop = 0; };
         c.replaceChild(im, ph);
       }
-      if (RT.cache[k]) { poner(RT.cache[k]); return; }
-      enviar({ accion: 'rutina_img', dia: dia, orden: x.orden }).then(function (d) {
-        if (d && d.ok) { RT.cache[k] = d.data; poner(d.data); } else poner(null);
-      }).catch(function () { poner(null); });
+      imgRt(dia, x, RT.fechas[dia - 1]).then(poner);
     });
+  }
+  // imagen de la rutina: se guarda por día y fecha de carga (si el instructor la cambia, la fecha cambia) y se comparte el pedido en curso
+  function imgRt(dia, x, fecha) {
+    var k = dia + '|' + x.orden + '|' + fecha;
+    RT.cache = RT.cache || {}; RT.pend = RT.pend || {};
+    if (RT.cache[k]) return Promise.resolve(RT.cache[k]);
+    if (RT.pend[k]) return RT.pend[k];
+    var pr = enviar({ accion: 'rutina_img', dia: dia, orden: x.orden }).then(function (d) {
+      delete RT.pend[k]; if (d && d.ok) { RT.cache[k] = d.data; return d.data; } return null;
+    }, function () { delete RT.pend[k]; return null; });
+    RT.pend[k] = pr; return pr;
+  }
+  function imgNu(fecha, p) {
+    var k = fecha + '|' + p;
+    NU.cache = NU.cache || {}; NU.pend = NU.pend || {};
+    if (NU.cache[k]) return Promise.resolve(NU.cache[k]);
+    if (NU.pend[k]) return NU.pend[k];
+    var pr = enviar({ accion: 'nutri_img', pag: p }).then(function (r) {
+      delete NU.pend[k]; if (r && r.ok) { NU.cache[k] = r.data; return r.data; } return null;
+    }, function () { delete NU.pend[k]; return null; });
+    NU.pend[k] = pr; return pr;
   }
 
   /* ---------- alumnos remotos: plan alimenticio y medidas ---------- */
@@ -1968,11 +2060,11 @@
   }
   function abrirNutri() {
     ver('nutri'); var tok = ++NU.tok;
-    $('nuCarga').hidden = false; $('nuCarga').textContent = 'Cargando tu plan…'; $('nuImgs').textContent = ''; $('nuNota').textContent = '';
-    $('nuInfo').hidden = true; $('nuTabs').hidden = true; $('nuTabs').textContent = ''; $('nuFin').hidden = true; $('nuImgs').className = 'rimgs'; $('nuImgs').removeAttribute('data-p');
-    enviar({ accion: 'nutri_ver' }).then(function (d) {
+    if (!CA.nutri_ver) { $('nuCarga').hidden = false; esq($('nuCarga')); $('nuImgs').textContent = ''; $('nuNota').textContent = ''; $('nuInfo').hidden = true; $('nuTabs').hidden = true; $('nuFin').hidden = true; }
+    conCache('nutri_ver', {}, function (d) {
       if (tok !== NU.tok) return;
-      if (!d || !d.ok) { $('nuCarga').textContent = d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu plan. Intenta de nuevo.'; return; }
+      $('nuImgs').textContent = ''; $('nuNota').textContent = ''; $('nuTabs').textContent = ''; $('nuTabs').hidden = true; $('nuImgs').className = 'rimgs'; $('nuImgs').removeAttribute('data-p');
+      $('nuInfo').hidden = true; $('nuFin').hidden = true; $('nuCarga').hidden = false;
       if (!d.paginas) { $('nuCarga').textContent = 'Tu instructor aún no cargó tu plan alimenticio. En cuanto lo suba, aparecerá aquí 🥗'; return; }
       $('nuCarga').hidden = true; $('nuNota').textContent = 'Plan actualizado el ' + d.fecha + ' · toca una imagen para ampliarla';
       $('nuPags').textContent = d.paginas + (d.paginas === 1 ? ' página' : ' páginas'); $('nuQuien').textContent = 'Actualizado el ' + d.fecha;
@@ -1988,20 +2080,25 @@
       }
       var c = $('nuImgs'), fases = [];
       for (var p = 1; p <= d.paginas; p++) { var ph = document.createElement('p'); ph.className = 'msg'; ph.textContent = 'Cargando página ' + p + '…'; c.appendChild(ph); fases.push(ph); }
-      (function cargar(p) {
+      var cargarPag = (function cargar(p) {
         if (p > d.paginas || tok !== NU.tok) return;
         var k = d.fecha + '|' + p, ph = fases[p - 1];
         function poner(src) {
           if (tok !== NU.tok) return;
-          if (!src) { ph.textContent = 'No se pudo cargar la página ' + p + '. Revisa tu internet.'; cargar(p + 1); return; }
+          if (!src) { ph.textContent = 'No se pudo cargar la página ' + p + '. Revisa tu internet.'; cargar(p + 3); return; }
           var im = new Image(); im.alt = 'Plan alimenticio, página ' + p; im.src = src;
           im.onclick = function () { $('lbRImg').src = src; $('lbR').hidden = false; $('lbR').scrollTop = 0; };
-          c.replaceChild(im, ph); cargar(p + 1);
+          c.replaceChild(im, ph); cargar(p + 3);
         }
         if (NU.cache[k]) { poner(NU.cache[k]); return; }
-        enviar({ accion: 'nutri_img', pag: p }).then(function (r) { if (r && r.ok) { NU.cache[k] = r.data; poner(r.data); } else poner(null); }).catch(function () { poner(null); });
-      })(1);
-    }).catch(function () { if (tok === NU.tok) $('nuCarga').textContent = 'Sin conexión, intenta de nuevo.'; });
+        imgNu(d.fecha, p).then(poner);
+      });
+      [1, 2, 3].forEach(function (s0) { cargarPag(s0); });    // tres páginas a la vez
+    }, function (d, sinRed) {
+      if (tok !== NU.tok) return;
+      $('nuCarga').hidden = false;
+      $('nuCarga').textContent = sinRed ? 'Sin conexión, intenta de nuevo.' : (d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu plan. Intenta de nuevo.');
+    });
   }
 
   var MD = { items: [], cur: null, edit: null, busy: false };
@@ -2014,11 +2111,16 @@
   }
   function num2(x) { return String(Math.round(x * 100) / 100).replace('.', ','); }
   function abrirMedidas() {
-    ver('medidas'); mdVista('carga'); $('mdCarga').textContent = 'Cargando tus medidas…';
-    enviar({ accion: 'medidas_ver' }).then(function (d) {
-      if (d && d.ok) { MD.items = d.medidas; pintarMedidas(); }
-      else $('mdCarga').textContent = d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tus medidas. Intenta de nuevo.';
-    }).catch(function () { $('mdCarga').textContent = 'Sin conexión, intenta de nuevo.'; });
+    ver('medidas');
+    if (!CA.medidas_ver) { mdVista('carga'); esq($('mdCarga')); }
+    conCache('medidas_ver', {}, function (d, deCache) {
+      MD.items = d.medidas;
+      if (!deCache && $('mdLista').hidden) return;       // si está viendo o escribiendo una medida, no se le cambia la pantalla
+      pintarMedidas();
+    }, function (d, sinRed) {
+      mdVista('carga');
+      $('mdCarga').textContent = sinRed ? 'Sin conexión, intenta de nuevo.' : (d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tus medidas. Intenta de nuevo.');
+    });
   }
   function pintarMedidas() {
     mdVista('lista');
@@ -2245,7 +2347,7 @@
         $('btnCambiar').onclick = cambiarTarjeta;
         activarRutina(a);
         activarRemoto(a);
-        pintarRutinaBox(); pintarFichasDatos(a); acomodarFichas();
+        pintarRutinaBox(); pintarFichasDatos(a); acomodarFichas(); precargar(a);
         var tomada = introInicio(a);
         $('detalle').hidden = false;
         mostrarInstalar();
@@ -2381,7 +2483,7 @@
 
   function cambiarTarjeta() {
     avisosBaja();
-    borrarId(); borrarTel(); id = '';
+    borrarId(); borrarTel(); id = ''; limpiarCache();
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
     $('detalle').hidden = true;
     iniciarEntrada('');
