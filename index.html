@@ -203,7 +203,8 @@
     .card.home{position:static;background:none;border:0;border-radius:0;padding:0;overflow:visible}
     .card.home:before,.card.home>.status{display:none}
     .card.home #detalle{display:flex;flex-direction:column;gap:18px}
-    .yy{position:absolute;top:-70px;right:-150px;width:470px;height:470px;opacity:.07;pointer-events:none;z-index:-1}
+    .yy{position:fixed;top:-70px;right:-150px;width:470px;height:470px;opacity:.07;pointer-events:none;z-index:-1}
+    @media(min-width:440px){.yy{right:auto;left:calc(50% - 100px)}}
     .bell{position:absolute;top:20px;right:16px;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:#C9D3C5;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
     .bell:not(.on):after{content:"";position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:50%;background:var(--warn)}
     .bell.on{color:var(--ok);border-color:rgba(98,217,126,.45)}
