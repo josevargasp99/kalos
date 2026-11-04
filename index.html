@@ -476,6 +476,17 @@
     .card.pago button.mdc:not(.abierto){display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-radius:18px;margin-top:10px}
     .mdc .rv{display:flex;align-items:baseline;gap:8px;flex:none}.mdc .rv b{font:500 28px/1 Inter,Arial,sans-serif;display:inline}.mdc .rv small{font-size:13px;color:#9aa696}
     .mdc .lb b{font-size:16px}
+    /* ---------- etapa 4: datos en fichas, horas, etiquetas ---------- */
+    .fx .fn{display:block;font:600 34px/1 Inter,Arial,sans-serif;margin-top:2px}
+    #btnAsist .fn{color:#fff}#btnLogros .fn{color:#fff}
+    .fx .fb{display:block;height:4px;border-radius:3px;background:#1c2616;overflow:hidden;margin-top:8px}
+    .fx .fb s{display:block;height:100%;background:var(--warn);border-radius:3px;width:0;transition:width .6s ease}
+    .fx.ancha .fn{font-size:28px}
+    .rutina.on.vacia{opacity:.55;filter:saturate(.6)}
+    .ult div{display:flex;justify-content:space-between;gap:10px}
+    .ult div span+span{color:#9aa696;font-weight:400}
+    .apit.abierto .fh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .dtabs button small.ck{color:var(--ok);font-size:11px;letter-spacing:0}
     #modal .box{border-radius:22px}
     /* ---------- pantalla de inicio (neblina) ---------- */
     #splash{position:fixed;inset:0;z-index:100;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}
@@ -600,8 +611,8 @@
       <div id="fichas" class="tiles">
         <button id="btnNutri" class="fx cs" style="--i:3" type="button" hidden><span class="ic v"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4 0-7-3-7-8 0-4 3-6 7-6s7 2 7 6c0 5-3 8-7 8z"></path><path d="M12 7c0-2 1-4 3-5"></path></svg></span><span><b>Mi plan alimenticio</b><small>Tu alimentación del mes</small></span></button>
         <button id="btnMedidas" class="fx cs" style="--i:3" type="button" hidden><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17L17 3l4 4L7 21z"></path><path d="M7 13l2 2M10 10l2 2M13 7l2 2"></path></svg></span><span><b>Mis medidas</b><small>Tu progreso corporal</small></span></button>
-        <button id="btnAsist" class="fx cs" style="--i:3" type="button"><span class="ic v"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span><span><b>Mi asistencia</b><small>Tu mes en calendario</small></span></button>
-        <button id="btnLogros" class="fx cs" style="--i:4" type="button"><span class="ic a"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg></span><span><b>Mis logros</b><small>Tus metas del mes</small></span></button>
+        <button id="btnAsist" class="fx cs" style="--i:3" type="button"><span class="ic v"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span><strong id="fnAsist" class="fn" hidden></strong><span><b>Mi asistencia</b><small>Tu mes en calendario</small></span></button>
+        <button id="btnLogros" class="fx cs" style="--i:4" type="button"><span class="ic a"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg></span><strong id="fnLogros" class="fn" hidden></strong><span><b>Mis logros</b><small>Tus metas del mes</small><i id="fbLogros" class="fb" hidden><s></s></i></span></button>
         <button id="btnApuntes" class="fx cs" style="--i:4" type="button"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"></path><path d="M6 3v18M10 8h5M10 12h5"></path></svg></span><span><b>Mis apuntes</b><small>Tus ejercicios y cargas</small></span></button>
         <button id="btnFisio" class="fx cs" style="--i:5" type="button"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"></path></svg></span><span><b>Fisioterapia</b><small>Kine-Regeneratus</small></span></button>
       </div>
@@ -1413,7 +1424,11 @@
     try { $('asMesLbl').textContent = 'en ' + MESES[Number(d.hoy.slice(5, 7)) - 1].toLowerCase(); } catch (e) {}
     var vis = d.dias.filter(function (f) { return f <= d.hoy; }).sort().reverse().slice(0, 3), ul = $('asUltL'); ul.textContent = '';
     var NDS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    vis.forEach(function (f) { var r = document.createElement('div'); r.textContent = NDS[new Date(Date.UTC(+f.slice(0, 4), +f.slice(5, 7) - 1, +f.slice(8, 10))).getUTCDay()] + ' ' + f.slice(8, 10) + '/' + f.slice(5, 7); ul.appendChild(r); });
+    vis.forEach(function (f) {
+      var r = document.createElement('div'), n1 = document.createElement('span'); n1.textContent = NDS[new Date(Date.UTC(+f.slice(0, 4), +f.slice(5, 7) - 1, +f.slice(8, 10))).getUTCDay()] + ' ' + f.slice(8, 10) + '/' + f.slice(5, 7); r.appendChild(n1);
+      if (d.horas && d.horas[f]) { var n2 = document.createElement('span'); n2.textContent = d.horas[f]; r.appendChild(n2); }
+      ul.appendChild(r);
+    });
     $('asUlt').hidden = !vis.length;
     $('asTitulo').textContent = 'Asistencia ' + d.anio;
     var sel = $('mesSel'); sel.textContent = '';
@@ -1507,6 +1522,19 @@
     AP.items.forEach(function (x) { var k = apClave(x.ejercicio); if (!g[k]) { g[k] = []; orden.push(k); } g[k].push(x); });
     return { g: g, orden: orden };
   }
+  function apVol(t) {
+    t = String(t || ''); var m = /(\d+)\s*[x×*]\s*(\d+)/i.exec(t);
+    if (m) return (+m[1]) * (+m[2]);
+    return (t.match(/\d+(?:[.,]\d+)?/g) || []).reduce(function (s, x) { return s + parseFloat(x.replace(',', '.')); }, 0);
+  }
+  function apMejora(lista) {   // el último registro supera al anterior con la misma intensidad
+    if (!lista || lista.length < 2) return false;
+    var ult = lista[0], clave = String(ult.intensidad).trim().toLowerCase();
+    for (var i = 1; i < lista.length; i++) {
+      if (String(lista[i].intensidad).trim().toLowerCase() === clave) { var a = apVol(ult.reps), b = apVol(lista[i].reps); return a > 0 && b > 0 && a > b; }
+    }
+    return false;
+  }
   function apPintarLista() {
     var cont = $('apGrupos'); while (cont.firstChild) cont.removeChild(cont.firstChild);
     var q = apClave($('apBuscar').value), r = apGrupos(), n = 0;
@@ -1516,7 +1544,10 @@
       var ult = r.g[k][0], abierto = (n === 1 && !q), b = document.createElement(abierto ? 'div' : 'button');
       if (!abierto) b.type = 'button'; b.className = 'apit' + (abierto ? ' abierto' : '');
       if (abierto) {
-        var tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = ult.ejercicio; b.appendChild(tt);
+        var fh = document.createElement('div'); fh.className = 'fh';
+        var tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = ult.ejercicio; fh.appendChild(tt);
+        if (apMejora(r.g[k])) { var ch = document.createElement('span'); ch.className = 'chip2'; ch.textContent = 'Mejorando'; fh.appendChild(ch); }
+        b.appendChild(fh);
         r.g[k].slice(0, 3).forEach(function (x) {
           var fl = document.createElement('div'); fl.className = 'fl';
           [apCorta(x.fecha), x.intensidad, x.reps].forEach(function (v) { var sp = document.createElement('span'); sp.textContent = v; fl.appendChild(sp); });
@@ -1833,10 +1864,12 @@
   var NDIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
   var RT = { dias: null, fechas: null, dia: 1, tok: 0, cache: {}, rem: false, hoy: 0 };
   var RM = { remoto: false, recargar: false };
+  var SEM_OK = [];
   function marcaHoyTab(b, h) {
     var s = b.querySelector('small');
-    if (h && !s) { s = document.createElement('small'); s.textContent = 'HOY'; b.appendChild(s); }
-    else if (!h && s) b.removeChild(s);
+    if (s && !h) { b.removeChild(s); s = null; }
+    if (h && !(s && s.textContent === 'HOY')) { if (s) b.removeChild(s); s = document.createElement('small'); s.textContent = 'HOY'; b.appendChild(s); }
+    if (!h && SEM_OK[Number(b.dataset.d) - 1] && !RT.rem) { var c = document.createElement('small'); c.className = 'ck'; c.textContent = '✓'; b.appendChild(c); }
   }
   function etqRt(i) { return RT.rem ? 'Semana ' + (i + 1) : NDIAS[i]; }
   function diaHoy() {   // 1 = lunes … 5 = viernes; fin de semana = 0 (hora de Bolivia)
@@ -1845,7 +1878,7 @@
   }
   function refrescarTarjeta() {   // vuelve a pintar racha y etapa sin recargar toda la pantalla
     enviar({ accion: 'tarjeta' }).then(function (d) {
-      if (d && d.ok && d.alumno) { pintarRacha(d.alumno.racha, d.alumno); pintarEtapa(d.alumno.etapa); pintarRutinaBox(); }
+      if (d && d.ok && d.alumno) { pintarRacha(d.alumno.racha, d.alumno); pintarEtapa(d.alumno.etapa); pintarRutinaBox(); pintarFichasDatos(d.alumno); }
     }).catch(function () {});
   }
   function activarRutina(a) {
@@ -1886,7 +1919,8 @@
         var n = etqRt(i);
         var b = document.createElement('button'); b.type = 'button'; b.textContent = RT.rem ? 'S' + (i + 1) : n.slice(0, 3);
         b.setAttribute('aria-label', n); b.dataset.d = String(i + 1);
-        if (hoy === i + 1) { b.className = 'hoy'; if (!RT.rem) marcaHoyTab(b, true); }
+        if (!RT.rem) marcaHoyTab(b, hoy === i + 1);
+        if (hoy === i + 1) b.className = 'hoy';
         b.onclick = function () { verDiaRutina(i + 1); };
         tabs.appendChild(b);
       });
@@ -2211,7 +2245,7 @@
         $('btnCambiar').onclick = cambiarTarjeta;
         activarRutina(a);
         activarRemoto(a);
-        pintarRutinaBox(); acomodarFichas();
+        pintarRutinaBox(); pintarFichasDatos(a); acomodarFichas();
         var tomada = introInicio(a);
         $('detalle').hidden = false;
         mostrarInstalar();
@@ -2235,6 +2269,17 @@
   function pintarBarra(pr) {
     var v = Math.max(0, Math.min(100, Number(pr) || 0)), b = $('barra');
     b.style.width = v + '%'; b.parentNode.setAttribute('aria-valuenow', String(v));
+  }
+  function pintarFichasDatos(a) {
+    if (!a) return;
+    var nA = $('fnAsist'), nL = $('fnLogros'), sA = $('btnAsist').querySelector('small'), sL = $('btnLogros').querySelector('small'), sP = $('btnApuntes').querySelector('small');
+    if (typeof a.visitas === 'number') { nA.textContent = String(a.visitas); nA.hidden = false; sA.textContent = a.visitas === 1 ? 'visita este mes' : 'visitas este mes'; }
+    if (typeof a.lgMetas === 'number' && a.lgMetas > 0 && typeof a.lgHechas === 'number') {
+      nL.textContent = a.lgHechas + '/' + a.lgMetas; nL.hidden = false; sL.hidden = true;
+      $('fbLogros').hidden = false; $('fbLogros').firstChild.style.width = Math.round(a.lgHechas / a.lgMetas * 100) + '%';
+    }
+    if (typeof a.apuntes === 'number' && a.apuntes > 0) sP.textContent = a.apuntes + (a.apuntes === 1 ? ' ejercicio anotado' : ' ejercicios anotados');
+    $('rutinaBox').classList.toggle('vacia', !!a.rutina && a.rutinaOk === false);
   }
   function pintarRutinaBox() {
     var bt = $('btnRutina'), r = $('rutinaBox');
@@ -2301,10 +2346,12 @@
     $('rLbl').textContent = r.racha === 1 ? 'día de racha' : 'días de racha';
     $('rRec').textContent = r.record > 0 ? 'Récord: ' + r.record : '';
     var sem = $('rSem'); while (sem.firstChild) sem.removeChild(sem.firstChild);
+    SEM_OK = [];
     var tres = /^(\dx|r\d)$/.test(r.modo), rem = !!(a && a.modalidad === 'Remoto');
     (r.semana.dias || []).forEach(function (d) {
       var e = d.e, m = '';
       if (e === 'ok') m = '✓'; else if (e === 'falta') { if (tres) e = ''; else m = '✕'; } else if (e === 'hoy') m = 'hoy'; else if (e === 'feriado') m = 'feriado';
+      SEM_OK.push(e === 'ok');
       var sp = document.createElement('span'); sp.className = e === 'futuro' ? '' : e;
       var lt = document.createElement('b'); lt.textContent = d.l; sp.appendChild(lt);
       if (m) { var sm = document.createElement('small'); sm.textContent = m; sp.appendChild(sm); }
