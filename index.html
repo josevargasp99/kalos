@@ -1103,10 +1103,16 @@
 
   armarCabeceras();
 
+  var ES_REMOTO = false;   // alumno remoto: su renovación se coordina directo con Kalos por WhatsApp
+  function textoRenovarRemoto(nombre) { return 'Hola Chino! Soy ' + nombre + ', alumno remoto de Kalos, y quiero renovar mi plan 💪'; }
+  function irRenovar(auto) {   // auto = viene de un enlace/aviso (sin toque): no se puede abrir una ventana, se navega
+    if (ES_REMOTO) { var n = ($('nombre').textContent || '').trim(), u = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(textoRenovarRemoto(n)); if (auto === true) location.assign(u); else window.open(u, '_blank', 'noopener'); return; }
+    ver('pago');
+  }
   function activarRenovar(nombre) {
     var texto = 'Hola Chino! Soy ' + nombre + ' y quiero renovar mi mes!';
     $('btnWa').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(texto);
-    $('btnRenovar').onclick = function () { ver('pago'); };
+    $('btnRenovar').onclick = function () { irRenovar(); };
     $('btnVolver').onclick = function () { ver('card'); };
   }
 
@@ -1229,6 +1235,10 @@
         if (v === CAV) {
           ['logros_leer', 'apuntes_leer', 'rutina_ver', 'asistencia_ver', 'medidas_ver', 'nutri_ver'].forEach(function (k) { if (d[PRE_SEC[k]] && d[PRE_SEC[k]].ok) CA[k] = d[PRE_SEC[k]]; });
         }
+        if (v === CAV) {
+          if (d.apuntes && d.apuntes.ok) fichaApuntes(ejerciciosDistintos(d.apuntes.items));
+          if (d.logros && d.logros.ok) { var lgp = logrosDeEstado(d.logros.estado); fichaLogros(lgp ? lgp.hechas : 0, lgp ? lgp.metas : 0); }
+        }
         precargarRutina(CA.rutina_ver); precargarNutri(CA.nutri_ver);
       }, function () { PRE = null; if (id === cid) precargarUnoPorUno(cid); });
     }, 300);
@@ -1314,6 +1324,7 @@
 
   function pintarLogros() {
     var e = LG.est;
+    var lgf = logrosDeEstado(e); fichaLogros(lgf ? lgf.hechas : 0, lgf ? lgf.metas : 0);
     $('lgCarga').hidden = true;
     if (!e || !e.actual) { mostrarForm(1); return; }
     $('lgForm').hidden = true; $('lgLista').hidden = false;
@@ -1629,6 +1640,7 @@
     return false;
   }
   function apPintarLista() {
+    fichaApuntes(ejerciciosDistintos(AP.items));
     var cont = $('apGrupos'); while (cont.firstChild) cont.removeChild(cont.firstChild);
     var q = apClave($('apBuscar').value), r = apGrupos(), n = 0;
     r.orden.forEach(function (k) {
@@ -1839,6 +1851,8 @@
     inp.value = leerTel();
     $('puOlvide').hidden = true;
     ver('puerta'); mostrar('puForm');
+    try { fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'ping' }) }).catch(function () {}); } catch (e) {}   // despierta el servidor mientras escribe su celular y PIN
+    var PU_TK = 0;
 
     // crear = true: primera vez con PIN (el servidor crea el PIN y registra la asistencia)
     function registrar(sel, crear) {
@@ -1851,6 +1865,7 @@
         if (pin !== soloDig($('puPinN2').value)) { decir('bad', 'Los dos PIN no coinciden.'); return; }
       }
       PU.busy = true; btn.disabled = true; $('btnPuCrear').disabled = true; decir('', 'Registrando…');
+      var tk = ++PU_TK; setTimeout(function () { if (PU.busy && tk === PU_TK) decir('', 'Guardando tu asistencia… un momento, no cierres esta pantalla.'); }, 4000);
       var body = { accion: 'asistencia_registrar', tel: tel };
       if (pin) body.pin = pin;
       if (crear) body.crear = true;
@@ -2367,13 +2382,14 @@
         activarAvisos();
         pintarBono(a);
         $('btnCambiar').onclick = cambiarTarjeta;
+        ES_REMOTO = a.modalidad === 'Remoto';
         activarRutina(a);
         activarRemoto(a);
         pintarRutinaBox(); pintarFichasDatos(a); acomodarFichas(); precargar(a);
         var tomada = introInicio(a);
         $('detalle').hidden = false;
         mostrarInstalar();
-        if (IR === 'renovar' && !a.staff) { IR = ''; try { history.replaceState(null, '', location.pathname + '?app=1'); } catch (e) {} setTimeout(function () { ver('pago'); }, 450); }
+        if (IR === 'renovar' && !a.staff) { IR = ''; try { history.replaceState(null, '', location.pathname + '?app=1'); } catch (e) {} setTimeout(function () { irRenovar(true); }, 450); }
         if (!tomada) requestAnimationFrame(function () { pintarBarra(a.progreso); });
       })
       .catch(function () {
@@ -2394,15 +2410,29 @@
     var v = Math.max(0, Math.min(100, Number(pr) || 0)), b = $('barra');
     b.style.width = v + '%'; b.parentNode.setAttribute('aria-valuenow', String(v));
   }
+  function fichaApuntes(n) {    // n ejercicios distintos; con 0 vuelve al texto de siempre
+    var sP = $('btnApuntes').querySelector('small');
+    sP.textContent = n > 0 ? n + (n === 1 ? ' ejercicio anotado' : ' ejercicios anotados') : 'Tus ejercicios y cargas';
+  }
+  function fichaLogros(hechas, metas) {
+    var nL = $('fnLogros'), sL = $('btnLogros').querySelector('small'), fb = $('fbLogros');
+    if (metas > 0) {
+      nL.textContent = hechas + '/' + metas; nL.hidden = false; sL.hidden = true;
+      fb.hidden = false; fb.firstChild.style.width = Math.round(hechas / metas * 100) + '%';
+    } else { nL.hidden = true; sL.hidden = false; fb.hidden = true; }
+  }
+  function ejerciciosDistintos(items) { var k = {}; (items || []).forEach(function (x) { k[String(x.ejercicio).trim().toLowerCase()] = 1; }); return Object.keys(k).length; }
+  function logrosDeEstado(est) {   // {hechas, metas} de la ronda actual; null si no hay
+    if (!est || !est.actual || !est.rondas || !est.rondas.length) return null;
+    var cur = est.rondas[est.rondas.length - 1];
+    return { hechas: cur.metas.filter(function (m) { return m.hecho; }).length, metas: cur.metas.length };
+  }
   function pintarFichasDatos(a) {
     if (!a) return;
     var nA = $('fnAsist'), nL = $('fnLogros'), sA = $('btnAsist').querySelector('small'), sL = $('btnLogros').querySelector('small'), sP = $('btnApuntes').querySelector('small');
     if (typeof a.visitas === 'number') { nA.textContent = String(a.visitas); nA.hidden = false; sA.textContent = a.visitas === 1 ? 'visita este mes' : 'visitas este mes'; }
-    if (typeof a.lgMetas === 'number' && a.lgMetas > 0 && typeof a.lgHechas === 'number') {
-      nL.textContent = a.lgHechas + '/' + a.lgMetas; nL.hidden = false; sL.hidden = true;
-      $('fbLogros').hidden = false; $('fbLogros').firstChild.style.width = Math.round(a.lgHechas / a.lgMetas * 100) + '%';
-    }
-    if (typeof a.apuntes === 'number' && a.apuntes > 0) sP.textContent = a.apuntes + (a.apuntes === 1 ? ' ejercicio anotado' : ' ejercicios anotados');
+    if (typeof a.lgMetas === 'number' && typeof a.lgHechas === 'number') fichaLogros(a.lgHechas, a.lgMetas);
+    if (typeof a.apuntes === 'number') fichaApuntes(a.apuntes);
     $('rutinaBox').classList.toggle('vacia', !!a.rutina && a.rutinaOk === false);
   }
   function pintarRutinaBox() {
