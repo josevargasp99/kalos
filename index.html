@@ -1177,7 +1177,7 @@
 
   /* ---- caché de lecturas (solo en memoria, solo de esta tarjeta): al abrir un apartado se muestra lo último que se vio y se actualiza por detrás ---- */
   var CA = {}, CAP = {}, CAV = 0;
-  function limpiarCache() { CA = {}; CAP = {}; CAV++; try { RT.cache = {}; RT.pend = {}; NU.cache = {}; NU.pend = {}; } catch (e) {} }
+  function limpiarCache() { CA = {}; CAP = {}; PRE = null; CAV++; try { RT.cache = {}; RT.pend = {}; NU.cache = {}; NU.pend = {}; } catch (e) {} }
   function cacheEscritura(accion, d) {   // una escritura exitosa deja la copia al día (o la borra si no trae los datos nuevos)
     if (!d || !d.ok || accion === 'logros_leer' || accion === 'apuntes_leer' || accion === 'medidas_ver') return;
     var a = String(accion || '');
@@ -1187,8 +1187,13 @@
     else if (a === 'rutina_semana') { CAV++; delete CA.rutina_ver; }
     else if (a === 'rem_marcar') { CAV++; delete CA.asistencia_ver; }
   }
+  var PRE = null, PRE_SEC = { logros_leer: 'logros', apuntes_leer: 'apuntes', rutina_ver: 'rutina', asistencia_ver: 'asistencia', medidas_ver: 'medidas', nutri_ver: 'nutri' };
   function pedir(accion, extra) {   // si ya hay un pedido igual en camino, lo comparte (por ejemplo el de la precarga)
     if (CAP[accion]) return CAP[accion];
+    if (PRE && PRE_SEC[accion] && !(extra && extra.id)) {   // la precarga va en camino: se espera su respuesta; si no trae esta parte, se pide aparte
+      var pw = PRE.then(function () { delete CAP[accion]; return CA[accion] ? CA[accion] : pedir(accion, extra); });
+      CAP[accion] = pw; return pw;
+    }
     var b = { accion: accion }; for (var q in extra) b[q] = extra[q];
     var v = CAV;
     var pr = enviar(b).then(function (d) { delete CAP[accion]; if (d && d.ok && v === CAV) CA[accion] = d; return d; },
@@ -1209,19 +1214,35 @@
     el.textContent = '';
     for (var i = 0; i < (n || 3); i++) { var d = document.createElement('div'); d.className = 'esq' + (i === 0 ? ' alto' : ''); el.appendChild(d); }
   }
-  // Después del PIN, trae en segundo plano los apartados del alumno para que abran al instante
+  // Después del PIN, trae en segundo plano los apartados del alumno en UN solo pedido (acción `precarga`).
+  // Si el servidor es antiguo o falla, se piden uno por uno como antes.
   function precargar(a) {
     var cid = a.id;
+    setTimeout(function () {
+      if (id !== cid || PRE) return;
+      var v = CAV;
+      PRE = enviar({ accion: 'precarga' }).then(function (d) {
+        PRE = null;
+        if (id !== cid) return;
+        if (!d || !d.ok) { if (!d || d.error !== 'pin_requerido') precargarUnoPorUno(cid); return; }
+        if (v === CAV) {
+          ['logros_leer', 'apuntes_leer', 'rutina_ver', 'asistencia_ver', 'medidas_ver', 'nutri_ver'].forEach(function (k) { if (d[PRE_SEC[k]] && d[PRE_SEC[k]].ok) CA[k] = d[PRE_SEC[k]]; });
+        }
+        precargarRutina(CA.rutina_ver); precargarNutri(CA.nutri_ver);
+      }, function () { PRE = null; if (id === cid) precargarUnoPorUno(cid); });
+    }, 300);
+  }
+  function precargarUnoPorUno(cid) {
     setTimeout(function () {
       if (id !== cid) return;
       pedir('logros_leer').catch(function () {});
       if (!$('btnRutina').hidden) pedir('rutina_ver').then(precargarRutina).catch(function () {});
-    }, 700);
+    }, 300);
     setTimeout(function () {
       if (id !== cid) return;
       pedir('apuntes_leer').catch(function () {});
       if (RM.remoto) { pedir('medidas_ver').catch(function () {}); pedir('nutri_ver').then(precargarNutri).catch(function () {}); }
-    }, 2200);
+    }, 1800);
   }
   function precargarRutina(d) {
     if (!d || !d.ok) return;
