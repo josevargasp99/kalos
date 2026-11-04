@@ -195,6 +195,7 @@
     .rimgs img{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);background:#000;cursor:zoom-in}
     #lbR{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:50;overflow:auto;touch-action:pan-x pan-y pinch-zoom;-webkit-overflow-scrolling:touch}
     #lbR img{display:block;width:100%;height:auto}
+    #lbR.ancho img{width:220%;max-width:none}
     #lbRx{position:fixed;top:12px;right:12px;z-index:51;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px;cursor:pointer}
     [hidden]{display:none!important}
 
@@ -1996,7 +1997,7 @@
     $('btnRutina').onclick = abrirRutina;
     $('rutinaBox').onclick = function (e) { if (!$('btnRutina').hidden && !(e.target.closest && e.target.closest('#btnRutina'))) abrirRutina(); };
     $('btnVolverR').onclick = function () { ver('card'); };
-    $('lbRx').onclick = function () { $('lbR').hidden = true; $('lbRImg').removeAttribute('src'); };
+    $('lbRx').onclick = function () { $('lbR').hidden = true; $('lbR').classList.remove('ancho'); $('lbRImg').removeAttribute('src'); };
     $('btnRtSem').onclick = function () {
       var av = $('rtSemAv'), b = $('btnRtSem'); if (b.disabled) return;
       b.disabled = true; av.className = 'aviso'; av.textContent = 'Guardando…';
@@ -2040,6 +2041,12 @@
       $('rtCarga').textContent = sinRed ? 'Sin conexión, intenta de nuevo.' : d && d.error === 'ocupado' ? 'Hay muchas consultas. Intenta de nuevo en un minuto.' : d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu rutina. Intenta de nuevo.';
     });
   }
+  // visor de la rutina: una tabla ancha (PDF de un remoto, imagen de más de 1600 px) se abre al 220 % para poder leerla arrastrando
+  function abrirVisorRt(im, src, rem) {
+    var anchoReal = im.naturalWidth || 0;
+    $('lbR').classList.toggle('ancho', !!rem && anchoReal > 1600 && anchoReal > (im.naturalHeight || 0) * 0.6);
+    $('lbRImg').src = src; $('lbR').hidden = false; $('lbR').scrollTop = 0; $('lbR').scrollLeft = 0;
+  }
   function verDiaRutina(dia) {
     RT.dia = dia; var tok = ++RT.tok;
     Array.prototype.forEach.call($('rtTabs').children, function (b) { b.classList.toggle('on', Number(b.dataset.d) === dia); });
@@ -2052,7 +2059,7 @@
         if (tok !== RT.tok) return;
         if (!src) { ph.textContent = 'No se pudo cargar la imagen. Revisa tu internet.'; return; }
         var im = new Image(); im.alt = 'Rutina: ' + etqRt(dia - 1); im.src = src;
-        im.onclick = function () { $('lbRImg').src = src; $('lbR').hidden = false; $('lbR').scrollTop = 0; };
+        im.onclick = function () { abrirVisorRt(im, src, RT.rem); };
         c.replaceChild(im, ph);
       }
       imgRt(dia, x, RT.fechas[dia - 1]).then(poner);

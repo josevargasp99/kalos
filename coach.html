@@ -187,6 +187,10 @@
       <div id="imgs" class="imgs"></div>
       <button id="btnAgregar" class="btn" type="button">+ AGREGAR IMAGEN</button>
       <p id="avDia" class="aviso" role="status"></p>
+      <div id="pdfConf" hidden>
+        <button id="btnPdfOk" class="btn" type="button">SÍ, REEMPLAZAR LA SEMANA</button>
+        <button id="btnPdfNo" class="btn sec" type="button">Cancelar</button>
+      </div>
       <div id="postSubida" hidden>
         <a id="btnWa" class="btn wa" href="#" target="_blank" rel="noopener">AVISAR POR WHATSAPP</a>
       </div>
@@ -585,8 +589,10 @@
         w.replaceChild(im, ph);
       });
     });
-    $('btnAgregar').hidden = lst.length >= 3;
-    $('btnAgregar').textContent = lst.length ? '+ AGREGAR OTRA IMAGEN (' + lst.length + ' de 3)' : '+ SUBIR RUTINA';
+    $('btnAgregar').hidden = !S.rem && lst.length >= 3;
+    $('btnAgregar').textContent = S.rem ? (lst.length ? 'SUBIR PDF NUEVO O AGREGAR IMAGEN' : '+ SUBIR RUTINA (PDF O IMAGEN)')
+      : (lst.length ? '+ AGREGAR OTRA IMAGEN (' + lst.length + ' de 3)' : '+ SUBIR RUTINA');
+    $('pdfConf').hidden = true; PDFPEND = null;
     $('btnCopiar').hidden = !lst.length;
   }
   function cargarImg(dia, orden, cb) {
@@ -602,7 +608,8 @@
 
   /* ---------- subir (con compresión en el celular) ---------- */
   var ordenSubida = 0;
-  function elegir(orden) { ordenSubida = orden || 0; $('archivo').value = ''; $('archivo').click(); }
+  var PDFPEND = null;
+  function elegir(orden) { ordenSubida = orden || 0; $('archivo').accept = S.rem ? 'application/pdf,image/*' : 'image/*'; $('archivo').value = ''; $('archivo').click(); }
   $('btnAgregar').onclick = function () { elegir(0); };
 
   function comprimir(file) {
@@ -626,7 +633,13 @@
   }
   $('archivo').onchange = function () {
     var f = this.files && this.files[0]; if (!f || S.busy) return;
-    if (!/^image\//.test(f.type)) { decir('avDia', 'bad', 'Elige una imagen (captura o foto).'); return; }
+    var esPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
+    if (esPdf) {
+      if (!S.rem) { decir('avDia', 'bad', 'El PDF se puede subir solo para alumnos remotos. Aquí sube una imagen.'); return; }
+      return prepararPdfRutina(f);
+    }
+    if (!/^image\//.test(f.type)) { decir('avDia', 'bad', S.rem ? 'Elige un PDF o una imagen (captura o foto).' : 'Elige una imagen (captura o foto).'); return; }
+    if (ordenSubida === 0 && S.dias[S.dia - 1].length >= 3) { decir('avDia', 'bad', 'La semana ya tiene 3 imágenes. Reemplaza una o sube un PDF.'); return; }
     S.busy = true; decir('avDia', '', 'Preparando la imagen…');
     comprimir(f).then(function (data) {
       if (data.length > 1400000) throw new Error('grande');
@@ -641,6 +654,101 @@
       });
     }).catch(function () { S.busy = false; decir('avDia', 'bad', 'No pudimos subir la imagen. Revisa tu internet e intenta de nuevo.'); });
   };
+  /* ---------- remotos: rutina de la semana en PDF ---------- */
+  var RUT_PDF_MAX = 3, RUT_ANCHO = 2000;
+  function recortarBlancos(c) {
+    var w = c.width, h = c.height, d = c.getContext('2d').getImageData(0, 0, w, h).data, x0 = w, x1 = -1, y0 = h, y1 = -1, x, y, i;
+    for (y = 0; y < h; y++) {
+      for (x = 0; x < w; x++) {
+        i = (y * w + x) * 4;
+        if (d[i] < 242 || d[i + 1] < 242 || d[i + 2] < 242) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      }
+    }
+    if (x1 < 0) return c;
+    var m = 16; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w - 1, x1 + m); y1 = Math.min(h - 1, y1 + m);
+    var cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+    if (cw >= w - 4 && ch >= h - 4) return c;
+    var o = document.createElement('canvas'); o.width = cw; o.height = ch;
+    var ox = o.getContext('2d'); ox.fillStyle = '#fff'; ox.fillRect(0, 0, cw, ch); ox.drawImage(c, x0, y0, cw, ch, 0, 0, cw, ch);
+    return o;
+  }
+  function jpegRutina(c) {
+    var out = c.toDataURL('image/jpeg', 0.85);
+    if (out.length > 1400000) out = c.toDataURL('image/jpeg', 0.75);
+    if (out.length > 1400000) {
+      var k = 0.75, o = document.createElement('canvas'); o.width = Math.round(c.width * k); o.height = Math.round(c.height * k);
+      var ox = o.getContext('2d'); ox.fillStyle = '#fff'; ox.fillRect(0, 0, o.width, o.height); ox.drawImage(c, 0, 0, o.width, o.height);
+      out = o.toDataURL('image/jpeg', 0.75);
+    }
+    if (out.length > 1450000) throw new Error('grande');
+    return out;
+  }
+  function paginasRutina(file) {
+    return cargarPdfJs().then(function (lib) {
+      return file.arrayBuffer().then(function (buf) { return lib.getDocument({ data: buf }).promise; });
+    }).then(function (pdf) {
+      if (pdf.numPages > RUT_PDF_MAX) throw new Error('paginas');
+      var res = [], p = Promise.resolve();
+      for (var i = 1; i <= pdf.numPages; i++) (function (n) {
+        p = p.then(function () { return pdf.getPage(n); }).then(function (pg) {
+          var v0 = pg.getViewport({ scale: 1 }), v = pg.getViewport({ scale: Math.min(4, RUT_ANCHO / v0.width) }), c = document.createElement('canvas');
+          c.width = Math.round(v.width); c.height = Math.round(v.height);
+          var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+          return pg.render({ canvasContext: x, viewport: v }).promise.then(function () { res.push(jpegRutina(recortarBlancos(c))); });
+        });
+      })(i);
+      return p.then(function () { return res; });
+    });
+  }
+  function msgPdf(e) {
+    return e && e.message === 'paginas' ? 'El PDF tiene más de ' + RUT_PDF_MAX + ' páginas; una semana admite ' + RUT_PDF_MAX + '.'
+      : e && e.message === 'pdfjs' ? 'No se pudo preparar el PDF (revisa tu internet) o súbelo como imagen.'
+      : e && e.message === 'grande' ? 'El PDF pesa demasiado. Expórtalo con menos calidad o súbelo como imagen.'
+      : e && e.d ? errTxt(e.d) + ' La semana puede haber quedado incompleta: vuelve a subir el PDF.'
+      : 'No pudimos subir el PDF. Revisa tu internet e intenta de nuevo.';
+  }
+  function prepararPdfRutina(file) {
+    var tenia = S.dias[S.dia - 1].length;
+    if (!tenia) { subirPdfRutina(file); return; }
+    PDFPEND = file; $('pdfConf').hidden = false;
+    decir('avDia', '', 'Esta semana ya tiene rutina cargada (' + tenia + (tenia === 1 ? ' imagen' : ' imágenes') + '). Si subes el PDF, se reemplaza todo lo de esta semana.');
+  }
+  $('btnPdfOk').onclick = function () { var f = PDFPEND; PDFPEND = null; $('pdfConf').hidden = true; if (f) subirPdfRutina(f); };
+  $('btnPdfNo').onclick = function () { PDFPEND = null; $('pdfConf').hidden = true; decir('avDia', '', ''); };
+  function subirPdfRutina(file) {
+    if (S.busy) return;
+    var dia = S.dia, previas = S.dias[dia - 1].map(function (x) { return x.orden; }), ultimo = null;
+    S.busy = true; $('pdfConf').hidden = true; decir('avDia', '', 'Preparando el PDF…');
+    paginasRutina(file).then(function (pags) {
+      var p = Promise.resolve(), n = pags.length;
+      pags.forEach(function (u, i) {
+        p = p.then(function () {
+          decir('avDia', '', 'Subiendo página ' + (i + 1) + ' de ' + n + '…');
+          return api({ accion: 'coach_subir', id: S.al.id, dia: dia, orden: i + 1, data: u }).then(function (d) {
+            if (!d.ok) { var e = new Error('srv'); e.d = d; throw e; }
+            IMG[clave(dia, d.orden)] = u; ultimo = d; return d;
+          });
+        });
+      });
+      previas.filter(function (o) { return o > n; }).forEach(function (o) {
+        p = p.then(function () {
+          return api({ accion: 'coach_quitar', id: S.al.id, dia: dia, orden: o }).then(function (d) {
+            if (!d.ok) { var e = new Error('srv'); e.d = d; throw e; }
+            delete IMG[clave(dia, o)]; ultimo = d; return d;
+          });
+        });
+      });
+      return p;
+    }).then(function () {
+      S.busy = false;
+      if (ultimo) { S.dias = ultimo.dias; S.fechas = ultimo.fechas; S.al.cuenta = ultimo.dias.map(function (x) { return x.length; }); }
+      decir('avDia', 'ok', '✅ Rutina guardada. Ya la ve ' + S.al.nombre.split(' ')[0] + ' en su tarjeta.');
+      pintarDia(); mostrarAviso();
+    }).catch(function (e) {
+      S.busy = false; decir('avDia', 'bad', msgPdf(e));
+      if (ultimo) { S.dias = ultimo.dias; S.fechas = ultimo.fechas; S.al.cuenta = ultimo.dias.map(function (x) { return x.length; }); pintarDia(); }
+    });
+  }
   function mostrarAviso() {
     var a = S.al; $('postSubida').hidden = !a.tel;
     if (a.tel) $('btnWa').href = 'https://wa.me/' + waNum(a.tel) + '?text=' + encodeURIComponent('¡Hola ' + a.nombre.split(' ')[0] + '! Tienes rutina nueva en tu tarjeta de Kalos 💪 ' + PAGINA + '?id=' + a.id);
