@@ -1970,7 +1970,7 @@
   function activarQrApp(a) {
     var b = $('btnQrApp'), hint = $('qrHint');
     if (!b) return;
-    if (a.staff || a.modalidad === 'Remoto') { b.hidden = true; hint.hidden = true; return; }
+    if (a.modalidad === 'Remoto') { b.hidden = true; hint.hidden = true; return; }
     b.hidden = false; b.style.right = $('btnAvisos').hidden ? '16px' : '68px';
     var visto = ''; try { visto = Number(localStorage.getItem('kalos_qr_hint') || 0); } catch (e) {}
     if (visto < 3) { hint.hidden = false; try { localStorage.setItem('kalos_qr_hint', String(visto + 1)); } catch (e) {} setTimeout(function () { hint.hidden = true; }, 7000); }
