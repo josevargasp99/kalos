@@ -191,6 +191,31 @@
     .dtabs button{flex:1;padding:10px 0;border-radius:10px;border:1px solid var(--line);background:#0a1206;color:var(--muted);font:600 14px Inter,Arial,sans-serif;cursor:pointer}
     .dtabs button.on{background:var(--ok);color:#06210f;border-color:var(--ok)}
     .dtabs button.hoy:not(.on){border-color:var(--ok);color:var(--ok)}
+    /* rutina nativa (remotos, #22) */
+    .rnprox{margin:14px 0 0;padding:10px 12px;border:1px solid var(--ok);border-radius:12px;color:var(--ok);font:600 14px/1.35 Inter,Arial,sans-serif}
+    .rnprox.esp{border-color:var(--warn);color:var(--warn)}
+    .rnet{margin:10px 2px 0;color:var(--muted);font:500 13px Inter,Arial,sans-serif}.rnet b{color:#fff;font-weight:700}
+    .rndias{display:flex;gap:6px;margin-top:12px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.rndias::-webkit-scrollbar{display:none}
+    .rndias button{flex:1 0 auto;min-width:46px;padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:#0a1206;color:var(--muted);font:600 13px Inter,Arial,sans-serif;cursor:pointer;white-space:nowrap}
+    .rndias button.on{background:var(--ok);color:#06210f;border-color:var(--ok)}
+    .rndias button.hoy:not(.on){border-color:var(--ok);color:var(--ok)}
+    .rnbox{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 14px 6px;text-align:left}
+    .rnbox h3{margin:0 0 2px;font:400 26px/1 'Bebas Neue',Inter,sans-serif;letter-spacing:1px;color:#fff}
+    .rnbox h3 small{display:block;margin-top:4px;font:600 12px Inter,Arial,sans-serif;letter-spacing:.3px;color:var(--ok);text-transform:uppercase}
+    .rncal{margin:10px 0 4px;border-top:1px solid var(--line);padding-top:8px}
+    .rncal summary{cursor:pointer;color:var(--muted);font:600 13px Inter,Arial,sans-serif;list-style:none;padding:4px 0}.rncal summary::-webkit-details-marker{display:none}
+    .rncal summary::after{content:' ▾'}.rncal[open] summary::after{content:' ▴'}
+    .rncal ul{margin:4px 0 6px;padding-left:18px;color:#d7dfd4;font:500 14px/1.5 Inter,Arial,sans-serif}
+    .rnlst{list-style:none;margin:6px 0 0;padding:0}
+    .rnlst li{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+    .rnlst .n{flex:0 0 22px;height:22px;border-radius:50%;background:#0a1206;border:1px solid var(--line);color:var(--muted);font:700 11px/20px Inter,Arial,sans-serif;text-align:center;margin-top:1px}
+    .rnlst .t{flex:1;min-width:0;color:#fff;font:600 15px/1.3 Inter,Arial,sans-serif;overflow-wrap:anywhere}
+    .rnlst .t small{display:block;margin-top:3px;color:var(--muted);font:500 13px/1.3 Inter,Arial,sans-serif}
+    .rnlst .ds{flex:0 0 auto;max-width:44%;padding:5px 9px;border-radius:9px;background:rgba(98,217,126,.12);color:var(--ok);font:700 14px/1.25 Inter,Arial,sans-serif;text-align:right;overflow-wrap:anywhere}
+    .rnlst li.hiit{cursor:pointer}.rnlst li.hiit .t{color:var(--ok)}
+    .rnhiit .cfg{margin:6px 0 2px;color:var(--warn);font:600 13px Inter,Arial,sans-serif}
+    .rndesc{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:8px 0 8px;font:500 14px Inter,Arial,sans-serif;color:#d7dfd4}.rndesc b{color:#fff;font-weight:600;text-align:right}
+    .rnpie{margin:12px 2px 0;color:var(--muted);font:500 12px Inter,Arial,sans-serif;text-align:center}
     .rimgs{display:grid;gap:12px;margin-top:16px}
     .rimgs img{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);background:#000;cursor:zoom-in}
     #lbR{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:50;overflow:auto;touch-action:pan-x pan-y pinch-zoom;-webkit-overflow-scrolling:touch}
@@ -792,6 +817,17 @@
     <div class="status"><span class="dot"></span>MI RUTINA</div>
     <span id="rtBadge" class="badge" hidden></span>
     <p id="rtCarga" class="msg">Cargando tu rutina…</p>
+    <p id="rtProx" class="rnprox" role="status" hidden></p>
+    <div id="rtNat" hidden>
+      <div id="rnSem" class="dtabs"></div>
+      <p id="rnEt" class="rnet"></p>
+      <div id="rnDias" class="rndias"></div>
+      <div id="rnDia"></div>
+      <div id="rnHiit" class="rnbox rnhiit" hidden></div>
+      <div id="rnDesc" class="rnbox" hidden></div>
+      <p id="rnPie" class="rnpie"></p>
+      <button id="btnRnApuntes" class="btn out" type="button" style="margin-top:14px">ANOTAR EN MIS APUNTES</button>
+    </div>
     <div id="rtCont" hidden>
       <div id="rtTabs" class="dtabs"></div>
       <p id="rtNota" class="msg"></p>
@@ -1121,6 +1157,7 @@
     });
     $('fisio').querySelector('.fhero').onclick = function () { $('fiImg').src = this.src; $('fiImg').parentNode.className = 'fzs'; $('fiZoom').hidden = false; };
     $('btnRtApuntes').onclick = function () { $('btnApuntes').click(); };
+    $('btnRnApuntes').onclick = function () { $('btnApuntes').click(); };
   }
   var ETAPA_TXT = '';
   function pintarBadgeRt() {
@@ -1290,7 +1327,7 @@
     }, 1800);
   }
   function precargarRutina(d) {
-    if (!d || !d.ok) return;
+    if (!d || !d.ok || (d.nativa && d.nativa.ciclo)) return;
     var dia = d.remoto ? d.semana : diaHoy();
     if (!dia || !d.dias[dia - 1]) return;
     d.dias[dia - 1].forEach(function (x) { imgRt(dia, x, d.fechas[dia - 1]); });
@@ -2139,8 +2176,12 @@
     ver('rutina');
     $('rtSemAv').textContent = '';
     if (!CA.rutina_ver) { $('rtCarga').hidden = false; esq($('rtCarga')); $('rtCont').hidden = true; }
+    $('rtNat').hidden = true; $('rtProx').hidden = true;
     conCache('rutina_ver', {}, function (d) {
       RT.dias = d.dias; RT.fechas = d.fechas; RT.rem = !!d.remoto;
+      var nv = d.nativa || null;
+      avisoProximo(nv);
+      if (nv && nv.ciclo) { $('rtCarga').hidden = true; $('rtCont').hidden = true; pintarNativa(nv); return; }
       var hay = d.dias.some(function (x) { return x.length; });
       $('rtSemBox').hidden = !RT.rem;
       if (RT.rem) $('rtSemSel').value = String(d.semana);
@@ -2164,6 +2205,81 @@
       $('rtCarga').hidden = false; $('rtCont').hidden = true;
       $('rtCarga').textContent = sinRed ? 'Sin conexión, intenta de nuevo.' : d && d.error === 'ocupado' ? 'Hay muchas consultas. Intenta de nuevo en un minuto.' : d && d.error === 'pin_requerido' ? '' : 'No pudimos cargar tu rutina. Intenta de nuevo.';
     });
+  }
+  /* ---------- rutina nativa de remotos (#22): texto en vez de imágenes ---------- */
+  var RN = { nv: null, sem: 1, dia: 0 };
+  var RN_DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
+  function sinTildes(t) { return String(t || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function fechaDia(iso) { var d = new Date(iso + 'T12:00:00'); var n = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'][d.getDay()]; return n + ' ' + iso.slice(8, 10) + '/' + iso.slice(5, 7); }
+  function avisoProximo(nv) {
+    var p = $('rtProx'); p.hidden = true; p.className = 'rnprox';
+    if (!nv) return;
+    if (nv.proximo) { p.textContent = 'Tu nueva rutina empieza el ' + fechaDia(nv.proximo) + ' 💪'; p.hidden = false; }
+    else if (nv.ciclo && nv.terminado) { p.textContent = 'Terminaste tus 4 semanas. Tu coach está preparando tu nueva rutina; mientras tanto repite la semana 4.'; p.className = 'rnprox esp'; p.hidden = false; }
+  }
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function pintarNativa(nv) {
+    RN.nv = nv; $('rtNat').hidden = false; $('rtSemBox').hidden = true;
+    var c = nv.ciclo, tabs = $('rnSem'); tabs.textContent = '';
+    c.semanas.forEach(function (s) {
+      var b = el('button', s.n === nv.semana ? 'hoy' : '', 'S' + s.n); b.type = 'button'; b.dataset.s = String(s.n);
+      b.setAttribute('aria-label', 'Semana ' + s.n + (s.etapa ? ' · ' + s.etapa : ''));
+      b.onclick = function () { verSemanaNat(s.n); };
+      tabs.appendChild(b);
+    });
+    $('rnPie').textContent = 'Rutina del ' + fechaCorta(c.inicio).slice(0, 5) + (c.fin ? ' al ' + fechaCorta(c.fin).slice(0, 5) : '') + (c.cargada ? ' · cargada el ' + c.cargada : '');
+    var desc = $('rnDesc'); desc.textContent = ''; desc.hidden = !c.descansos.length;
+    if (c.descansos.length) {
+      desc.appendChild(el('h3', '', 'DESCANSO ENTRE SERIES'));
+      var g = el('div', 'rndesc'); c.descansos.forEach(function (x) { g.appendChild(el('span', '', x.grupo)); g.appendChild(el('b', '', x.tiempo)); }); desc.appendChild(g);
+    }
+    RN.dia = 0;
+    verSemanaNat(nv.semana && c.semanas.some(function (s) { return s.n === nv.semana; }) ? nv.semana : c.semanas[0].n);
+  }
+  function semNat(n) { var x = null; RN.nv.ciclo.semanas.forEach(function (s) { if (s.n === n) x = s; }); return x; }
+  function verSemanaNat(n) {
+    var s = semNat(n); if (!s) return; RN.sem = n;
+    Array.prototype.forEach.call($('rnSem').children, function (b) { b.classList.toggle('on', Number(b.dataset.s) === n); });
+    var et = $('rnEt'); et.textContent = '';
+    et.appendChild(el('b', '', 'Semana ' + n + (s.etapa ? ' · ' + s.etapa : ''))); if (n === RN.nv.semana) et.appendChild(document.createTextNode(' · esta semana'));
+    var dias = $('rnDias'); dias.textContent = '';
+    var hoyN = 0, hoyTxt = RN_DIAS[new Date(hoyBolivia() + 'T12:00:00').getDay()];
+    s.dias.forEach(function (d, i) { if (sinTildes(d.titulo).indexOf(hoyTxt) === 0) hoyN = i + 1; });
+    var cortos = s.dias.length > 4 && s.dias.every(function (d) { return RN_DIAS.indexOf(sinTildes(d.titulo)) >= 0; });   // L–V: abreviados para que entren todos
+    s.dias.forEach(function (d, i) {
+      var b = el('button', '', cortos ? d.titulo.slice(0, 3) : d.titulo); b.type = 'button'; b.dataset.d = String(i + 1); b.setAttribute('aria-label', d.titulo);
+      if (n === RN.nv.semana && hoyN === i + 1) { b.classList.add('hoy'); b.setAttribute('aria-label', d.titulo + ', hoy'); }
+      b.onclick = function () { verDiaNat(i + 1); };
+      dias.appendChild(b);
+    });
+    var h = $('rnHiit'); h.textContent = ''; h.hidden = !(s.hiit && s.hiit.items.length);
+    if (!h.hidden) {
+      h.appendChild(el('h3', '', 'HIIT'));
+      if (s.hiit.cfg) h.appendChild(el('p', 'cfg', s.hiit.cfg));
+      var ol = el('ol', 'rnlst'); s.hiit.items.forEach(function (t, i) { var li = el('li'); li.appendChild(el('span', 'n', String(i + 1))); li.appendChild(el('span', 't', t)); ol.appendChild(li); }); h.appendChild(ol);
+    }
+    var ini = RN.dia && RN.dia <= s.dias.length ? RN.dia : (n === RN.nv.semana && hoyN ? hoyN : 1);
+    verDiaNat(ini);
+  }
+  function verDiaNat(i) {
+    var s = semNat(RN.sem), d = s && s.dias[i - 1], box = $('rnDia'); box.textContent = '';
+    if (!d) return; RN.dia = i;
+    Array.prototype.forEach.call($('rnDias').children, function (b) { b.classList.toggle('on', Number(b.dataset.d) === i); });
+    var card = el('div', 'rnbox'), h3 = el('h3', '', d.titulo); if (d.foco) h3.appendChild(el('small', '', d.foco)); card.appendChild(h3);
+    if (d.calent && d.calent.length) {
+      var det = el('details', 'rncal'); det.appendChild(el('summary', '', 'Calentamiento · ' + d.calent.length + ' ejercicios'));
+      var ul = el('ul'); d.calent.forEach(function (t) { ul.appendChild(el('li', '', t)); }); det.appendChild(ul); card.appendChild(det);
+    }
+    var ol = el('ol', 'rnlst'), k = 0;
+    d.items.forEach(function (x) {
+      var hiit = /^hiit$/i.test(x.ej), li = el('li', hiit ? 'hiit' : '');
+      li.appendChild(el('span', 'n', hiit ? '⚡' : String(++k)));
+      var t = el('span', 't', hiit ? 'HIIT (ver abajo)' : x.ej); if (x.nota) t.appendChild(el('small', '', x.nota)); li.appendChild(t);
+      if (x.dosis) li.appendChild(el('span', 'ds', x.dosis));
+      if (hiit) li.onclick = function () { $('rnHiit').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+      ol.appendChild(li);
+    });
+    card.appendChild(ol); box.appendChild(card);
   }
   // visor de la rutina: una tabla ancha (PDF de un remoto, imagen de más de 1600 px) se abre al 220 % para poder leerla arrastrando
   function abrirVisorRt(im, src, rem) {

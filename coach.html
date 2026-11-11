@@ -87,7 +87,10 @@
     @keyframes slInR{from{transform:translate3d(105%,0,0);opacity:.2}}
     @keyframes slInL{from{transform:translate3d(-105%,0,0);opacity:.2}}
     .btn:active:not(:disabled){transform:scale(.97);transition:transform .08s}
-  </style>
+      .rnw{margin-bottom:10px}.rnc{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin:8px 0}
+    .rnct{font-weight:700;margin-bottom:6px}.rnc summary{cursor:pointer;padding:6px 0;font-weight:600}
+    .rncd{margin:8px 0 2px;color:#62D97E;font-weight:600;font-size:14px}.rnc ul{margin:2px 0 6px;padding-left:18px;font-size:14px;line-height:1.45}
+</style>
 </head>
 <body>
 <main class="wrap">
@@ -322,7 +325,8 @@
       var b = el('button', 'row'); b.type = 'button';
       var t = el('div', 't'); t.appendChild(el('div', 'n', a.nombre));
       var cargados = (a.cuenta || []).filter(function (x) { return x > 0; }).length;
-      t.appendChild(el('div', 's', (a.prueba ? '🧪 PRUEBA · ' : '') + (a.remoto ? '🌎 Remoto · ' + cargados + ' de 4 semanas con rutina · plan alimenticio ' + (a.nutri ? '✓' : '—') :
+      var nvTxt = a.nativa ? (a.nativa.falta ? '⚠️ falta cargar el mes nuevo' : a.nativa.vigente ? 'rutina del mes · semana ' + a.nativa.semana + (a.nativa.proximo ? ' · próxima desde ' + a.nativa.proximo.slice(8, 10) + '/' + a.nativa.proximo.slice(5, 7) : '') : 'rutina nueva desde ' + a.nativa.proximo.slice(8, 10) + '/' + a.nativa.proximo.slice(5, 7)) : '';
+      t.appendChild(el('div', 's', (a.prueba ? '🧪 PRUEBA · ' : '') + (a.remoto ? '🌎 Remoto · ' + (nvTxt || cargados + ' de 4 semanas con rutina') + ' · plan alimenticio ' + (a.nutri ? '✓' : '—') :
         S.soloRem ? (a.horario || '—') + ' · presencial' : (a.horario || '—') + ' · ' + cargados + ' de 5 días con rutina')));
       b.appendChild(t);
       var clase = a.estado === 'ACTIVO' ? 'ok' : (a.estado === 'POR VENCER' ? 'warn' : 'bad');
@@ -377,7 +381,7 @@
   /* ---------- alumno ---------- */
   function abrirAlumno(a) {
     S.al = a; $('alNombre').textContent = a.nombre; $('alInfo').textContent = (a.plan || '') + ' · ' + (a.horario || '');
-    S.rem = !!a.remoto; $('remBtns').hidden = !S.rem;
+    S.rem = !!a.remoto; S.nativa = null; $('remBtns').hidden = !S.rem;
     if (S.rem) { $('semSel').value = String(a.semana || 1); $('avSem').textContent = ''; $('avSem').className = 'aviso'; }
     $('subDias').textContent = S.rem ? 'Toca una semana para cargar o cambiar su rutina (Semana 1 a 4). El alumno avanza de semana cada lunes.' : 'Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.';
     pantalla('sAlumno'); limpiar($('dias'));
@@ -385,8 +389,32 @@
     $('dias').appendChild(el('p', 'aviso', 'Cargando…'));
     api({ accion: 'coach_ver', id: a.id }).then(function (d) {
       if (!d.ok) { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', errTxt(d))); return; }
-      S.dias = d.dias; S.fechas = d.fechas; a.cuenta = d.dias.map(function (x) { return x.length; }); pintarDias();
+      S.nativa = d.nativa || null; S.dias = d.dias; S.fechas = d.fechas; a.cuenta = d.dias.map(function (x) { return x.length; }); pintarDias();
     }).catch(function () { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', 'Sin conexión, intenta de nuevo.')); });
+  }
+  /* rutina nativa (#22): solo lectura; la carga Claude desde el Excel */
+  function fCorta(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; }
+  function cicloCoach(c, titulo) {
+    var box = el('div', 'rnc'); box.appendChild(el('div', 'rnct', titulo + ' · ' + fCorta(c.inicio) + (c.fin ? ' al ' + fCorta(c.fin) : '') + (c.cargada ? ' · cargada el ' + c.cargada : '')));
+    c.semanas.forEach(function (s) {
+      var det = el('details'); det.appendChild(el('summary', '', 'Semana ' + s.n + (s.etapa ? ' · ' + s.etapa : '')));
+      s.dias.forEach(function (dd) {
+        det.appendChild(el('div', 'rncd', dd.titulo + (dd.foco ? ' · ' + dd.foco : '')));
+        var ul = el('ul'); dd.items.forEach(function (x) { ul.appendChild(el('li', '', x.ej + (x.nota ? ' (' + x.nota + ')' : '') + (x.dosis ? ' — ' + x.dosis : ''))); }); det.appendChild(ul);
+      });
+      if (s.hiit && s.hiit.items.length) { det.appendChild(el('div', 'rncd', 'HIIT' + (s.hiit.cfg ? ' · ' + s.hiit.cfg : ''))); var u2 = el('ul'); s.hiit.items.forEach(function (t) { u2.appendChild(el('li', '', t)); }); det.appendChild(u2); }
+      box.appendChild(det);
+    });
+    return box;
+  }
+  function pintarNativaCoach(nv) {
+    var c = $('dias'), w = el('div', 'rnw');
+    w.appendChild(el('p', 'aviso ' + (nv.falta ? 'bad' : 'ok'), nv.falta ? '⚠️ Terminó sus 4 semanas y falta cargar el mes nuevo. Mándale el Excel a José.' :
+      nv.ciclo ? 'Rutina del mes (texto, la ve así en su app) · esta semana: ' + nv.semana + '.' : 'Su rutina nueva empieza el ' + fCorta(nv.proximo.inicio) + '. Hasta entonces ve sus imágenes.'));
+    if (nv.ciclo) w.appendChild(cicloCoach(nv.ciclo, 'Mes vigente'));
+    if (nv.proximo) w.appendChild(cicloCoach(nv.proximo, 'Próximo mes'));
+    w.appendChild(el('p', 'sub', nv.ciclo ? 'Las imágenes de abajo quedan como respaldo; el alumno ve la rutina en texto.' : 'Imágenes que ve hoy:'));
+    c.insertBefore(w, c.firstChild);
   }
   function pintarDias() {
     var c = $('dias'); limpiar(c);
@@ -400,6 +428,7 @@
       b.onclick = function () { abrirDia(i + 1); };
       c.appendChild(b);
     });
+    if (S.rem && S.nativa) pintarNativaCoach(S.nativa);
   }
   /* ---------- remotos: plan alimenticio y medidas ---------- */
   var NUT = { tok: 0, cache: {} };

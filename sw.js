@@ -1,5 +1,5 @@
 /* Kalos Workout: guarda solo el "cascarón" de la app. Los datos siempre van frescos a la red. */
-const V = 'kalos-app-v16';
+const V = 'kalos-app-v17';
 const CASCARON = ['./', './index.html', './manifest.webmanifest', './logo.png', './isotipo-splash.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './vendor/jsqr.min.js'];
 
 self.addEventListener('install', (e) => {
