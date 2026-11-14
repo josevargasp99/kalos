@@ -277,14 +277,55 @@
     semana: 'Semana no válida (1 a 4).'
   };
 
+  /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
+     Lecturas 20 s con un reintento si se agotó; guardados 30 s sin reintento; subidas 90 s sin reintento. */
+  var WEBV = 'v18';
+  var RD = { buf: [], t0: 0, off: false };
+  try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
+  function esLectura(a) { return /^coach_(lista|ver|pagos|nutri_ver|medidas|apuntes|img|nutri_img)$/.test(a); }
+  function redTipo() {
+    try { var c = navigator.connection; if (!c) return ''; if (c.type === 'wifi') return 'wifi'; return /^(slow-2g|2g|3g|4g)$/.test(c.effectiveType || '') ? c.effectiveType : ''; } catch (e) { return ''; }
+  }
+  function medir(a, ms, r) {
+    if (RD.off || !/^[a-z_]{3,24}$/.test(a)) return;
+    if (RD.buf.length < 60) RD.buf.push({ a: a, ms: Math.round(ms), r: r, n: redTipo() });
+    if (!RD.t0) RD.t0 = setTimeout(function () { enviarTiempos(); }, 60000);
+  }
+  function enviarTiempos() {
+    if (RD.off || !RD.buf.length) return;
+    var lote = RD.buf.splice(0, 30);
+    try {
+      fetch(API, { method: 'POST', credentials: 'omit', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                   body: JSON.stringify({ accion: 'tiempos', o: 'instructor', v: WEBV, l: lote }) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.off) { RD.off = true; RD.buf = []; try { sessionStorage.setItem('kalos_med_off', '1'); } catch (e) {} } })
+        .catch(function () {});
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') enviarTiempos(); });
+  window.addEventListener('pagehide', enviarTiempos);
+  function lenta(e, base, escritura) { return e && e.tiempo ? (escritura ? 'No pudimos confirmar si se guardó. Revisa y vuelve a intentar.' : 'La conexión está lenta, intenta de nuevo.') : base; }
+
   function api(body) {
     body.clave = S.clave;
-    return fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
+    var a = String(body.accion || ''), lec = esLectura(a), lim = /subir$/.test(a) ? 90000 : lec ? 20000 : 30000;
+    function intento(n) {
+      var ctl = (typeof AbortController === 'function') ? new AbortController() : null, vencio = false, t0 = Date.now(), tm;
+      var init = { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) };
+      if (ctl) init.signal = ctl.signal;
+      var pedido = fetch(API, init).then(function (r) { return r.json(); });
+      var espera = new Promise(function (_, rech) { tm = setTimeout(function () { vencio = true; if (ctl) { try { ctl.abort(); } catch (e) {} } rech(new Error('tiempo')); }, lim); });
+      return Promise.race([pedido, espera]).then(function (d) {
+        clearTimeout(tm); medir(a, Date.now() - t0, d && d.ok ? 'ok' : 'error');
         if (d && d.error === 'clave') { try { localStorage.removeItem('kalos_coach_k'); } catch (e) {} S.clave = ''; }
         return d || { ok: false, error: 'red' };
+      }, function (e) {
+        clearTimeout(tm); medir(a, Date.now() - t0, vencio ? 'tiempo' : 'red');
+        if (vencio) { e = new Error('tiempo'); e.tiempo = true; if (lec && n === 0) return intento(1); }
+        throw e;
       });
+    }
+    return intento(0);
   }
   function errTxt(d) { return ERR[d && d.error] || 'No pudimos completarlo. Revisa tu internet e intenta de nuevo.'; }
 
@@ -313,7 +354,7 @@
       Array.prototype.forEach.call(document.querySelectorAll('.tabs'), function (t) { t.hidden = d.pagos === false; });
       decir('avLista', '', '');
       pintarLista();
-    }).catch(function () { decir('avLista', 'bad', 'Sin conexión, intenta de nuevo.'); });
+    }).catch(function (e) { decir('avLista', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
   }
   function pintarLista() {
     var q = $('busca').value.trim().toLowerCase();
@@ -368,7 +409,7 @@
       $('pgActRango').textContent = d.actual.desde + ' – ' + d.actual.hasta;
       $('pgActual').textContent = bs(d.actual.total) + (d.actual.n ? ' · ' + d.actual.n + (d.actual.n === 1 ? ' pago' : ' pagos') : '');
       if (d.pendiente > 0 && !d.esActual) decir('avPg', 'warn', 'Tienes ' + bs(d.pendiente) + ' pendientes de pago en total.');
-    }).catch(function () { decir('avPg', 'bad', 'Sin conexión, intenta de nuevo.'); });
+    }).catch(function (e) { decir('avPg', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
   }
   Array.prototype.forEach.call(document.querySelectorAll('.tabAl'), function (b) { b.onclick = function () { pantalla('sLista'); }; });
   Array.prototype.forEach.call(document.querySelectorAll('.tabPg'), function (b) { b.onclick = function () { cargarPagos(''); }; });
@@ -390,7 +431,7 @@
     api({ accion: 'coach_ver', id: a.id }).then(function (d) {
       if (!d.ok) { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', errTxt(d))); return; }
       S.nativa = d.nativa || null; S.dias = d.dias; S.fechas = d.fechas; a.cuenta = d.dias.map(function (x) { return x.length; }); pintarDias();
-    }).catch(function () { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', 'Sin conexión, intenta de nuevo.')); });
+    }).catch(function (e) { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
   }
   /* rutina nativa (#22): solo lectura; la carga Claude desde el Excel */
   function fCorta(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; }
@@ -473,7 +514,7 @@
       if (tok !== NUT.tok) return;
       if (!d.ok) { $('nuSub').textContent = ''; decir('avNu', 'bad', errTxt(d)); return; }
       pintarNutri(d, tok);
-    }).catch(function () { $('nuSub').textContent = ''; decir('avNu', 'bad', 'Sin conexión, intenta de nuevo.'); });
+    }).catch(function (e) { $('nuSub').textContent = ''; decir('avNu', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
   }
   function pintarNutri(d, tok) {
     var c = $('nuLista'); limpiar(c);
@@ -537,7 +578,7 @@
     api({ accion: 'coach_nutri_quitar', id: S.al.id }).then(function (d) {
       b.disabled = false;
       if (d.ok) { NUT.cache = {}; pintarNutri({ paginas: 0, fecha: '' }, NUT.tok); decir('avNu', 'ok', 'Plan quitado.'); } else decir('avNu', 'bad', errTxt(d));
-    }).catch(function () { b.disabled = false; decir('avNu', 'bad', 'Sin conexión, intenta de nuevo.'); });
+    }).catch(function (e) { b.disabled = false; decir('avNu', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', true)); });
   };
   $('btnSem').onclick = function () {
     if (!S.al || !S.rem) return;
@@ -547,7 +588,7 @@
       b.disabled = false;
       if (d && d.ok) { S.al.semana = d.semana; decir('avSem', 'ok', 'Listo ✅ Ahora va en la Semana ' + d.semana + ' y avanza sola cada lunes.'); }
       else decir('avSem', 'bad', errTxt(d));
-    }).catch(function () { b.disabled = false; decir('avSem', 'bad', 'Sin conexión, intenta de nuevo.'); });
+    }).catch(function (e) { b.disabled = false; decir('avSem', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', true)); });
   };
   $('btnMed').onclick = function () {
     var a = S.al, c = $('mdLista'); $('mdAtrasNom').textContent = a.nombre;
@@ -565,7 +606,7 @@
           bx.appendChild(el('div', 's', f[2] + '/' + f[1] + '/' + f[0])); c.appendChild(bx);
         });
       });
-    }).catch(function () { limpiar(c); c.appendChild(el('p', 'aviso bad', 'Sin conexión, intenta de nuevo.')); });
+    }).catch(function (e) { limpiar(c); c.appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
   };
   $('btnAtrasM').onclick = function () { pantalla('sAlumno'); };
 
@@ -589,7 +630,7 @@
           c.appendChild(r);
         });
       });
-    }).catch(function () { limpiar(c); c.appendChild(el('p', 'aviso bad', 'Sin conexión, intenta de nuevo.')); });
+    }).catch(function (e) { limpiar(c); c.appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
   };
   $('btnAtrasAp').onclick = function () { pantalla('sAlumno'); };
 
@@ -681,7 +722,7 @@
         decir('avDia', 'ok', '✅ Rutina guardada. Ya la ve ' + S.al.nombre.split(' ')[0] + ' en su tarjeta.');
         pintarDia(); mostrarAviso();
       });
-    }).catch(function () { S.busy = false; decir('avDia', 'bad', 'No pudimos subir la imagen. Revisa tu internet e intenta de nuevo.'); });
+    }).catch(function (e) { S.busy = false; decir('avDia', 'bad', lenta(e, 'No pudimos subir la imagen. Revisa tu internet e intenta de nuevo.', true)); });
   };
   /* ---------- remotos: rutina de la semana en PDF ---------- */
   var RUT_PDF_MAX = 3, RUT_ANCHO = 2000;
@@ -793,7 +834,7 @@
       delete IMG[clave(S.dia, orden)];
       S.dias = d.dias; S.fechas = d.fechas; S.al.cuenta = d.dias.map(function (x) { return x.length; });
       $('postSubida').hidden = true; decir('avDia', 'ok', 'Imagen quitada.'); pintarDia();
-    }).catch(function () { S.busy = false; decir('avDia', 'bad', 'Sin conexión, intenta de nuevo.'); });
+    }).catch(function (e) { S.busy = false; decir('avDia', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', true)); });
   }
 
   /* ---------- copiar a otros alumnos ---------- */
@@ -847,7 +888,7 @@
         l.href = 'https://wa.me/' + waNum(a.tel) + '?text=' + encodeURIComponent('¡Hola ' + a.nombre.split(' ')[0] + '! Tienes rutina nueva en tu tarjeta de Kalos 💪 ' + PAGINA + '?id=' + a.id);
         h.appendChild(l);
       });
-    }).catch(function () { S.busy = false; decir('avCp', 'bad', 'Sin conexión, intenta de nuevo.'); });
+    }).catch(function (e) { S.busy = false; decir('avCp', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', true)); });
   }
   $('btnHacerCopia').onclick = function () { copiar(false); };
   $('btnReemp').onclick = function () { copiar(true); };

@@ -1036,6 +1036,57 @@
   // URL de la Web App de Apps Script (la misma de Config!B4)
   var API = 'https://script.google.com/macros/s/AKfycbzyGTFXmPiO_efF5JjDzM7xvsQh-LiZfVI5_Jixl33qHi3tO3fQCLLzXhZdXxSYqzF0/exec';
 
+  /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
+     Lecturas: 20 s y un reintento si se agotó el tiempo. Guardados: 30 s y sin reintento (el servidor pudo haber guardado).
+     Se mide cuánto tarda cada pedido (sin ID ni datos del alumno) y se manda en un lote chico; el dueño lo prende o apaga en Config. */
+  var WEBV = 'v18';
+  var RD = { lec: 20000, esc: 30000, buf: [], t0: 0, off: false, ap: false };
+  try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
+  function esLectura(a) { return /(_ver|_leer|_img|_tarjeta)$/.test(a) || a === 'tarjeta' || a === 'precarga' || a === 'ping'; }
+  function redTipo() {
+    try { var c = navigator.connection; if (!c) return ''; if (c.type === 'wifi') return 'wifi'; return /^(slow-2g|2g|3g|4g)$/.test(c.effectiveType || '') ? c.effectiveType : ''; } catch (e) { return ''; }
+  }
+  function medir(a, ms, r) {
+    if (RD.off || !/^[a-z_]{3,24}$/.test(a)) return;
+    if (RD.buf.length < 60) RD.buf.push({ a: a, ms: Math.round(ms), r: r, n: redTipo() });
+    if (!RD.t0) RD.t0 = setTimeout(function () { enviarTiempos(); }, 60000);
+  }
+  function enviarTiempos() {
+    if (RD.off || !RD.buf.length) return;
+    var lote = RD.buf.splice(0, 30);
+    try {
+      fetch(API, { method: 'POST', credentials: 'omit', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                   body: JSON.stringify({ accion: 'tiempos', o: 'tarjeta', v: WEBV, l: lote }) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.off) { RD.off = true; RD.buf = []; try { sessionStorage.setItem('kalos_med_off', '1'); } catch (e) {} } })
+        .catch(function () {});
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') enviarTiempos(); });
+  window.addEventListener('pagehide', enviarTiempos);
+  // devuelve la promesa del JSON; si se agota el tiempo rechaza con e.tiempo = true
+  function red(body, o) {
+    o = o || {};
+    var a = String(body.accion || ''), lec = esLectura(a), lim = o.limite || (lec ? RD.lec : RD.esc);
+    function intento(n) {
+      var ctl = (typeof AbortController === 'function') ? new AbortController() : null, vencio = false, t0 = Date.now(), tm, espera;
+      var init = { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) };
+      if (o.cache) init.cache = o.cache;
+      if (ctl) init.signal = ctl.signal;
+      var pedido = fetch(API, init).then(function (r) { return r.json(); });
+      espera = new Promise(function (_, rech) { tm = setTimeout(function () { vencio = true; if (ctl) { try { ctl.abort(); } catch (e) {} } rech(new Error('tiempo')); }, lim); });
+      return Promise.race([pedido, espera]).then(function (d) {
+        clearTimeout(tm); medir(a, Date.now() - t0, d && d.ok ? 'ok' : 'error'); return d;
+      }, function (e) {
+        clearTimeout(tm); medir(a, Date.now() - t0, vencio ? 'tiempo' : 'red');
+        if (vencio) { e = new Error('tiempo'); e.tiempo = true; if (lec && n === 0) return intento(1); }
+        throw e;
+      });
+    }
+    return intento(0);
+  }
+  function msgEsc(e, base) { return e && e.tiempo ? 'No pudimos confirmar si se guardó. Revisa y vuelve a intentar.' : base; }
+
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---- PIN: el permiso de sesión vive solo en memoria, así que cada apertura de la app pide el PIN ---- */
@@ -1211,9 +1262,7 @@
       if (!msg) { decir('bad', MENSAJES.vacio); return; }
       enviar.disabled = true; decir('', 'Enviando…');
       // text/plain evita el preflight CORS de Apps Script; el código solo valida la tarjeta
-      fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                   body: JSON.stringify({ id: id, t: TK, msg: msg }) })
-        .then(function (r) { return r.json(); })
+      red({ id: id, t: TK, msg: msg })
         .then(function (d) {
           if (d && d.ok) {
             txt.value = ''; $('buzonForm').hidden = true; $('buzonGracias').hidden = false;
@@ -1245,8 +1294,7 @@
 
   function enviar(body) {
     body.id = id; body.t = TK;
-    return fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (d) {
+    return red(body).then(function (d) {
       if (d && d.error === 'pin_requerido' && body.accion !== 'push_baja') { TK = ''; limpiarCache(); if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }   // el permiso venció: vuelve a pedir el PIN
       else cacheEscritura(body.accion, d);
       return d;
@@ -1387,9 +1435,9 @@
       LG.busy = false;
       if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
       else { lgDecir($('lgAviso'), 'bad', LGERR[d && d.error] || 'No pudimos guardar tus metas. Intenta de nuevo.'); $('btnGuardarMetas').disabled = false; }
-    }).catch(function () {
-      LG.busy = false; $('btnGuardarMetas').disabled = false;
-      lgDecir($('lgAviso'), 'bad', 'No pudimos guardar. Revisa tu internet e intenta de nuevo.');
+    }).catch(function (e) {
+      LG.busy = false; $('btnGuardarMetas').disabled = false; if (e && e.tiempo) { CA = {}; CAV++; }
+      lgDecir($('lgAviso'), 'bad', msgEsc(e, 'No pudimos guardar. Revisa tu internet e intenta de nuevo.'));
     });
   }
 
@@ -1470,8 +1518,8 @@
         LG.est = d.estado; pintarLogros();
         if (valor) festejar(m.texto, d.estado.completa);
       } else { lgDecir($('lgAvisoL'), 'bad', LGERR[d && d.error] || 'No pudimos guardar. Intenta de nuevo.'); }
-    }).catch(function () {
-      LG.busy = false; lgDecir($('lgAvisoL'), 'bad', 'No pudimos guardar. Revisa tu internet e intenta de nuevo.');
+    }).catch(function (e) {
+      LG.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } lgDecir($('lgAvisoL'), 'bad', msgEsc(e, 'No pudimos guardar. Revisa tu internet e intenta de nuevo.'));
     });
   }
 
@@ -1493,8 +1541,8 @@
         LG.busy = false;
         if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
         else { lgDecir($('lgAvisoL'), 'bad', LGERR[d && d.error] || 'No pudimos guardar. Intenta de nuevo.'); }
-      }).catch(function () {
-        LG.busy = false; lgDecir($('lgAvisoL'), 'bad', 'No pudimos guardar. Revisa tu internet e intenta de nuevo.');
+      }).catch(function (e) {
+        LG.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } lgDecir($('lgAvisoL'), 'bad', msgEsc(e, 'No pudimos guardar. Revisa tu internet e intenta de nuevo.'));
       });
     };
   }
@@ -1648,8 +1696,7 @@
     $('btnMarcar').hidden = !(RM.remoto && origen && origen.id); $('asMarcaAv').textContent = ''; $('asMarcaAv').className = 'aviso';
     var body = { accion: 'asistencia_ver', t: TK };
     for (var k in origen) body[k] = origen[k];
-    fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); })
+    red(body)
       .then(function (d) {
         if (d && d.error === 'pin_requerido') { TK = ''; limpiarCache(); if (id) mostrarPin(id, true, 'guardado', 'Tu sesión venció. Ingresa tu PIN.'); }
         else if (d && d.ok && d.dias) {
@@ -1672,7 +1719,7 @@
         b.disabled = false;
         if (d && d.ok && d.dias) { av.className = 'aviso ok'; av.textContent = d.ya ? 'Ya marcaste hoy 💪 ¡Sigue así!' : '¡Listo! Marcaste que entrenaste hoy 💪'; pintarCalendario(d); RM.recargar = true; }
         else if (!d || d.error !== 'pin_requerido') { av.className = 'aviso bad'; av.textContent = ASERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.'; }
-      }).catch(function () { b.disabled = false; av.className = 'aviso bad'; av.textContent = 'Sin conexión, intenta de nuevo.'; });
+      }).catch(function (e) { b.disabled = false; av.className = 'aviso bad'; av.textContent = msgEsc(e, 'Sin conexión, intenta de nuevo.'); if (e && e.tiempo) { CA = {}; CAV++; } });
     };
   }
 
@@ -1787,7 +1834,7 @@
       AP.busy = false;
       if (d && d.ok) { AP.items = d.items || []; apPintarLista(); ok(); }
       else lgDecir($('apAviso'), 'bad', AP_ERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
-    }).catch(function () { AP.busy = false; lgDecir($('apAviso'), 'bad', 'Sin conexión. Intenta de nuevo.'); });
+    }).catch(function (e) { AP.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } lgDecir($('apAviso'), 'bad', msgEsc(e, 'Sin conexión. Intenta de nuevo.')); });
   }
   function activarApuntes() {
     var sel = $('apSel');
@@ -1943,8 +1990,7 @@
       if (sel !== undefined) { body.sel = sel; PU.sel = sel; }
       else if (!crear) PU.sel = undefined;
       else if (PU.sel !== undefined) body.sel = PU.sel;
-      fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
-        .then(function (r) { return r.json(); })
+      red(body)
         .then(function (d) {
           PU.busy = false; btn.disabled = false; $('btnPuCrear').disabled = false;
           if (d && d.ok && d.eleccion) { elegir(d.eleccion); decir('', ''); return; }
@@ -2169,7 +2215,7 @@
           RT.hoy = d.semana; Array.prototype.forEach.call($('rtTabs').children, function (x) { var h = Number(x.dataset.d) === d.semana; x.classList.toggle('hoy', h); if (!RT.rem) marcaHoyTab(x, h); });
           verDiaRutina(d.semana); refrescarTarjeta();
         } else if (!d || d.error !== 'pin_requerido') { av.className = 'aviso bad'; av.textContent = 'No se pudo guardar. Intenta de nuevo.'; }
-      }).catch(function () { b.disabled = false; av.className = 'aviso bad'; av.textContent = 'Sin conexión, intenta de nuevo.'; });
+      }).catch(function (e) { b.disabled = false; av.className = 'aviso bad'; av.textContent = msgEsc(e, 'Sin conexión, intenta de nuevo.'); if (e && e.tiempo) { CA = {}; CAV++; } });
     };
   }
   function abrirRutina() {
@@ -2465,7 +2511,7 @@
           MD.busy = false;
           if (d && d.ok) { MD.items = d.medidas; var j = MD.items.map(function (x) { return x.nombre; }).indexOf(m.nombre); if (j >= 0) verMedida(j); else pintarMedidas(); }
           else mdDecir('bad', 'No se pudo borrar. Intenta de nuevo.');
-        }).catch(function () { MD.busy = false; mdDecir('bad', 'Sin conexión, intenta de nuevo.'); });
+        }).catch(function (e) { MD.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } mdDecir('bad', msgEsc(e, 'Sin conexión, intenta de nuevo.')); });
       };
       row.appendChild(f); row.appendChild(be); row.appendChild(bd); h.appendChild(row);
     });
@@ -2494,7 +2540,7 @@
           if (j >= 0) verMedida(j); else pintarMedidas();
           mdDecir('ok', 'Guardado ✅');
         } else if (!d || d.error !== 'pin_requerido') mdDecir('bad', MDERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
-      }).catch(function () { MD.busy = false; $('btnMdGuardar').disabled = false; mdDecir('bad', 'Sin conexión, intenta de nuevo.'); });
+      }).catch(function (e) { MD.busy = false; $('btnMdGuardar').disabled = false; if (e && e.tiempo) { CA = {}; CAV++; } mdDecir('bad', msgEsc(e, 'Sin conexión, intenta de nuevo.')); });
     };
   }
   $('btnMdNueva').onclick = function () { formMedida(null, null); };
@@ -2539,8 +2585,7 @@
       body = { accion: 'pin_crear', id: PINS.cid, tel: tel, pin: pin };
     }
     PINS.busy = true; $('btnPin').disabled = true; pinDecir('', 'Verificando…');
-    fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); })
+    red(body)
       .then(function (d) {
         PINS.busy = false; $('btnPin').disabled = false;
         if (d && d.ok && d.t) {
@@ -2586,9 +2631,7 @@
     $('mensaje').textContent = 'Consultando la inscripción.'; $('mensaje').hidden = false;
     $('detalle').hidden = true; $('btnReintentar').hidden = true;
     // Sin cookies: así no importa cuántas cuentas de Google tenga abiertas el celular. Siempre datos frescos.
-    fetch(API, { method: 'POST', credentials: 'omit', cache: 'no-store', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                 body: JSON.stringify({ accion: 'tarjeta', id: cid, t: TK }) })
-      .then(function (r) { return r.json(); })
+    red({ accion: 'tarjeta', id: cid, t: TK }, { cache: 'no-store' })
       .then(function (d) {
         if (window.splashListo) splashListo();
         if (d && d.error === 'pin_requerido') { mostrarPin(cid, !!d.tiene, origen, ''); return; }
@@ -2604,6 +2647,7 @@
         }
         var a = d.alumno;
         guardarId(cid);
+        if (!RD.ap) { RD.ap = true; try { medir('apertura', performance.now(), 'ok'); } catch (e) {} }
         pintar(a.clase, a.estado, '');
         $('card').classList.add('home');
         $('estadoH').textContent = a.estado;
@@ -2640,9 +2684,9 @@
         if (IR === 'renovar' && !a.staff) { IR = ''; try { history.replaceState(null, '', location.pathname + '?app=1'); } catch (e) {} setTimeout(function () { irRenovar(true); }, 450); }
         if (!tomada) requestAnimationFrame(function () { pintarBarra(a.progreso); });
       })
-      .catch(function () {
+      .catch(function (e) {
         if (window.splashListo) splashListo();
-        pintar('warn', 'SIN CONEXIÓN', 'Sin conexión, intenta de nuevo.');
+        pintar('warn', e && e.tiempo ? 'CONEXIÓN LENTA' : 'SIN CONEXIÓN', e && e.tiempo ? 'La conexión está lenta, intenta de nuevo.' : 'Sin conexión, intenta de nuevo.');
         $('btnReintentar').hidden = false; $('btnReintentar').onclick = function () { cargarTarjeta(cid, origen); };
       });
   }
@@ -2805,8 +2849,7 @@
       busy = true; btn.disabled = true; decir('', 'Buscando tu tarjeta…');
       var body = { accion: 'asistencia_tarjeta', tel: tel };
       if (sel !== undefined) body.sel = sel;
-      fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
-        .then(function (r) { return r.json(); })
+      red(body)
         .then(function (d) {
           busy = false; btn.disabled = false;
           if (d && d.ok && d.eleccion) { elegir(d.eleccion); decir('', ''); return; }
@@ -2846,8 +2889,7 @@
       if (t.length >= 8) {
         // ya marcó asistencia en este celular: encontramos su tarjeta sin preguntar
         $('card').className = 'card neutral loading'; $('estado').textContent = 'VERIFICANDO…';
-        fetch(API, { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'asistencia_tarjeta', tel: t }) })
-          .then(function (r) { return r.json(); })
+        red({ accion: 'asistencia_tarjeta', tel: t })
           .then(function (d) {
             if (d && d.ok && d.id && ID_FMT.test(String(d.id).toUpperCase())) cargarTarjeta(String(d.id).toUpperCase(), 'tel');
             else iniciarEntrada('');          // celular compartido o ya no existe: que lo confirme él
