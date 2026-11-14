@@ -1039,7 +1039,7 @@
   /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
      Lecturas: 20 s y un reintento si se agotó el tiempo. Guardados: 30 s y sin reintento (el servidor pudo haber guardado).
      Se mide cuánto tarda cada pedido (sin ID ni datos del alumno) y se manda en un lote chico; el dueño lo prende o apaga en Config. */
-  var WEBV = 'v18';
+  var WEBV = 'v19';
   var RD = { lec: 20000, esc: 30000, buf: [], t0: 0, off: false, ap: false };
   try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
   function esLectura(a) { return /(_ver|_leer|_img|_tarjeta)$/.test(a) || a === 'tarjeta' || a === 'precarga' || a === 'ping'; }
@@ -1279,7 +1279,7 @@
   }
 
   /* ===================== LOGROS ===================== */
-  var LG = { est: null, nombre: '', busy: false };
+  var LG = { est: null, nombre: '', busy: false, pend: 0, cadena: Promise.resolve(), err: '' };
 
   var LGERR = {
     invalido: 'No pudimos validar tu tarjeta. Consulta en recepción.',
@@ -1430,15 +1430,14 @@
         lgDecir($('lgAviso'), 'bad', 'Escribe las 3 metas (entre 3 y 60 caracteres, sin empezar con = + - @).'); return;
       }
     }
-    LG.busy = true; $('btnGuardarMetas').disabled = true; lgDecir($('lgAviso'), '', 'Guardando…');
-    enviar({ accion: 'logros_crear', metas: metas }).then(function (d) {
-      LG.busy = false;
-      if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
-      else { lgDecir($('lgAviso'), 'bad', LGERR[d && d.error] || 'No pudimos guardar tus metas. Intenta de nuevo.'); $('btnGuardarMetas').disabled = false; }
-    }).catch(function (e) {
-      LG.busy = false; $('btnGuardarMetas').disabled = false; if (e && e.tiempo) { CA = {}; CAV++; }
-      lgDecir($('lgAviso'), 'bad', msgEsc(e, 'No pudimos guardar. Revisa tu internet e intenta de nuevo.'));
-    });
+    if (LG.pend) { lgDecir($('lgAviso'), '', 'Un momento, sincronizando…'); return; }
+    var antes = LG.est, sig = (antes && antes.actual ? antes.actual : 0) + 1;
+    LG.est = lgNuevaRondaLocal(antes, sig, metas); pintarLogros();       // se ve al instante
+    lgPedir({ accion: 'logros_crear', metas: metas }, antes, function (msg) {
+      mostrarForm(sig);
+      Array.prototype.forEach.call($('lgForm').querySelectorAll('input'), function (i, k) { i.value = metas[k] || ''; });
+      lgDecir($('lgAviso'), 'bad', msg);
+    }, 'No pudimos guardar tus metas. Intenta de nuevo.');
   }
 
   function pintarLogros() {
@@ -1509,18 +1508,75 @@
     return li;
   }
 
-  function cambiarLogro(m, valor) {
-    if (LG.busy) return;
-    LG.busy = true; lgDecir($('lgAvisoL'), '', 'Guardando…');
-    enviar({ accion: 'logros_marcar', ronda: LG.est.actual, n: m.n, valor: valor }).then(function (d) {
-      LG.busy = false;
-      if (d && d.ok) {
-        LG.est = d.estado; pintarLogros();
-        if (valor) festejar(m.texto, d.estado.completa);
-      } else { lgDecir($('lgAvisoL'), 'bad', LGERR[d && d.error] || 'No pudimos guardar. Intenta de nuevo.'); }
-    }).catch(function (e) {
-      LG.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } lgDecir($('lgAvisoL'), 'bad', msgEsc(e, 'No pudimos guardar. Revisa tu internet e intenta de nuevo.'));
+  /* ---- logros al instante (cambio #24): se pinta el cambio y se confirma con el servidor por detrás; si falla, se vuelve atrás y se avisa ---- */
+  function lgCopia(e) { return JSON.parse(JSON.stringify(e)); }
+  function lgFechaHoy() { var p = hoyBolivia().split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  function lgRecalcular(e) {
+    var u = e.rondas[e.rondas.length - 1];
+    e.completa = !!u && u.metas.length === 3 && u.metas.every(function (m) { return m.hecho; });
+    e.total = 0; e.rondas.forEach(function (r) { r.metas.forEach(function (m) { if (m.hecho) e.total++; }); });
+  }
+  function lgBuscar(e, ronda, n) {
+    var r = e.rondas.filter(function (x) { return x.ronda === ronda; })[0];
+    var m = r && r.metas.filter(function (x) { return x.n === n; })[0];
+    return r && m ? { r: r, m: m } : null;
+  }
+  function lgMarcarLocal(est, ronda, n, valor) {
+    var e = lgCopia(est), x = lgBuscar(e, ronda, n); if (!x) return null;
+    x.m.hecho = !!valor; x.m.logrado = valor ? lgFechaHoy() : '';
+    var hechas = x.r.metas.filter(function (m) { return m.hecho && m !== x.m; }), pend = x.r.metas.filter(function (m) { return !m.hecho; });
+    pend.sort(function (a, b) { return a.n - b.n; });
+    x.r.metas = (valor ? [x.m] : []).concat(hechas, pend);
+    if (!valor) x.r.metas = hechas.concat(pend);
+    lgRecalcular(e); return e;
+  }
+  function lgEditarLocal(est, ronda, n, texto) {
+    var e = lgCopia(est), x = lgBuscar(e, ronda, n); if (!x) return null;
+    x.m.texto = texto; return e;
+  }
+  function lgNuevaRondaLocal(est, num, metas) {
+    var e = est ? lgCopia(est) : { actual: 0, completa: false, total: 0, rondas: [] };
+    e.rondas.forEach(function (r) { r.cerrada = true; });
+    e.rondas.push({ ronda: num, cerrada: false, metas: metas.map(function (t, i) { return { n: i + 1, texto: t, hecho: false, logrado: '' }; }) });
+    e.actual = num; lgRecalcular(e); return e;
+  }
+  function lgReconciliar(estado) {
+    var igual = JSON.stringify(estado) === JSON.stringify(LG.est);
+    LG.est = estado;
+    if (!igual || LG.err) pintarLogros();
+    if (LG.err) { lgDecir($('lgAvisoL'), 'bad', LG.err); LG.err = ''; } else if (!$('lgAvisoL').classList.contains('bad')) lgDecir($('lgAvisoL'), '', '');
+  }
+  function lgFalla(antes, msg, enFalla) {
+    LG.err = msg;
+    if (LG.pend) { lgDecir($('lgAvisoL'), 'bad', msg); return; }      // quedan pedidos en camino: al terminar se muestra la verdad del servidor
+    function mostrar() { var t = LG.err; LG.err = ''; if (enFalla) enFalla(t); else lgDecir($('lgAvisoL'), 'bad', t); }
+    delete CA.logros_leer;
+    pedir('logros_leer', {}).then(function (d) { LG.est = d && d.ok ? d.estado : antes; pintarLogros(); mostrar(); },
+                                  function () { LG.est = antes; pintarLogros(); mostrar(); });
+  }
+  // los pedidos van en fila (uno detrás de otro) para que el servidor los reciba en el mismo orden en que se tocó
+  function lgPedir(body, antes, enFalla, txtBase) {
+    LG.pend++;
+    var p = LG.cadena.then(function () { return enviar(body); });
+    LG.cadena = p.then(function () {}, function () {});
+    p.then(function (d) {
+      LG.pend--;
+      if (d && d.ok) { if (!LG.pend) lgReconciliar(d.estado); }
+      else if (d && d.error === 'pin_requerido') { LG.pend = Math.max(0, LG.pend); lgFalla(antes, 'Tu sesión venció. Ingresa tu PIN.', enFalla); }
+      else lgFalla(antes, LGERR[d && d.error] || txtBase, enFalla);
+    }, function (e) {
+      LG.pend--; if (e && e.tiempo) { CA = {}; CAV++; }
+      lgFalla(antes, msgEsc(e, 'No pudimos guardar. Revisa tu internet e intenta de nuevo.'), enFalla);
     });
+  }
+
+  function cambiarLogro(m, valor) {
+    var antes = LG.est, nuevo = antes && lgMarcarLocal(antes, antes.actual, m.n, valor);
+    if (!nuevo) return;
+    LG.est = nuevo; pintarLogros();                                   // se ve al instante
+    lgDecir($('lgAvisoL'), '', 'Sincronizando…');
+    if (valor) festejar(m.texto, nuevo.completa);
+    lgPedir({ accion: 'logros_marcar', ronda: antes.actual, n: m.n, valor: valor }, antes, null, 'No pudimos guardar. Intenta de nuevo.');
   }
 
   function editarLogro(li, m) {
@@ -1536,14 +1592,10 @@
       if (LG.busy) return;
       var t = inp.value.trim();
       if (t.length < 3 || t.length > 60 || /^[=+\-@]/.test(t)) { lgDecir($('lgAvisoL'), 'bad', 'La meta debe tener entre 3 y 60 caracteres y no empezar con = + - @.'); return; }
-      LG.busy = true; lgDecir($('lgAvisoL'), '', 'Guardando…');
-      enviar({ accion: 'logros_editar', ronda: LG.est.actual, n: m.n, texto: t }).then(function (d) {
-        LG.busy = false;
-        if (d && d.ok) { LG.est = d.estado; pintarLogros(); }
-        else { lgDecir($('lgAvisoL'), 'bad', LGERR[d && d.error] || 'No pudimos guardar. Intenta de nuevo.'); }
-      }).catch(function (e) {
-        LG.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } lgDecir($('lgAvisoL'), 'bad', msgEsc(e, 'No pudimos guardar. Revisa tu internet e intenta de nuevo.'));
-      });
+      var antes = LG.est, nuevo = antes && lgEditarLocal(antes, antes.actual, m.n, t);
+      if (!nuevo) return;
+      LG.est = nuevo; pintarLogros(); lgDecir($('lgAvisoL'), '', 'Sincronizando…');
+      lgPedir({ accion: 'logros_editar', ronda: antes.actual, n: m.n, texto: t }, antes, null, 'No pudimos guardar. Intenta de nuevo.');
     };
   }
 
@@ -1714,12 +1766,20 @@
     $('btnVolverA').onclick = function () { ver(AS.volver); if (RM.recargar) { RM.recargar = false; refrescarTarjeta(); } };
     $('btnMarcar').onclick = function () {
       var b = $('btnMarcar'), av = $('asMarcaAv'); if (b.disabled) return;
-      b.disabled = true; av.className = 'aviso'; av.textContent = 'Guardando…';
+      b.disabled = true; av.className = 'aviso';
+      var antes = AS.d, local = null;
+      if (antes && antes.hoy && antes.dias) {                                  // el día se pinta al instante; el servidor confirma por detrás
+        local = JSON.parse(JSON.stringify(antes));
+        if (local.dias.indexOf(local.hoy) < 0) { local.dias.push(local.hoy); local.dias.sort(); local.mes = (local.mes || 0) + 1; local.total = (local.total || 0) + 1; }
+        pintarCalendario(local); av.textContent = '¡Listo! Marcaste que entrenaste hoy 💪 · sincronizando…';
+      } else av.textContent = 'Guardando…';
+      function deshacer(txt) { if (local && antes) pintarCalendario(antes); av.className = 'aviso bad'; av.textContent = txt; }
       enviar({ accion: 'rem_marcar' }).then(function (d) {
         b.disabled = false;
         if (d && d.ok && d.dias) { av.className = 'aviso ok'; av.textContent = d.ya ? 'Ya marcaste hoy 💪 ¡Sigue así!' : '¡Listo! Marcaste que entrenaste hoy 💪'; pintarCalendario(d); RM.recargar = true; }
-        else if (!d || d.error !== 'pin_requerido') { av.className = 'aviso bad'; av.textContent = ASERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.'; }
-      }).catch(function (e) { b.disabled = false; av.className = 'aviso bad'; av.textContent = msgEsc(e, 'Sin conexión, intenta de nuevo.'); if (e && e.tiempo) { CA = {}; CAV++; } });
+        else if (!d || d.error !== 'pin_requerido') deshacer(ASERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
+        else deshacer('Tu sesión venció. Ingresa tu PIN y vuelve a marcar.');
+      }).catch(function (e) { b.disabled = false; if (e && e.tiempo) { CA = {}; CAV++; } deshacer(msgEsc(e, 'Sin conexión, no se guardó. Intenta de nuevo.')); });
     };
   }
 
@@ -1828,13 +1888,48 @@
     $('apFecha').value = x ? x.fecha : apHoy(); $('apNotas').value = x ? x.notas : '';
     apMostrar('form');
   }
+  /* apuntes al instante (cambio #24): el cambio se ve de inmediato; si el servidor lo rechaza o no responde, vuelve todo atrás y reabre el formulario con lo escrito */
+  function apLocal(items, body) {
+    var l = items.slice();
+    if (body.accion === 'apuntes_borrar') { var n0 = l.length; l = l.filter(function (x) { return x.ref !== body.ref; }); return l.length === n0 ? null : l; }
+    var it = { ref: body.ref || ('tmp' + Date.now()), fecha: body.fecha, ejercicio: body.ejercicio, intensidad: body.intensidad, reps: body.reps, notas: body.notas || '' };
+    if (body.accion === 'apuntes_editar') { var i = -1; l.forEach(function (x, k) { if (x.ref === body.ref) i = k; }); if (i < 0) return null; l[i] = it; }
+    else l.unshift(it);
+    return l.sort(function (a, b) { return a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0; });
+  }
+  function apRefrescarVista() {
+    if (!$('apLista').hidden) apPintarLista();
+    else if (!$('apDetalle').hidden) { if (AP.ej && apGrupos().g[AP.ej]) apAbrir(AP.ej); else { AP.ej = null; apPintarLista(); apMostrar('lista'); } }
+  }
   function apEnviar(body, ok) {
-    if (AP.busy) return; AP.busy = true;
+    if (AP.busy) return;
+    var antes = AP.items, local = apLocal(antes, body);
+    AP.busy = true;
+    if (local) { AP.items = local; apPintarLista(); ok(); $('apMsg').textContent = 'Sincronizando…'; }
     enviar(body).then(function (d) {
       AP.busy = false;
-      if (d && d.ok) { AP.items = d.items || []; apPintarLista(); ok(); }
-      else lgDecir($('apAviso'), 'bad', AP_ERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
-    }).catch(function (e) { AP.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } lgDecir($('apAviso'), 'bad', msgEsc(e, 'Sin conexión. Intenta de nuevo.')); });
+      if (d && d.ok) {
+        var nuevo = d.items || [], igual = JSON.stringify(nuevo) === JSON.stringify(AP.items);
+        AP.items = nuevo;
+        if (!local) { apPintarLista(); ok(); } else { $('apMsg').textContent = ''; if (!igual) apRefrescarVista(); }
+      } else apFalla(AP_ERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
+    }).catch(function (e) { AP.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } apFalla(msgEsc(e, 'Sin conexión, no se guardó. Intenta de nuevo.')); });
+    function apFalla(msg) {
+      $('apMsg').textContent = '';
+      if (!local) { lgDecir($('apAviso'), 'bad', msg); return; }
+      AP.items = antes; apPintarLista();
+      if (body.accion === 'apuntes_borrar') {
+        apRefrescarVista();
+        modal({ titulo: 'No se pudo borrar', texto: msg, confeti: false, botones: [{ t: 'Entendido', clase: 'btn', fn: cerrarModal }] });
+        return;
+      }
+      var x = null; antes.forEach(function (it) { if (it.ref === body.ref) x = it; });
+      apForm(body.accion === 'apuntes_editar' ? x : null);
+      var sel = $('apSel'), enSug = AP_SUG.indexOf(body.ejercicio) >= 0;
+      sel.value = enSug ? body.ejercicio : '__otro'; $('apOtro').hidden = enSug; $('apOtro').value = enSug ? '' : body.ejercicio;
+      $('apInt').value = body.intensidad; $('apReps').value = body.reps; $('apFecha').value = body.fecha; $('apNotas').value = body.notas || '';
+      lgDecir($('apAviso'), 'bad', msg);
+    }
   }
   function activarApuntes() {
     var sel = $('apSel');
@@ -2445,7 +2540,7 @@
     if (!CA.medidas_ver) { mdVista('carga'); esq($('mdCarga')); }
     conCache('medidas_ver', {}, function (d, deCache) {
       MD.items = d.medidas;
-      if (!deCache && $('mdLista').hidden) return;       // si está viendo o escribiendo una medida, no se le cambia la pantalla
+      if (!deCache && (!$('mdDetalle').hidden || !$('mdForm').hidden)) return;       // si está viendo o escribiendo una medida, no se le cambia la pantalla (cargando sí se pinta)
       pintarMedidas();
     }, function (d, sinRed) {
       mdVista('carga');
@@ -2490,6 +2585,26 @@
       b.onclick = function () { verMedida(i); }; c.appendChild(b);
     });
   }
+  /* medidas al instante (cambio #24) */
+  function mdAgrupar(items) { return items.slice().sort(function (a, b) { return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }); }); }
+  function mdLocal(items, body, reg) {
+    var l = JSON.parse(JSON.stringify(items)), v = Number(String(body.valor).replace(',', '.'));
+    if (body.accion === 'medidas_borrar') {
+      var hallado = false;
+      l.forEach(function (m) { m.reg = m.reg.filter(function (r) { if (r.r === body.rid) { hallado = true; return false; } return true; }); });
+      return hallado ? l.filter(function (m) { return m.reg.length; }) : null;
+    }
+    if (body.accion === 'medidas_editar') {
+      var ok = false;
+      l.forEach(function (m) { m.reg.forEach(function (r) { if (r.r === body.rid) { r.v = v; r.f = body.fecha; ok = true; } }); m.reg.sort(function (a, b) { return a.f < b.f ? -1 : a.f > b.f ? 1 : 0; }); });
+      return ok ? l : null;
+    }
+    var nom = String(body.nombre || '').toLowerCase(), m = null;
+    l.forEach(function (x) { if (x.nombre.toLowerCase() === nom) m = x; });
+    if (!m) { m = { nombre: body.nombre, unidad: body.unidad || '', reg: [] }; l.push(m); }
+    m.reg.push({ r: 'tmp' + Date.now(), f: body.fecha, v: v }); m.reg.sort(function (a, b) { return a.f < b.f ? -1 : a.f > b.f ? 1 : 0; });
+    return mdAgrupar(l);
+  }
   function verMedida(i) {
     var m = MD.items[i]; if (!m) { pintarMedidas(); return; }
     MD.cur = i; mdVista('detalle');
@@ -2507,11 +2622,15 @@
       bd.onclick = function () {
         if (!bd.classList.contains('on')) { bd.classList.add('on'); bd.textContent = 'Borrar'; setTimeout(function () { bd.classList.remove('on'); bd.textContent = '🗑'; }, 3500); return; }
         if (MD.busy) return; MD.busy = true;
-        enviar({ accion: 'medidas_borrar', rid: r.r }).then(function (d) {
+        var body = { accion: 'medidas_borrar', rid: r.r }, antes = MD.items, local = mdLocal(antes, body);
+        function vistaDe(lista) { MD.items = lista; var j = lista.map(function (x) { return x.nombre; }).indexOf(m.nombre); if (j >= 0) verMedida(j); else pintarMedidas(); }
+        function falla(txt) { vistaDe(antes); modal({ titulo: 'No se pudo borrar', texto: txt, confeti: false, botones: [{ t: 'Entendido', clase: 'btn', fn: cerrarModal }] }); }
+        if (local) vistaDe(local);
+        enviar(body).then(function (d) {
           MD.busy = false;
-          if (d && d.ok) { MD.items = d.medidas; var j = MD.items.map(function (x) { return x.nombre; }).indexOf(m.nombre); if (j >= 0) verMedida(j); else pintarMedidas(); }
-          else mdDecir('bad', 'No se pudo borrar. Intenta de nuevo.');
-        }).catch(function (e) { MD.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } mdDecir('bad', msgEsc(e, 'Sin conexión, intenta de nuevo.')); });
+          if (d && d.ok) { if (!local || JSON.stringify(d.medidas) !== JSON.stringify(MD.items)) vistaDe(d.medidas); else MD.items = d.medidas; }
+          else if (local) falla(MDERR[d && d.error] || 'No se pudo borrar. Intenta de nuevo.'); else mdDecir('bad', 'No se pudo borrar. Intenta de nuevo.');
+        }).catch(function (e) { MD.busy = false; if (e && e.tiempo) { CA = {}; CAV++; } if (local) falla(msgEsc(e, 'Sin conexión, no se borró. Intenta de nuevo.')); else mdDecir('bad', msgEsc(e, 'Sin conexión, intenta de nuevo.')); });
       };
       row.appendChild(f); row.appendChild(be); row.appendChild(bd); h.appendChild(row);
     });
@@ -2530,17 +2649,24 @@
       var body = { accion: reg ? 'medidas_editar' : 'medidas_crear', valor: $('mdValor').value.trim(), fecha: $('mdFecha').value };
       if (reg) body.rid = reg.r; else { body.nombre = $('mdNombre').value.trim(); body.unidad = $('mdUnidad').value.trim(); }
       if (!body.valor || isNaN(Number(body.valor.replace(',', '.')))) { mdDecir('bad', MDERR.valor); return; }
-      MD.busy = true; $('btnMdGuardar').disabled = true; mdDecir('', 'Guardando…');
+      MD.busy = true; $('btnMdGuardar').disabled = true;
+      var antes = MD.items, local = mdLocal(antes, body, reg), nom = reg || m ? (m ? m.nombre : '') : body.nombre;
+      function irA(lista) { MD.items = lista; var j = -1; lista.forEach(function (x, k) { if (x.nombre.toLowerCase() === nom.toLowerCase()) j = k; }); if (j >= 0) verMedida(j); else pintarMedidas(); }
+      function falla(txt) {
+        MD.items = antes; formMedida(m, reg);
+        $('mdValor').value = body.valor; $('mdFecha').value = body.fecha;
+        if (!m && !reg) { $('mdNombre').value = body.nombre || ''; $('mdUnidad').value = body.unidad || ''; }
+        mdDecir('bad', txt);
+      }
+      if (local) { irA(local); mdDecir('', ''); } else mdDecir('', 'Guardando…');
       enviar(body).then(function (d) {
         MD.busy = false; $('btnMdGuardar').disabled = false;
         if (d && d.ok) {
-          MD.items = d.medidas;
-          var nom = reg || m ? (m ? m.nombre : '') : body.nombre, j = -1;
-          MD.items.forEach(function (x, k) { if (x.nombre.toLowerCase() === nom.toLowerCase()) j = k; });
-          if (j >= 0) verMedida(j); else pintarMedidas();
+          if (!local || JSON.stringify(d.medidas) !== JSON.stringify(MD.items)) irA(d.medidas); else MD.items = d.medidas;
           mdDecir('ok', 'Guardado ✅');
-        } else if (!d || d.error !== 'pin_requerido') mdDecir('bad', MDERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.');
-      }).catch(function (e) { MD.busy = false; $('btnMdGuardar').disabled = false; if (e && e.tiempo) { CA = {}; CAV++; } mdDecir('bad', msgEsc(e, 'Sin conexión, intenta de nuevo.')); });
+        } else if (!d || d.error !== 'pin_requerido') { if (local) falla(MDERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.'); else mdDecir('bad', MDERR[d && d.error] || 'No se pudo guardar. Intenta de nuevo.'); }
+        else if (local) falla('Tu sesión venció. Ingresa tu PIN y vuelve a guardar.');
+      }).catch(function (e) { MD.busy = false; $('btnMdGuardar').disabled = false; if (e && e.tiempo) { CA = {}; CAV++; } if (local) falla(msgEsc(e, 'Sin conexión, no se guardó. Intenta de nuevo.')); else mdDecir('bad', msgEsc(e, 'Sin conexión, intenta de nuevo.')); });
     };
   }
   $('btnMdNueva').onclick = function () { formMedida(null, null); };
