@@ -991,6 +991,7 @@
         <div><b id="puRacha">0</b><span>Semanas seguidas</span></div>
       </div>
       <button id="btnPuCal" class="btn out" type="button">📅 VER MI CALENDARIO</button>
+      <a id="btnPuTarjeta" class="btn out" href="./?app=1" hidden>VER MI TARJETA</a>
       <a id="btnPuWa" class="btn wa" href="#" target="_blank" rel="noopener" hidden>RENOVAR MI MES POR WHATSAPP</a>
       <button id="btnPuOtro" class="btn sec" type="button">No soy yo / cambiar número</button>
     </div>
@@ -1043,7 +1044,7 @@
   /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
      Lecturas: 20 s y un reintento si se agotó el tiempo. Guardados: 30 s y sin reintento (el servidor pudo haber guardado).
      Se mide cuánto tarda cada pedido (sin ID ni datos del alumno) y se manda en un lote chico; el dueño lo prende o apaga en Config. */
-  var WEBV = 'v20';
+  var WEBV = 'v21';
   var RD = { lec: 20000, esc: 30000, buf: [], t0: 0, off: false, ap: false };
   try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
   function esLectura(a) { return /(_ver|_leer|_img|_tarjeta)$/.test(a) || a === 'tarjeta' || a === 'precarga' || a === 'ping'; }
@@ -1095,11 +1096,15 @@
 
   /* ---- PIN: el permiso de sesión vive solo en memoria, así que cada apertura de la app pide el PIN ---- */
   var TK = '';
-  var PIN_SEGUNDO_PLANO_MS = 45 * 60 * 1000, tOculta = 0;
+  var PIN_SEGUNDO_PLANO_MS = 45 * 60 * 1000, tOculta = 0, tRefresco = 0;
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { tOculta = Date.now(); return; }
     var fuera = tOculta ? Date.now() - tOculta : 0; tOculta = 0;
-    if (TK && fuera > PIN_SEGUNDO_PLANO_MS) { TK = ''; limpiarCache(); if (id) mostrarPin(id, true, 'guardado', ''); }   // más de 45 min en segundo plano
+    if (TK && fuera > PIN_SEGUNDO_PLANO_MS) { TK = ''; limpiarCache(); if (id) mostrarPin(id, true, 'guardado', ''); return; }   // más de 45 min en segundo plano
+    if (id && fuera >= 5000 && Date.now() - tRefresco > 15000 && !$('detalle').hidden) {   // volvió a la app (p. ej. tras escanear con la cámara del celular): todo al día en silencio
+      tRefresco = Date.now(); CAV++; delete CA.asistencia_ver; refrescarTarjeta();
+      try { if (NAV.cur === 'asistencia' && AS.origen && AS.origen.id) abrirCalendario(AS.origen, AS.volver); } catch (e) {}
+    }
   });
 
   function reloj() {
@@ -2131,6 +2136,7 @@
           : 'Tu plan está vencido (' + String(d.textoDias || '').toLowerCase() + '). Renueva para seguir entrenando.';
         $('btnPuWa').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hola Chino! Soy ' + d.nombre + ' y quiero renovar mi mes!');
       }
+      $('btnPuTarjeta').hidden = !leerId();
       mostrar('puOk');
     }
 
@@ -2183,6 +2189,8 @@
       }
       $('qaCam').hidden = true; $('qaOk').hidden = false; window.scrollTo(0, 0);
       CAV++; delete CA.asistencia_ver;
+      if (d && d.dias) CA.asistencia_ver = { ok: true, anio: d.anio, hoy: d.hoy, dias: d.dias, mes: d.mes, total: d.total, racha: d.racha, horas: d.horas };
+      refrescarTarjeta();   // racha, puntos de la semana y fichas ya están al día cuando cierra esta pantalla
     }
     function leido(txt) {
       if (S.busy) return;
@@ -2203,14 +2211,24 @@
       S.raf = requestAnimationFrame(ciclo);
       if (S.busy || vid.readyState < 2 || !vid.videoWidth) return;
       var t = Date.now(); if (S.t && t - S.t < 120) return; S.t = t;
+      if (!S.ayuda && S.ini && t - S.ini > 8000) { S.ayuda = true; decir('', 'Acerca o aleja el celular y evita el reflejo de la luz sobre el QR.'); }
       if (S.det) {
-        S.det.detect(vid).then(function (r) { if (r && r.length && S.vivo) leido(r[0].rawValue); }).catch(function () {});
+        S.n = (S.n || 0) + 1;
+        var fuente = vid;
+        if (S.n % 2 === 0) {   // cuadros alternados con colores invertidos: lee también el QR claro sobre fondo oscuro
+          try {
+            var w2 = vid.videoWidth, h2 = vid.videoHeight, k2 = Math.min(1, 640 / w2);
+            var c2 = S.ci || (S.ci = document.createElement('canvas')); c2.width = Math.round(w2 * k2); c2.height = Math.round(h2 * k2);
+            var x2 = c2.getContext('2d'); x2.filter = 'invert(1)'; x2.drawImage(vid, 0, 0, c2.width, c2.height); fuente = c2;
+          } catch (e) { fuente = vid; }
+        }
+        S.det.detect(fuente).then(function (r) { if (r && r.length && S.vivo) leido(r[0].rawValue); }).catch(function () {});
         return;
       }
       var w = vid.videoWidth, h = vid.videoHeight, k = Math.min(1, 640 / w);
       var cv = S.cv || (S.cv = document.createElement('canvas')); cv.width = Math.round(w * k); cv.height = Math.round(h * k);
       var cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(vid, 0, 0, cv.width, cv.height);
-      var im = cx.getImageData(0, 0, cv.width, cv.height), r = window.jsQR && window.jsQR(im.data, im.width, im.height, { inversionAttempts: 'dontInvert' });
+      var im = cx.getImageData(0, 0, cv.width, cv.height), r = window.jsQR && window.jsQR(im.data, im.width, im.height, { inversionAttempts: 'attemptBoth' });
       if (r && r.data && S.vivo) leido(r.data);
     }
     function conLibreria(fn) {
@@ -2225,7 +2243,7 @@
       navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }).then(function (st) {
         if ($('qrApp').hidden) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
         S.stream = st; vid.srcObject = st; vid.play().catch(function () {});
-        var go = function () { S.vivo = true; S.t = 0; ciclo(); };
+        var go = function () { S.vivo = true; S.t = 0; S.ini = Date.now(); S.ayuda = false; ciclo(); };
         if (S.det) go(); else conLibreria(go);
       }).catch(function () {
         decir('bad', 'No pudimos abrir la cámara. Permite el acceso a la cámara para esta app, o escanea el QR con la cámara de tu celular.');
