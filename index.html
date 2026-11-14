@@ -14,9 +14,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Kalos Workout">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-400-normal.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/bebas-neue-latin-400-normal.woff2" crossorigin>
   <style>
+    @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}
+    @font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}
+    @font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/inter-latin-600-normal.woff2) format('woff2')}
+    @font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/bebas-neue-latin-400-normal.woff2) format('woff2')}
     :root{
       --bg:#070B05; --panel:#10180C; --line:#24321e; --sage:#8A9686;
       --ok:#62D97E; --warn:#F2B33D; --bad:#FF5A5A; --neutral:#8A9686;
@@ -770,7 +774,7 @@
   <section id="fisio" class="card pago ok" hidden>
     <div class="status"><span class="dot"></span>FISIOTERAPIA</div>
     <h2>KINE-REGENERATUS</h2>
-    <img id="fiHero" class="fhero" src="kine1.jpg" alt="Kine-Regeneratus, centro de rehabilitación" width="640" height="400">
+    <img id="fiHero" class="fhero" src="kine1.webp" alt="Kine-Regeneratus, centro de rehabilitación" width="640" height="400">
     <div class="d30"><span class="p">30%</span><div><b>Descuento por ser alumno de Kalos</b><span>En sus servicios individuales. Consulta también por el seguro y por el pago anticipado.</span></div></div>
     <div id="fiCar" class="fcar"></div>
     <p class="fhint">Desliza para ver más · toca una foto para ampliar</p>
@@ -1039,7 +1043,7 @@
   /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
      Lecturas: 20 s y un reintento si se agotó el tiempo. Guardados: 30 s y sin reintento (el servidor pudo haber guardado).
      Se mide cuánto tarda cada pedido (sin ID ni datos del alumno) y se manda en un lote chico; el dueño lo prende o apaga en Config. */
-  var WEBV = 'v19';
+  var WEBV = 'v20';
   var RD = { lec: 20000, esc: 30000, buf: [], t0: 0, off: false, ap: false };
   try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
   function esLectura(a) { return /(_ver|_leer|_img|_tarjeta)$/.test(a) || a === 'tarjeta' || a === 'precarga' || a === 'ping'; }
@@ -1378,6 +1382,7 @@
     if (!d || !d.ok || (d.nativa && d.nativa.ciclo)) return;
     var dia = d.remoto ? d.semana : diaHoy();
     if (!dia || !d.dias[dia - 1]) return;
+    try { if (navigator.connection && navigator.connection.saveData) return; } catch (e) {}
     d.dias[dia - 1].forEach(function (x) { imgRt(dia, x, d.fechas[dia - 1]); });
   }
   function precargarNutri(d) {
@@ -2044,7 +2049,7 @@
         FI.listo = true;
         for (var i = 1; i <= 4; i++) {
           var im = document.createElement('img');
-          im.src = 'kine' + i + '.jpg'; im.alt = 'Kine-Regeneratus ' + i; im.loading = 'lazy';
+          im.src = 'kine' + i + '.webp'; im.alt = 'Kine-Regeneratus ' + i; im.loading = 'lazy';
           im.onclick = function () { $('fiImg').src = this.src; $('fiImg').parentNode.className = 'fzs'; $('fiZoom').hidden = false; };
           $('fiCar').appendChild(im);
         }
@@ -2452,10 +2457,39 @@
     RT.cache = RT.cache || {}; RT.pend = RT.pend || {};
     if (RT.cache[k]) return Promise.resolve(RT.cache[k]);
     if (RT.pend[k]) return RT.pend[k];
-    var pr = enviar({ accion: 'rutina_img', dia: dia, orden: x.orden }).then(function (d) {
-      delete RT.pend[k]; if (d && d.ok) { RT.cache[k] = d.data; return d.data; } return null;
-    }, function () { delete RT.pend[k]; return null; });
+    // 1) guardada en el celular (#26): solo imágenes de la rutina, nunca plan alimenticio ni medidas
+    var pr = rtLeerGuardada(dia, x.orden, fecha).then(function (g) {
+      if (g) { delete RT.pend[k]; RT.cache[k] = g; return g; }
+      return enviar({ accion: 'rutina_img', dia: dia, orden: x.orden }).then(function (d) {
+        delete RT.pend[k]; if (d && d.ok) { RT.cache[k] = d.data; rtGuardar(dia, x.orden, fecha, d.data); return d.data; } return null;
+      }, function () { delete RT.pend[k]; return null; });
+    });
     RT.pend[k] = pr; return pr;
+  }
+  var RT_ALM = 'kalos-rutina', RT_MAX = 40;
+  function rtClave(dia, orden, fecha) { return '/rt/' + encodeURIComponent(id || '') + '/' + dia + '/' + orden + '/' + encodeURIComponent(fecha || ''); }
+  function rtLeerGuardada(dia, orden, fecha) {
+    if (!window.caches || !id) return Promise.resolve(null);
+    return caches.open(RT_ALM).then(function (c) { return c.match(rtClave(dia, orden, fecha)); })
+      .then(function (r) { return r ? r.text() : null; }).then(function (t) { return t && t.indexOf('data:image') === 0 ? t : null; })
+      .catch(function () { return null; });
+  }
+  function rtGuardar(dia, orden, fecha, data) {
+    if (!window.caches || !id || typeof data !== 'string' || data.indexOf('data:image') !== 0) return;
+    caches.open(RT_ALM).then(function (c) {
+      var mia = '/rt/' + encodeURIComponent(id) + '/', propia = '/rt/' + encodeURIComponent(id) + '/' + dia + '/' + orden + '/';
+      return c.put(rtClave(dia, orden, fecha), new Response(data, { headers: { 'Content-Type': 'text/plain' } })).then(function () { return c.keys(); }).then(function (ks) {
+        var borrar = [], resto = [];
+        ks.forEach(function (q) {
+          var pth = new URL(q.url).pathname;
+          if (pth.indexOf(mia) !== 0) borrar.push(q);                                            // de otra tarjeta
+          else if (pth.indexOf(propia) === 0 && pth !== rtClave(dia, orden, fecha)) borrar.push(q); // versión vieja de esta imagen
+          else resto.push(q);
+        });
+        while (resto.length > RT_MAX) borrar.push(resto.shift());
+        return Promise.all(borrar.map(function (q) { return c.delete(q); }));
+      });
+    }).catch(function () {});
   }
   function imgNu(fecha, p) {
     var k = fecha + '|' + p;

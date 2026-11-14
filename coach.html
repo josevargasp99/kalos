@@ -14,9 +14,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Kalos Coach">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-400-normal.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/bebas-neue-latin-400-normal.woff2" crossorigin>
   <style>
+    @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}
+    @font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}
+    @font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/inter-latin-600-normal.woff2) format('woff2')}
+    @font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/bebas-neue-latin-400-normal.woff2) format('woff2')}
     :root{--bg:#0D1708;--panel:#121e0d;--line:#24321e;--sage:#8A9686;--ok:#62D97E;--warn:#F2B33D;--bad:#FF5A5A;--text:#fff;--muted:#8A9686}
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;min-height:100%}
@@ -40,6 +44,9 @@
     input[type=text],input[type=search]{width:100%;margin-top:12px;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:16px Inter,Arial,sans-serif}
     input:focus{outline:2px solid var(--sage);border-color:transparent}
     select{width:100%;margin-top:6px;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0a1206;color:var(--text);font:16px Inter,Arial,sans-serif}
+    .esq{height:64px;border-radius:16px;margin-top:12px;background:linear-gradient(100deg,rgba(255,255,255,.04) 30%,rgba(255,255,255,.10) 50%,rgba(255,255,255,.04) 70%);background-size:220% 100%;animation:esqBrilla 1.3s linear infinite}
+    @keyframes esqBrilla{from{background-position:120% 0}to{background-position:-120% 0}}
+    @media (prefers-reduced-motion:reduce){.esq{animation:none}}
     .aviso{margin-top:12px;font-size:14px;line-height:1.5;min-height:20px;color:var(--muted)}
     .aviso.bad{color:var(--bad)} .aviso.ok{color:var(--ok)}
     .row{display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0a1206;color:var(--text);text-align:left;cursor:pointer;font:inherit}
@@ -279,7 +286,7 @@
 
   /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
      Lecturas 20 s con un reintento si se agotó; guardados 30 s sin reintento; subidas 90 s sin reintento. */
-  var WEBV = 'v18';
+  var WEBV = 'v20';
   var RD = { buf: [], t0: 0, off: false };
   try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
   function esLectura(a) { return /^coach_(lista|ver|pagos|nutri_ver|medidas|apuntes|img|nutri_img)$/.test(a); }
@@ -306,9 +313,38 @@
   window.addEventListener('pagehide', enviarTiempos);
   function lenta(e, base, escritura) { return e && e.tiempo ? (escritura ? 'No pudimos confirmar si se guardó. Revisa y vuelve a intentar.' : 'La conexión está lenta, intenta de nuevo.') : base; }
 
+  /* memoria por pantalla (#25): lo ya visto se pinta al instante y se actualiza si cambió */
+  var CC = {}, CCV = 0, CCP = {}, CCTTL = 600000;
+  function esq(c, n) { for (var i = 0; i < n; i++) c.appendChild(el('div', 'esq')); }
+  function ckey(b) { var o = {}; for (var k in b) if (k !== 'clave') o[k] = b[k]; return JSON.stringify(o); }
+  function pedirC(body) {
+    var k = ckey(body), v = CCV;
+    if (CCP[k]) return CCP[k];
+    var pr = api(body).then(function (d) {
+      delete CCP[k];
+      if (d && d.ok && v === CCV) CC[k] = { t: Date.now(), d: d };
+      return d;
+    }, function (e) { delete CCP[k]; throw e; });
+    CCP[k] = pr; return pr;
+  }
+  function leer(body, pinta, falla) {
+    var k = ckey(body), h = CC[k], visto = null;
+    if (h && Date.now() - h.t < CCTTL) { visto = JSON.stringify(h.d); pinta(h.d); if (Date.now() - h.t < 5000) return; }
+    pedirC(body).then(function (d) {
+      if (visto !== null && JSON.stringify(d) === visto) return;
+      pinta(d);
+    }, function (e) { if (visto === null) falla(e); });
+  }
+  function precargar(body) {
+    var k = ckey(body), h = CC[k];
+    if (CCP[k] || (h && Date.now() - h.t < CCTTL)) return;
+    pedirC(body).catch(function () {});
+  }
+
   function api(body) {
     body.clave = S.clave;
     var a = String(body.accion || ''), lec = esLectura(a), lim = /subir$/.test(a) ? 90000 : lec ? 20000 : 30000;
+    if (!lec) { CC = {}; CCV++; }
     function intento(n) {
       var ctl = (typeof AbortController === 'function') ? new AbortController() : null, vencio = false, t0 = Date.now(), tm;
       var init = { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) };
@@ -317,7 +353,8 @@
       var espera = new Promise(function (_, rech) { tm = setTimeout(function () { vencio = true; if (ctl) { try { ctl.abort(); } catch (e) {} } rech(new Error('tiempo')); }, lim); });
       return Promise.race([pedido, espera]).then(function (d) {
         clearTimeout(tm); medir(a, Date.now() - t0, d && d.ok ? 'ok' : 'error');
-        if (d && d.error === 'clave') { try { localStorage.removeItem('kalos_coach_k'); } catch (e) {} S.clave = ''; }
+        if (!lec) { CC = {}; CCV++; }
+        if (d && d.error === 'clave') { try { localStorage.removeItem('kalos_coach_k'); } catch (e) {} S.clave = ''; CC = {}; CCV++; }
         return d || { ok: false, error: 'red' };
       }, function (e) {
         clearTimeout(tm); medir(a, Date.now() - t0, vencio ? 'tiempo' : 'red');
@@ -346,15 +383,15 @@
 
   /* ---------- lista ---------- */
   function cargarLista(fallo) {
-    pantalla('sLista'); limpiar($('lista')); decir('avLista', '', 'Cargando tus alumnos…'); $('subLista').textContent = '';
-    api({ accion: 'coach_lista' }).then(function (d) {
-      if (!d.ok) { if (d.error === 'clave') { pantalla('sLogin'); if (fallo) fallo(d); else decir('avLogin', 'bad', errTxt(d)); return; } decir('avLista', 'bad', errTxt(d)); return; }
+    pantalla('sLista'); limpiar($('lista')); esq($('lista'), 5); decir('avLista', '', ''); $('subLista').textContent = '';
+    leer({ accion: 'coach_lista' }, function (d) {
+      if (!d.ok) { if (d.error === 'clave') { pantalla('sLogin'); if (fallo) fallo(d); else decir('avLogin', 'bad', errTxt(d)); return; } limpiar($('lista')); decir('avLista', 'bad', errTxt(d)); return; }
       S.alumnos = d.alumnos || []; S.soloRem = !!d.soloRemotos;
       $('quien').textContent = 'Instructor · ' + d.coach;
       Array.prototype.forEach.call(document.querySelectorAll('.tabs'), function (t) { t.hidden = d.pagos === false; });
       decir('avLista', '', '');
       pintarLista();
-    }).catch(function (e) { decir('avLista', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
+    }, function (e) { limpiar($('lista')); decir('avLista', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
   }
   function pintarLista() {
     var q = $('busca').value.trim().toLowerCase();
@@ -374,6 +411,7 @@
       b.appendChild(el('span', 'pill ' + clase, a.estado));
       b.appendChild(el('span', 'chev', '›'));
       b.onclick = function () { abrirAlumno(a); };
+      b.addEventListener('pointerdown', function () { if (a.remoto || !S.soloRem) precargar({ accion: 'coach_ver', id: a.id }); });
       c.appendChild(b);
     });
   }
@@ -384,7 +422,7 @@
   var PG = { semana: '' };
   function cargarPagos(sem) {
     pantalla('sPagos'); decir('avPg', '', 'Cargando…');
-    api({ accion: 'coach_pagos', semana: sem || '' }).then(function (d) {
+    leer({ accion: 'coach_pagos', semana: sem || '' }, function (d) {
       if (!d.ok) { if (d.error === 'clave') { pantalla('sLogin'); decir('avLogin', 'bad', errTxt(d)); return; } decir('avPg', 'bad', errTxt(d)); return; }
       decir('avPg', '', '');
       var w = d.semana; PG.semana = w.semana;
@@ -409,7 +447,7 @@
       $('pgActRango').textContent = d.actual.desde + ' – ' + d.actual.hasta;
       $('pgActual').textContent = bs(d.actual.total) + (d.actual.n ? ' · ' + d.actual.n + (d.actual.n === 1 ? ' pago' : ' pagos') : '');
       if (d.pendiente > 0 && !d.esActual) decir('avPg', 'warn', 'Tienes ' + bs(d.pendiente) + ' pendientes de pago en total.');
-    }).catch(function (e) { decir('avPg', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
+    }, function (e) { decir('avPg', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
   }
   Array.prototype.forEach.call(document.querySelectorAll('.tabAl'), function (b) { b.onclick = function () { pantalla('sLista'); }; });
   Array.prototype.forEach.call(document.querySelectorAll('.tabPg'), function (b) { b.onclick = function () { cargarPagos(''); }; });
@@ -427,11 +465,11 @@
     $('subDias').textContent = S.rem ? 'Toca una semana para cargar o cambiar su rutina (Semana 1 a 4). El alumno avanza de semana cada lunes.' : 'Toca un día para cargar o cambiar su rutina. Se repite todas las semanas hasta que la cambies.';
     pantalla('sAlumno'); limpiar($('dias'));
     if (S.soloRem && !S.rem) { $('subDias').textContent = 'Alumno presencial: su rutina se consulta en el gimnasio.'; return; }
-    $('dias').appendChild(el('p', 'aviso', 'Cargando…'));
-    api({ accion: 'coach_ver', id: a.id }).then(function (d) {
+    esq($('dias'), 3);
+    leer({ accion: 'coach_ver', id: a.id }, function (d) {
       if (!d.ok) { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', errTxt(d))); return; }
       S.nativa = d.nativa || null; S.dias = d.dias; S.fechas = d.fechas; a.cuenta = d.dias.map(function (x) { return x.length; }); pintarDias();
-    }).catch(function (e) { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
+    }, function (e) { limpiar($('dias')); $('dias').appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
   }
   /* rutina nativa (#22): solo lectura; la carga Claude desde el Excel */
   function fCorta(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; }
@@ -510,11 +548,11 @@
   function abrirNutri() {
     var a = S.al, tok = ++NUT.tok; $('nuAtrasNom').textContent = a.nombre; decir('avNu', '', ''); $('nuHecho').hidden = true;
     pantalla('sNutri'); limpiar($('nuLista')); $('nuSub').textContent = 'Cargando…'; $('btnNuQuitar').hidden = true;
-    api({ accion: 'coach_nutri_ver', id: a.id }).then(function (d) {
+    leer({ accion: 'coach_nutri_ver', id: a.id }, function (d) {
       if (tok !== NUT.tok) return;
       if (!d.ok) { $('nuSub').textContent = ''; decir('avNu', 'bad', errTxt(d)); return; }
       pintarNutri(d, tok);
-    }).catch(function (e) { $('nuSub').textContent = ''; decir('avNu', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
+    }, function (e) { $('nuSub').textContent = ''; decir('avNu', 'bad', lenta(e, 'Sin conexión, intenta de nuevo.', false)); });
   }
   function pintarNutri(d, tok) {
     var c = $('nuLista'); limpiar(c);
@@ -592,8 +630,8 @@
   };
   $('btnMed').onclick = function () {
     var a = S.al, c = $('mdLista'); $('mdAtrasNom').textContent = a.nombre;
-    pantalla('sMed'); limpiar(c); c.appendChild(el('p', 'aviso', 'Cargando…'));
-    api({ accion: 'coach_medidas', id: a.id }).then(function (d) {
+    pantalla('sMed'); limpiar(c); esq(c, 3);
+    leer({ accion: 'coach_medidas', id: a.id }, function (d) {
       limpiar(c);
       if (!d.ok) { c.appendChild(el('p', 'aviso bad', errTxt(d))); return; }
       if (!d.medidas.length) { c.appendChild(el('p', 'aviso', 'Este alumno aún no anotó medidas.')); return; }
@@ -606,15 +644,15 @@
           bx.appendChild(el('div', 's', f[2] + '/' + f[1] + '/' + f[0])); c.appendChild(bx);
         });
       });
-    }).catch(function (e) { limpiar(c); c.appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
+    }, function (e) { limpiar(c); c.appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
   };
   $('btnAtrasM').onclick = function () { pantalla('sAlumno'); };
 
   $('btnAtras1').onclick = function () { pintarLista(); pantalla('sLista'); };
   $('btnApAl').onclick = function () {
     var a = S.al, c = $('apLista'); $('apAtrasNom').textContent = a.nombre; $('apSub').textContent = 'Solo lectura · lo que anota el alumno en su cuaderno.';
-    pantalla('sApuntes'); limpiar(c); c.appendChild(el('p', 'aviso', 'Cargando…'));
-    api({ accion: 'coach_apuntes', id: a.id }).then(function (d) {
+    pantalla('sApuntes'); limpiar(c); esq(c, 3);
+    leer({ accion: 'coach_apuntes', id: a.id }, function (d) {
       limpiar(c);
       if (!d.ok) { c.appendChild(el('p', 'aviso bad', errTxt(d))); return; }
       if (!d.items.length) { c.appendChild(el('p', 'aviso', 'Este alumno aún no tiene apuntes.')); return; }
@@ -630,7 +668,7 @@
           c.appendChild(r);
         });
       });
-    }).catch(function (e) { limpiar(c); c.appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
+    }, function (e) { limpiar(c); c.appendChild(el('p', 'aviso bad', lenta(e, 'Sin conexión, intenta de nuevo.', false))); });
   };
   $('btnAtrasAp').onclick = function () { pantalla('sAlumno'); };
 
