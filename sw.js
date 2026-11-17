@@ -1,5 +1,5 @@
 /* Kalos Workout: guarda solo el "cascarón" de la app. Los datos siempre van frescos a la red. */
-const V = 'kalos-app-v23';
+const V = 'kalos-app-v24';
 const CASCARON = ['./', './index.html', './manifest.webmanifest', './logo.png', './isotipo-splash.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './vendor/jsqr.min.js', './fonts/inter-latin-400-normal.woff2', './fonts/inter-latin-500-normal.woff2', './fonts/inter-latin-600-normal.woff2', './fonts/bebas-neue-latin-400-normal.woff2'];
 
 self.addEventListener('install', (e) => {
@@ -14,8 +14,9 @@ self.addEventListener('fetch', (e) => {
   const u = new URL(r.url);
   if (u.origin !== location.origin) return;          // Apps Script y otros: siempre a la red, sin guardar
   if (r.mode === 'navigate') {                        // la página: red primero (siempre la última versión), caché si no hay internet
-    e.respondWith(fetch(r).then((res) => { const cp = res.clone(); caches.open(V).then((c) => c.put('./index.html', cp)); return res; })
-      .catch(() => caches.match('./index.html')));
+    const esTarjeta = u.pathname === new URL('./', self.registration.scope).pathname || /\/index\.html$/.test(u.pathname);
+    e.respondWith(fetch(r).then((res) => { if (esTarjeta && res.ok) { const cp = res.clone(); caches.open(V).then((c) => c.put('./index.html', cp)); } return res; })
+      .catch(() => (esTarjeta ? caches.match('./index.html') : caches.match(r))));
     return;
   }
   e.respondWith(caches.match(r).then((hit) => hit || fetch(r)));
