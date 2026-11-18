@@ -1044,8 +1044,8 @@
   /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
      Lecturas: 20 s y un reintento si se agotó el tiempo. Guardados: 30 s y sin reintento (el servidor pudo haber guardado).
      Se mide cuánto tarda cada pedido (sin ID ni datos del alumno) y se manda en un lote chico; el dueño lo prende o apaga en Config. */
-  var WEBV = 'v21';
-  var RD = { lec: 20000, esc: 30000, buf: [], t0: 0, off: false, ap: false };
+  var WEBV = 'v22';
+  var RD = { lec: 20000, esc: 30000, buf: [], t0: 0, off: false, ap: false, ocu: 0 };
   try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
   function esLectura(a) { return /(_ver|_leer|_img|_tarjeta)$/.test(a) || a === 'tarjeta' || a === 'precarga' || a === 'ping'; }
   function redTipo() {
@@ -1067,23 +1067,24 @@
         .catch(function () {});
     } catch (e) {}
   }
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') enviarTiempos(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { RD.ocu++; enviarTiempos(); } });
   window.addEventListener('pagehide', enviarTiempos);
   // devuelve la promesa del JSON; si se agota el tiempo rechaza con e.tiempo = true
   function red(body, o) {
     o = o || {};
     var a = String(body.accion || ''), lec = esLectura(a), lim = o.limite || (lec ? RD.lec : RD.esc);
     function intento(n) {
-      var ctl = (typeof AbortController === 'function') ? new AbortController() : null, vencio = false, t0 = Date.now(), tm, espera;
+      var ctl = (typeof AbortController === 'function') ? new AbortController() : null, vencio = false, t0 = Date.now(), tm, espera, ocu0 = RD.ocu;
+      function midi(r) { if (RD.ocu === ocu0 && !document.hidden) medir(a, Date.now() - t0, r); }   // con la app en segundo plano el tiempo es falso: no se mide
       var init = { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) };
       if (o.cache) init.cache = o.cache;
       if (ctl) init.signal = ctl.signal;
       var pedido = fetch(API, init).then(function (r) { return r.json(); });
       espera = new Promise(function (_, rech) { tm = setTimeout(function () { vencio = true; if (ctl) { try { ctl.abort(); } catch (e) {} } rech(new Error('tiempo')); }, lim); });
       return Promise.race([pedido, espera]).then(function (d) {
-        clearTimeout(tm); medir(a, Date.now() - t0, d && d.ok ? 'ok' : 'error'); return d;
+        clearTimeout(tm); midi(d && d.ok ? 'ok' : (d && d.error === 'pin_requerido' ? 'pin' : 'error')); return d;
       }, function (e) {
-        clearTimeout(tm); medir(a, Date.now() - t0, vencio ? 'tiempo' : 'red');
+        clearTimeout(tm); midi(vencio ? 'tiempo' : 'red');
         if (vencio) { e = new Error('tiempo'); e.tiempo = true; if (lec && n === 0) return intento(1); }
         throw e;
       });
@@ -1996,6 +1997,15 @@
       }).catch(function () {});
     } catch (e) {}
   }
+  function pushRegistroAlDia(endpoint) {
+    var k = 'kalos_push_' + id, dia = Math.floor(Date.now() / 86400000), v = '';
+    try { v = localStorage.getItem(k) || ''; } catch (e) {}
+    var p = v.split('|');
+    if (p.length === 2 && p[0] === endpoint && dia - Number(p[1]) < 7) return;
+    enviar({ accion: 'push_registrar', endpoint: endpoint }).then(function (d) {
+      if (d && d.ok) { try { localStorage.setItem(k, endpoint + '|' + dia); } catch (e) {} }
+    }).catch(function () {});
+  }
   function activarAvisos() {
     var b = $('btnAvisos'), av = $('avAvisos');
     function pintarBtn(on) { b.setAttribute('aria-label', on ? 'Avisos activados. Toca para desactivar' : 'Activar avisos'); b.title = b.getAttribute('aria-label'); b.className = on ? 'bell on' : 'bell'; b.dataset.on = on ? '1' : ''; }
@@ -2008,11 +2018,12 @@
       return reg.pushManager.getSubscription().then(function (sub) {
         if (sub && Notification.permission === 'granted') {
           pintarBtn(true); guardarCfgPush(sub.endpoint);
-          enviar({ accion: 'push_registrar', endpoint: sub.endpoint }).catch(function () {});   // mantiene el registro al día
+          pushRegistroAlDia(sub.endpoint);   // mantiene el registro al día, sin molestar al servidor en cada apertura
         }
         b.onclick = function () {
           lgDecir(av, '', '');
           if (b.dataset.on) {
+            try { localStorage.removeItem('kalos_push_' + id); } catch (e) {}
             enviar({ accion: 'push_baja', endpoint: sub && sub.endpoint }).catch(function () {});
             reg.pushManager.getSubscription().then(function (s) { return s && s.unsubscribe(); }).then(function () { sub = null; pintarBtn(false); lgDecir(av, 'ok', 'Avisos desactivados.'); });
             return;
@@ -2023,7 +2034,7 @@
             return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64aBytes(VAPID_PUB) }).then(function (s) {
               sub = s;
               return enviar({ accion: 'push_registrar', endpoint: s.endpoint }).then(function (d) {
-                if (d && d.ok) { guardarCfgPush(s.endpoint); pintarBtn(true); lgDecir(av, 'ok', '¡Listo! Te avisaremos cuando tu mes esté por vencer y cuando toque entrenar 💪'); }
+                if (d && d.ok) { guardarCfgPush(s.endpoint); try { localStorage.setItem('kalos_push_' + id, s.endpoint + '|' + Math.floor(Date.now() / 86400000)); } catch (e) {} pintarBtn(true); lgDecir(av, 'ok', '¡Listo! Te avisaremos cuando tu mes esté por vencer y cuando toque entrenar 💪'); }
                 else { s.unsubscribe().catch(function () {}); sub = null; lgDecir(av, 'bad', 'No se pudieron activar los avisos. Intenta de nuevo.'); }
               });
             });
@@ -2755,25 +2766,27 @@
     if (PINS.busy) return;
     var pin = soloDig($('pinIn').value), body, tel = '';
     if (pin.length !== 4) { pinDecir('bad', 'El PIN tiene 4 números.'); return; }
-    if (PINS.tiene) body = { accion: 'pin_entrar', id: PINS.cid, pin: pin };
+    if (PINS.tiene) body = { accion: 'pin_entrar', id: PINS.cid, pin: pin, con: 'tarjeta' };
     else {
       tel = soloDig($('pinTel').value);
       if (tel.length < 8) { pinDecir('bad', ASERR.telefono); return; }
       if (pin !== soloDig($('pinIn2').value)) { pinDecir('bad', 'Los dos PIN no coinciden.'); return; }
-      body = { accion: 'pin_crear', id: PINS.cid, tel: tel, pin: pin };
+      body = { accion: 'pin_crear', id: PINS.cid, tel: tel, pin: pin, con: 'tarjeta' };
     }
-    PINS.busy = true; $('btnPin').disabled = true; pinDecir('', 'Verificando…');
+    PINS.busy = true; $('btnPin').disabled = true; pinDecir('', 'Verificando…'); RD.tenv = performance.now();
     red(body)
       .then(function (d) {
         PINS.busy = false; $('btnPin').disabled = false;
         if (d && d.ok && d.t) {
           TK = d.t; $('pinIn').value = ''; $('pinIn2').value = ''; pintarPin();
           if (tel) guardarTel(tel);
-          cargarTarjeta(PINS.cid, PINS.origen); return;
+          pinMarcar(PINS.cid, true);
+          cargarTarjeta(PINS.cid, PINS.origen, d.tarjeta && d.tarjeta.ok ? d.tarjeta : null); return;
         }
+        if (d && d.error === 'invalido' && PINS.tiene && pinConocido(PINS.cid)) { pinMarcar(PINS.cid, false); cargarTarjeta(PINS.cid, PINS.origen); return; }
         if (d && d.error === 'pin_existe') { mostrarPin(PINS.cid, true, PINS.origen, ASERR.pin_existe); return; }
-        if (d && d.error === 'pin_crear') { mostrarPin(PINS.cid, false, PINS.origen, ''); return; }
-        if (d && d.error === 'pin_inactivo') { TK = ''; cargarTarjeta(PINS.cid, PINS.origen); return; }
+        if (d && d.error === 'pin_crear') { pinMarcar(PINS.cid, false); mostrarPin(PINS.cid, false, PINS.origen, ''); return; }
+        if (d && d.error === 'pin_inactivo') { TK = ''; pinMarcar(PINS.cid, false); cargarTarjeta(PINS.cid, PINS.origen); return; }
         $('pinIn').value = ''; $('pinIn2').value = ''; pintarPin();
         pinDecir('bad', errPin(d) || 'No pudimos verificar. Intenta de nuevo.');
       })
@@ -2801,7 +2814,15 @@
   $('pinIn2').onkeydown = function (e) { if (e.key === 'Enter') enviarPin(); };
   $('pinOtra').onclick = function () { cambiarTarjeta(); };
 
-  function cargarTarjeta(cid, origen) {
+  /* Este celular ya entró antes con PIN a esa tarjeta: se muestra el teclado al instante, sin pedir la tarjeta para que el servidor diga "falta PIN". */
+  function pinConocido(cid) { try { return localStorage.getItem('kalos_pin_' + cid) === '1'; } catch (e) { return false; } }
+  function pinMarcar(cid, si) { try { if (si) localStorage.setItem('kalos_pin_' + cid, '1'); else localStorage.removeItem('kalos_pin_' + cid); } catch (e) {} }
+  function abrirTarjeta(cid, origen) {
+    if (!TK && pinConocido(cid)) { if (window.splashListo) splashListo(); mostrarPin(cid, true, origen, ''); return; }
+    cargarTarjeta(cid, origen);
+  }
+
+  function cargarTarjeta(cid, origen, pre) {
     id = cid;
     ver('card');
     $('card').className = 'card neutral loading';
@@ -2809,7 +2830,7 @@
     $('mensaje').textContent = 'Consultando la inscripción.'; $('mensaje').hidden = false;
     $('detalle').hidden = true; $('btnReintentar').hidden = true;
     // Sin cookies: así no importa cuántas cuentas de Google tenga abiertas el celular. Siempre datos frescos.
-    red({ accion: 'tarjeta', id: cid, t: TK }, { cache: 'no-store' })
+    (pre ? Promise.resolve(pre) : red({ accion: 'tarjeta', id: cid, t: TK }, { cache: 'no-store' }))
       .then(function (d) {
         if (window.splashListo) splashListo();
         if (d && d.error === 'pin_requerido') { mostrarPin(cid, !!d.tiene, origen, ''); return; }
@@ -2826,6 +2847,7 @@
         var a = d.alumno;
         guardarId(cid);
         if (!RD.ap) { RD.ap = true; try { medir('apertura', performance.now(), 'ok'); } catch (e) {} }
+        if (RD.tenv) { try { medir('apertura_pin', performance.now() - RD.tenv, 'ok'); } catch (e) {} RD.tenv = 0; }   // desde que toca ENTRAR hasta ver la tarjeta (sin el tiempo de teclear)
         pintar(a.clase, a.estado, '');
         $('card').classList.add('home');
         $('estadoH').textContent = a.estado;
@@ -3057,11 +3079,11 @@
   if (PUERTA) {
     iniciarPuerta();
   } else if (id) {
-    cargarTarjeta(id, 'url');
+    abrirTarjeta(id, 'url');
   } else {
     var guardado = leerId();
     if (ID_FMT.test(guardado)) {
-      cargarTarjeta(guardado, 'guardado');
+      abrirTarjeta(guardado, 'guardado');
     } else {
       var t = leerTel();
       if (t.length >= 8) {
