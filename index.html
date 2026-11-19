@@ -1044,7 +1044,7 @@
   /* ---- red: límite de tiempo + medición anónima de velocidad (cambio #23) ----
      Lecturas: 20 s y un reintento si se agotó el tiempo. Guardados: 30 s y sin reintento (el servidor pudo haber guardado).
      Se mide cuánto tarda cada pedido (sin ID ni datos del alumno) y se manda en un lote chico; el dueño lo prende o apaga en Config. */
-  var WEBV = 'v22';
+  var WEBV = 'v23';
   var RD = { lec: 20000, esc: 30000, buf: [], t0: 0, off: false, ap: false, ocu: 0 };
   try { if (sessionStorage.getItem('kalos_med_off') === '1') RD.off = true; } catch (e) {}
   function esLectura(a) { return /(_ver|_leer|_img|_tarjeta)$/.test(a) || a === 'tarjeta' || a === 'precarga' || a === 'ping'; }
@@ -1743,7 +1743,7 @@
       var f = d.anio + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + dia).slice(-2);
       var c = document.createElement('i'); c.textContent = dia;
       if (set[f]) c.className = 'asist';
-      else if ((primero + dia - 1) % 7 >= 5) c.className = 'fin';
+      else if (!RM.remoto && (primero + dia - 1) % 7 >= 5) c.className = 'fin';   // el remoto entrena cualquier día: sábado y domingo no se apagan
       else if (f < d.hoy) c.className = 'pasado';
       if (f === d.hoy) c.className += ' hoy';
       g.appendChild(c);
